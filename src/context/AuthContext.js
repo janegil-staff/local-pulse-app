@@ -101,7 +101,7 @@ export function AuthProvider({ children }) {
   };
 
   // register(data) — creates the account with username + profile basics.
-  const register = async (data) => {
+  const register = async (data, opts = {}) => {
     const { token } = await api.register({
       email: data.email,
       password: data.password,
@@ -114,9 +114,13 @@ export function AuthProvider({ children }) {
     const cleanEmail = String(data.email).trim().toLowerCase();
     await persist(token, cleanEmail);
     if (data.pin) await secureSet('userPin', data.pin);
-    const { profile } = await api.getMyProfile();
     setIsNewUser(true);
     setPinVerified(true);
+    // When deferUser is set (multi-step onboarding), DON'T publish the user yet —
+    // otherwise the navigator sees an incomplete profile and bounces to
+    // onboarding mid-flow. The caller sets the user once everything's saved.
+    if (opts.deferUser) return null;
+    const { profile } = await api.getMyProfile();
     setUser(profile);
     return profile;
   };

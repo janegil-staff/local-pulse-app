@@ -6,6 +6,7 @@ import { api } from '../api/client.js';
 import { useFeedStore } from '../store/feedStore.js';
 import { reportPostFlow } from '../lib/moderation.js';
 import PostCard from '../components/PostCard.js';
+import ScreenHeader from '../components/ScreenHeader.js';
 import { theme, makeStyles, useStyles } from '../theme/theme.js';
 
 export default function FeedScreen({ navigation }) {
@@ -66,9 +67,7 @@ export default function FeedScreen({ navigation }) {
 
   return (
     <View style={styles.root}>
-      <View style={styles.topBar}>
-        <Text style={styles.title}>LocalPulse</Text>
-      </View>
+      <ScreenHeader title="Feed" navigation={navigation} />
 
       <View style={styles.tabs}>
         <Pressable style={[styles.tab, tab === 'nearby' && styles.tabActive]} onPress={() => setTab('nearby')}>
@@ -121,9 +120,7 @@ export default function FeedScreen({ navigation }) {
 const stylesFactory = (({ colors, spacing, radius }) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.bg },
-    topBar: { paddingHorizontal: spacing(4), paddingTop: spacing(2), paddingBottom: spacing(2) },
-    title: { color: colors.text, fontSize: 22, fontWeight: '800' },
-    tabs: { flexDirection: 'row', paddingHorizontal: spacing(4), gap: spacing(2), marginBottom: spacing(2) },
+    tabs: { flexDirection: 'row', paddingHorizontal: spacing(4), gap: spacing(2), marginTop: spacing(2), marginBottom: spacing(2) },
     tab: { paddingVertical: spacing(2), paddingHorizontal: spacing(4), borderRadius: radius.md },
     tabActive: { backgroundColor: colors.surfaceAlt },
     tabText: { color: colors.textDim, fontSize: 14, fontWeight: '600' },

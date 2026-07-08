@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
 import { useChatStore } from '../store/chatStore.js';
+import ScreenHeader from '../components/ScreenHeader.js';
 import { theme, makeStyles, useStyles } from '../theme/theme.js';
 
 export default function ConversationsScreen({ navigation }) {
@@ -17,6 +18,7 @@ export default function ConversationsScreen({ navigation }) {
 
   return (
     <View style={styles.root}>
+      <ScreenHeader title="Messages" onBack={() => navigation.goBack()} />
       <FlatList
         data={conversations}
         keyExtractor={(c) => String(c.id)}

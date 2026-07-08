@@ -6,7 +6,7 @@ import { useDiscoveryStore } from '../store/discoveryStore.js';
 import { api } from '../api/client.js';
 import SwipeCard from '../components/SwipeCard.js';
 import { theme, makeStyles, useStyles } from '../theme/theme.js';
-
+import ScreenHeader from '../components/ScreenHeader.js';
 export default function DiscoveryScreen({ navigation }) {
   const styles = useStyles(stylesFactory);
   const deck = useDiscoveryStore((s) => s.deck);
@@ -43,8 +43,8 @@ export default function DiscoveryScreen({ navigation }) {
   );
 
   return (
-    <View style={styles.root}>
-      <Text style={styles.title}>Discover</Text>
+    <View style={{ flex: 1, backgroundColor: theme.colors.bg }}>
+      <ScreenHeader title="Discover" navigation={navigation} />
 
       <View style={styles.deck}>
         {loading && deck.length === 0 ? (

@@ -20,15 +20,19 @@ import SavedScreen from '../screens/SavedScreen.js';
 import LegalScreen from '../screens/LegalScreen.js';
 import PinSetupScreen from '../screens/auth/PinSetupScreen.js';
 import PinConfirmScreen from '../screens/auth/PinConfirmScreen.js';
+import MyProfileScreen from '../screens/MyProfileScreen.js';
 import { registerForPush } from '../lib/push.js';
 import { theme } from '../theme/theme.js';
+import ChangeEmailScreen from '../screens/ChangeEmailScreen.js';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// Blue app header applied to all stack screens that use the default header.
 const screenOptions = {
-  headerStyle: { backgroundColor: theme.colors.bg },
-  headerTintColor: theme.colors.text,
+  headerStyle: { backgroundColor: theme.colors.accent },
+  headerTintColor: '#fff',
+  headerTitleStyle: { color: '#fff', fontWeight: '700' },
   headerShadowVisible: false,
   contentStyle: { backgroundColor: theme.colors.bg },
 };
@@ -47,11 +51,15 @@ function Tabs() {
         tabBarInactiveTintColor: theme.colors.textDim,
       }}
     >
+      {/* Settings and Messages moved out of the tab bar into header icons. */}
       <Tab.Screen name="Discover" component={DiscoveryScreen} options={{ headerShown: false, tabBarIcon: tabIcon('🔥') }} />
       <Tab.Screen name="Feed" component={FeedScreen} options={{ headerShown: false, tabBarIcon: tabIcon('⌂') }} />
-      <Tab.Screen name="Matches" component={MatchesScreen} options={{ tabBarIcon: tabIcon('♥') }} />
-      <Tab.Screen name="Messages" component={ConversationsScreen} options={{ tabBarIcon: tabIcon('✉') }} />
-      <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarIcon: tabIcon('⚙') }} />
+      <Tab.Screen name="Matches" component={MatchesScreen} options={{ headerShown: false, tabBarIcon: tabIcon('♥') }} />
+      <Tab.Screen
+        name="MyProfile"
+        component={MyProfileScreen}
+        options={{ headerShown: false, title: 'Profile', tabBarIcon: tabIcon('☺') }}
+      />
     </Tab.Navigator>
   );
 }
@@ -61,12 +69,13 @@ export default function RootNavigator() {
   const initSocket = useChatStore((s) => s.initSocket);
 
   const loggedIn = Boolean(token);
-  const needsOnboarding = loggedIn && user && !user.profileComplete;
+  // Stay in onboarding when logged in but the profile is missing or incomplete.
+  const needsOnboarding = loggedIn && (!user || !user.profileComplete);
 
   useEffect(() => {
     if (loggedIn) {
       initSocket();
-      registerForPush().catch(() => {});
+      registerForPush().catch(() => { });
     }
   }, [loggedIn, initSocket]);
 
@@ -85,12 +94,18 @@ export default function RootNavigator() {
       ) : needsOnboarding ? (
         <>
           <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+          {/* PIN screens reachable during onboarding regardless of login state */}
+          <Stack.Screen name="PinSetup" component={PinSetupScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="PinConfirm" component={PinConfirmScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Terms" component={LegalScreen} initialParams={{ doc: 'terms' }} options={{ title: 'Terms of Service' }} />
           <Stack.Screen name="Privacy" component={LegalScreen} initialParams={{ doc: 'privacy' }} options={{ title: 'Privacy Policy' }} />
         </>
       ) : (
         <>
           <Stack.Screen name="Tabs" component={Tabs} options={{ headerShown: false }} />
+          {/* Settings + Messages: pushed on top from the header icons */}
+          <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Messages" component={ConversationsScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Chat" component={ChatScreen} options={({ route }) => ({ title: route.params?.title || 'Chat' })} />
           {/* Feed-side stack screens */}
           <Stack.Screen name="Compose" component={ComposeScreen} options={{ title: 'New Post', presentation: 'modal' }} />
@@ -99,6 +114,7 @@ export default function RootNavigator() {
           <Stack.Screen name="Saved" component={SavedScreen} options={{ title: 'Saved' }} />
           <Stack.Screen name="Terms" component={LegalScreen} initialParams={{ doc: 'terms' }} options={{ title: 'Terms of Service' }} />
           <Stack.Screen name="Privacy" component={LegalScreen} initialParams={{ doc: 'privacy' }} options={{ title: 'Privacy Policy' }} />
+          <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} options={{ headerShown: false }} />
         </>
       )}
     </Stack.Navigator>

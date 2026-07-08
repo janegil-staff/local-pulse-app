@@ -2,6 +2,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { View, Text, FlatList, Pressable, Image, StyleSheet, Alert } from 'react-native';
 import { useProfileStore } from '../store/profileStore.js';
+import ScreenHeader from '../components/ScreenHeader.js';
 import { theme, makeStyles, useStyles } from '../theme/theme.js';
 
 export default function MatchesScreen({ navigation }) {
@@ -25,6 +26,7 @@ export default function MatchesScreen({ navigation }) {
 
   return (
     <View style={styles.root}>
+      <ScreenHeader title="Matches" navigation={navigation} />
       <FlatList
         data={matches}
         keyExtractor={(m) => String(m.id)}

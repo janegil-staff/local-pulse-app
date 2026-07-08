@@ -1,11 +1,15 @@
 // localpulse/app/src/screens/SettingsScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Alert, ScrollView, TextInput } from 'react-native';
+import {
+  View, Text, Pressable, StyleSheet, Alert, ScrollView, Switch, TextInput, StatusBar,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../api/client.js';
 import { useProfileStore } from '../store/profileStore.js';
 import { useAuth } from '../context/AuthContext.js';
 import { useThemeMode } from '../theme/ThemeContext.js';
-import { theme, makeStyles, useStyles } from '../theme/theme.js';
+import { theme, useStyles } from '../theme/theme.js';
+import ScreenHeader from '../components/ScreenHeader.js';
 
 const SHOW = [
   { key: 'women', label: 'Women' },
@@ -13,8 +17,52 @@ const SHOW = [
   { key: 'everyone', label: 'Everyone' },
 ];
 
+// ── Reusable rows (Recover pattern) ──────────────────────────────
+function Row({ label, value, onPress, danger, last }) {
+  const styles = useStyles(stylesFactory);
+  return (
+    <Pressable
+      style={[styles.row, !last && styles.rowDivider]}
+      onPress={onPress}
+      disabled={!onPress}
+    >
+      <Text style={[styles.rowLabel, danger && styles.rowLabelDanger]}>{label}</Text>
+      <View style={styles.rowRight}>
+        {value != null ? <Text style={styles.rowValue}>{value}</Text> : null}
+        {onPress ? <Text style={styles.chevron}>›</Text> : null}
+      </View>
+    </Pressable>
+  );
+}
+
+function ToggleRow({ label, value, onValueChange, last }) {
+  const styles = useStyles(stylesFactory);
+  return (
+    <View style={[styles.row, !last && styles.rowDivider]}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ true: theme.colors.accent, false: theme.colors.border }}
+        thumbColor="#fff"
+      />
+    </View>
+  );
+}
+
+function Section({ title, children }) {
+  const styles = useStyles(stylesFactory);
+  return (
+    <View style={styles.sectionWrap}>
+      {title ? <Text style={styles.sectionTitle}>{title}</Text> : null}
+      <View style={styles.section}>{children}</View>
+    </View>
+  );
+}
+
 export default function SettingsScreen({ navigation }) {
   const styles = useStyles(stylesFactory);
+  const insets = useSafeAreaInsets();
   const profile = useProfileStore((s) => s.profile);
   const loadProfile = useProfileStore((s) => s.loadProfile);
   const savePreferences = useProfileStore((s) => s.savePreferences);
@@ -25,6 +73,8 @@ export default function SettingsScreen({ navigation }) {
   const [ageMin, setAgeMin] = useState('18');
   const [ageMax, setAgeMax] = useState('99');
   const [distance, setDistance] = useState('50');
+
+  const isDark = pref === 'dark' || (pref === 'system' && theme.mode === 'dark');
 
   useEffect(() => { loadProfile(); }, [loadProfile]);
   useEffect(() => {
@@ -37,21 +87,21 @@ export default function SettingsScreen({ navigation }) {
     }
   }, [profile]);
 
-  async function save() {
+  async function savePrefs(patch) {
     try {
-      await savePreferences({
-        show,
-        ageMin: Number(ageMin),
-        ageMax: Number(ageMax),
-        maxDistanceKm: Number(distance),
-      });
-      Alert.alert('Saved', 'Your preferences have been updated.');
+      await savePreferences(patch);
     } catch (e) {
       Alert.alert('Error', e.message);
     }
   }
 
-  // App Store Guideline 5.1.1 — account deletion must be available in-app.
+  function cycleShow() {
+    const idx = SHOW.findIndex((s) => s.key === show);
+    const next = SHOW[(idx + 1) % SHOW.length];
+    setShow(next.key);
+    savePrefs({ show: next.key });
+  }
+
   function confirmDelete() {
     Alert.alert(
       'Delete account',
@@ -64,7 +114,7 @@ export default function SettingsScreen({ navigation }) {
           onPress: async () => {
             try {
               await api.deleteAccount();
-              await logout(); // clears token → routes back to auth
+              await logout();
             } catch (e) {
               Alert.alert('Error', e.message);
             }
@@ -74,88 +124,131 @@ export default function SettingsScreen({ navigation }) {
     );
   }
 
+  const showLabel = SHOW.find((s) => s.key === show)?.label ?? 'Everyone';
+
   return (
-    <ScrollView style={styles.root} contentContainerStyle={{ padding: theme.spacing(5) }}>
-      <Text style={styles.section}>Appearance</Text>
-      <View style={styles.chips}>
-        {[
-          { key: 'system', label: 'System' },
-          { key: 'light', label: 'Light' },
-          { key: 'dark', label: 'Dark' },
-        ].map((m) => (
-          <Pressable
-            key={m.key}
-            style={[styles.chip, pref === m.key && styles.chipActive]}
-            onPress={() => setPref(m.key)}
-          >
-            <Text style={[styles.chipText, pref === m.key && styles.chipTextActive]}>{m.label}</Text>
-          </Pressable>
-        ))}
-      </View>
+    <View style={styles.screen}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <ScreenHeader
+        title="Settings"
+        onBack={() => navigation.goBack()}
+      />
 
-      <Text style={styles.section}>Show me</Text>
-      <View style={styles.chips}>
-        {SHOW.map((s) => (
-          <Pressable key={s.key} style={[styles.chip, show === s.key && styles.chipActive]} onPress={() => setShow(s.key)}>
-            <Text style={[styles.chipText, show === s.key && styles.chipTextActive]}>{s.label}</Text>
-          </Pressable>
-        ))}
-      </View>
+      <ScrollView
+        style={styles.root}
+        contentContainerStyle={{ padding: theme.spacing(4), paddingBottom: insets.bottom + theme.spacing(10) }}
+      >
+        {/* Account */}
+        <Section title="ACCOUNT">
+          <Row label="Username" value={profile?.username || '—'} last={false} />
+          <Row
+            label="Email"
+            value={profile?.email || '—'}
+            onPress={() => navigation.navigate('ChangeEmail')}
+            last
+          />
+        </Section>
 
-      <Text style={styles.section}>Age range</Text>
-      <View style={styles.rangeRow}>
-        <TextInput style={styles.smallInput} value={ageMin} onChangeText={setAgeMin} keyboardType="number-pad" />
-        <Text style={styles.dash}>to</Text>
-        <TextInput style={styles.smallInput} value={ageMax} onChangeText={setAgeMax} keyboardType="number-pad" />
-      </View>
+        {/* Appearance */}
+        <Section title="APPEARANCE">
+          <ToggleRow
+            label="Dark mode"
+            value={isDark}
+            onValueChange={(v) => setPref(v ? 'dark' : 'light')}
+            last={false}
+          />
+          <Row
+            label="Use system setting"
+            value={pref === 'system' ? 'On' : 'Off'}
+            onPress={() => setPref(pref === 'system' ? (isDark ? 'dark' : 'light') : 'system')}
+            last
+          />
+        </Section>
 
-      <Text style={styles.section}>Max distance (km)</Text>
-      <TextInput style={styles.smallInput} value={distance} onChangeText={setDistance} keyboardType="number-pad" />
+        {/* Discovery */}
+        <Section title="DISCOVERY">
+          <Row label="Show me" value={showLabel} onPress={cycleShow} last={false} />
+          <View style={[styles.row, styles.rowDivider]}>
+            <Text style={styles.rowLabel}>Age range</Text>
+            <View style={styles.rangeRight}>
+              <TextInput
+                style={styles.rangeInput}
+                value={ageMin}
+                onChangeText={setAgeMin}
+                onBlur={() => savePrefs({ ageMin: Number(ageMin) })}
+                keyboardType="number-pad"
+              />
+              <Text style={styles.rangeDash}>–</Text>
+              <TextInput
+                style={styles.rangeInput}
+                value={ageMax}
+                onChangeText={setAgeMax}
+                onBlur={() => savePrefs({ ageMax: Number(ageMax) })}
+                keyboardType="number-pad"
+              />
+            </View>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>Max distance (km)</Text>
+            <TextInput
+              style={styles.rangeInput}
+              value={distance}
+              onChangeText={setDistance}
+              onBlur={() => savePrefs({ maxDistanceKm: Number(distance) })}
+              keyboardType="number-pad"
+            />
+          </View>
+        </Section>
 
-      <Pressable style={styles.saveBtn} onPress={save}>
-        <Text style={styles.saveText}>Save preferences</Text>
-      </Pressable>
+        {/* Legal */}
+        <Section title="LEGAL">
+          <Row label="Terms of Service" onPress={() => navigation.navigate('Terms')} last={false} />
+          <Row label="Privacy Policy" onPress={() => navigation.navigate('Privacy')} last />
+        </Section>
 
-      <View style={styles.divider} />
+        {/* Danger zone */}
+        <Section>
+          <Row label="Log out" onPress={logout} last={false} />
+          <Row label="Delete account" onPress={confirmDelete} danger last />
+        </Section>
 
-      <Pressable style={styles.logoutBtn} onPress={logout}>
-        <Text style={styles.logoutText}>Log out</Text>
-      </Pressable>
-
-      <Pressable style={styles.deleteBtn} onPress={confirmDelete}>
-        <Text style={styles.deleteText}>Delete account</Text>
-      </Pressable>
-
-      <Text style={styles.legal}>
-        By using this app you agree to our{' '}
-        <Text style={styles.legalLink} onPress={() => navigation.navigate('Terms')}>Terms</Text>
-        {' '}and{' '}
-        <Text style={styles.legalLink} onPress={() => navigation.navigate('Privacy')}>Privacy Policy</Text>.
-      </Text>
-    </ScrollView>
+        <Text style={styles.version}>Nearby</Text>
+      </ScrollView>
+    </View>
   );
 }
 
 const stylesFactory = (({ colors, spacing, radius }) =>
   StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.bg },
     root: { flex: 1, backgroundColor: colors.bg },
-    section: { color: colors.textDim, fontSize: 13, fontWeight: '600', marginTop: spacing(5), marginBottom: spacing(2) },
-    chips: { flexDirection: 'row', gap: spacing(2) },
-    chip: { backgroundColor: colors.surface, borderRadius: radius.md, paddingHorizontal: spacing(4), paddingVertical: spacing(2.5), borderWidth: 1, borderColor: colors.border },
-    chipActive: { backgroundColor: colors.accentDim, borderColor: colors.accent },
-    chipText: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
-    chipTextActive: { color: colors.text },
-    rangeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing(3) },
-    smallInput: { backgroundColor: colors.surface, color: colors.text, borderRadius: radius.md, paddingHorizontal: spacing(4), paddingVertical: spacing(3), fontSize: 16, borderWidth: 1, borderColor: colors.border, width: 90 },
-    dash: { color: colors.textDim },
-    saveBtn: { backgroundColor: colors.accent, borderRadius: radius.md, paddingVertical: spacing(3.5), alignItems: 'center', marginTop: spacing(6) },
-    saveText: { color: '#04101f', fontWeight: '700', fontSize: 15 },
-    divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing(6) },
-    logoutBtn: { paddingVertical: spacing(3.5), alignItems: 'center', borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
-    logoutText: { color: colors.text, fontWeight: '600', fontSize: 15 },
-    deleteBtn: { paddingVertical: spacing(3.5), alignItems: 'center', marginTop: spacing(3) },
-    deleteText: { color: colors.danger, fontWeight: '700', fontSize: 15 },
-    legal: { color: colors.textDim, fontSize: 12, textAlign: 'center', marginTop: spacing(6), lineHeight: 18 },
-    legalLink: { color: colors.accent, fontWeight: '700' },
+
+    sectionWrap: { marginBottom: spacing(6) },
+    sectionTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: spacing(2), marginLeft: spacing(1) },
+    section: {
+      backgroundColor: colors.surface, borderRadius: radius.md,
+      borderWidth: 1, borderColor: colors.border, overflow: 'hidden',
+    },
+
+    row: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      paddingHorizontal: spacing(4), paddingVertical: spacing(4), minHeight: 54,
+    },
+    rowDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
+    rowLabel: { color: colors.text, fontSize: 16 },
+    rowLabelDanger: { color: colors.danger, fontWeight: '600' },
+    rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing(2) },
+    rowValue: { color: colors.textDim, fontSize: 15 },
+    chevron: { color: colors.textDim, fontSize: 22, fontWeight: '300' },
+
+    rangeRight: { flexDirection: 'row', alignItems: 'center', gap: spacing(2) },
+    rangeInput: {
+      backgroundColor: colors.surfaceAlt, color: colors.text, borderRadius: radius.sm,
+      paddingHorizontal: spacing(3), paddingVertical: spacing(2), fontSize: 15,
+      borderWidth: 1, borderColor: colors.border, minWidth: 56, textAlign: 'center',
+    },
+    rangeDash: { color: colors.textDim, fontSize: 16 },
+
+    version: { color: colors.textDim, fontSize: 13, textAlign: 'center', marginTop: spacing(2) },
   })
 );

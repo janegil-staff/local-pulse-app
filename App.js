@@ -9,6 +9,7 @@ import RootNavigator from './src/navigation/RootNavigator.js';
 import { AuthProvider, useAuth } from './src/context/AuthContext.js';
 import { ThemeProvider, useThemeMode } from './src/theme/ThemeContext.js';
 import { theme } from './src/theme/theme.js';
+import { LangProvider } from './src/context/LangContext.js';
 
 function AppInner() {
   const { hydrated } = useAuth();
@@ -48,10 +49,12 @@ function AppInner() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppInner />
-      </AuthProvider>
-    </ThemeProvider>
+    <LangProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppInner />
+        </AuthProvider>
+      </ThemeProvider>
+    </LangProvider>
   );
 }

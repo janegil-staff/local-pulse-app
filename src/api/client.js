@@ -102,5 +102,12 @@ export const api = {
   unblockUser: (userId) => request(`/users/${userId}/block`, { method: 'DELETE' }),
   getBlocked: () => request('/blocks'),
 
-  uploadImage: (form) => request('/upload', { method: 'POST', body: form, isForm: true }),
+  uploadImage: (uri) => {
+    const name = (uri.split('/').pop() || 'photo.jpg').split('?')[0];
+    const ext = (name.split('.').pop() || 'jpg').toLowerCase();
+    const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+    const form = new FormData();
+    form.append('image', { uri, name, type }); // ⚠️ 'image' must match the route's .single('image')
+    return request('/upload', { method: 'POST', body: form, isForm: true });
+  },
 };

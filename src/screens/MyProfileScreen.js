@@ -21,18 +21,19 @@ import {
   Image,
   Alert,
   ActivityIndicator,
-  RefreshControl,
+  RefreshControl
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 import { useAuth } from '../context/AuthContext.js';
 import * as api from '../api/client.js'; // ⚠️ ADJUST if your client path/name differs.
-import { theme } from '../theme/theme.js';
+import { theme, useStyles } from '../theme/theme.js';
+import ScreenHeader from '../components/ScreenHeader.js';
 
 const GENDERS = ['male', 'female', 'other']; // ⚠️ ADJUST to your gender options.
-const C = theme.colors;
 
-export default function MyProfileScreen() {
+export default function MyProfileScreen({ navigation }) {
+  const styles = useStyles(stylesFactory);
   // ⚠️ ADJUST: refreshUser re-fetches current user after a save; logout clears auth.
   const { user, refreshUser, logout } = useAuth();
 
@@ -163,21 +164,19 @@ export default function MyProfileScreen() {
   if (!user) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator color={C.accent} />
+        <ActivityIndicator color={theme.colors.accent} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Profile</Text>
-      </View>
+      <ScreenHeader title="My Profile" navigation={navigation} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.accent} />
         }
       >
         <Text style={styles.sectionLabel}>Photos</Text>
@@ -192,7 +191,7 @@ export default function MyProfileScreen() {
           ))}
           <TouchableOpacity style={styles.addPhoto} onPress={addPhoto} disabled={uploadingPhoto}>
             {uploadingPhoto ? (
-              <ActivityIndicator color={C.accent} />
+              <ActivityIndicator color={theme.colors.accent} />
             ) : (
               <Text style={styles.addPhotoText}>＋</Text>
             )}
@@ -317,7 +316,7 @@ function EditableRow({
             onChangeText={setDraft}
             multiline={multiline}
             placeholder={placeholder}
-            placeholderTextColor={C.textDim}
+            placeholderTextColor={theme.colors.textDim}
             autoCapitalize={autoCapitalize}
             keyboardType={keyboardType}
             autoFocus
@@ -342,24 +341,14 @@ function EditableRow({
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+const stylesFactory = ({ colors }) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   centered: { alignItems: 'center', justifyContent: 'center' },
-
-  header: {
-    backgroundColor: C.surface,
-    paddingTop: 56,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: C.border,
-  },
-  headerTitle: { color: C.text, fontSize: 22, fontWeight: '700' },
 
   scrollContent: { padding: 20, paddingBottom: 48 },
 
   sectionLabel: {
-    color: C.textDim,
+    color: colors.textDim,
     fontSize: 13,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -369,7 +358,7 @@ const styles = StyleSheet.create({
 
   photoRow: { flexDirection: 'row', marginBottom: 24 },
   photoWrap: { marginRight: 12, position: 'relative' },
-  photo: { width: 96, height: 96, borderRadius: 12, backgroundColor: C.surface },
+  photo: { width: 96, height: 96, borderRadius: 12, backgroundColor: colors.surface },
   photoRemove: {
     position: 'absolute',
     top: -6,
@@ -377,28 +366,28 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: C.text,
+    backgroundColor: colors.text,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  photoRemoveText: { color: C.bg, fontSize: 18, lineHeight: 20, fontWeight: '700' },
+  photoRemoveText: { color: colors.bg, fontSize: 18, lineHeight: 20, fontWeight: '700' },
   addPhoto: {
     width: 96,
     height: 96,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: C.accent,
+    borderColor: colors.accent,
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  addPhotoText: { color: C.accent, fontSize: 32, fontWeight: '300' },
+  addPhotoText: { color: colors.accent, fontSize: 32, fontWeight: '300' },
 
   fieldBlock: {
     marginBottom: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: C.border,
+    borderBottomColor: colors.border,
   },
   fieldHeader: {
     flexDirection: 'row',
@@ -407,24 +396,24 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   fieldLabel: {
-    color: C.textDim,
+    color: colors.textDim,
     fontSize: 13,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  fieldValue: { color: C.text, fontSize: 16 },
-  editLink: { color: C.accent, fontSize: 14, fontWeight: '600' },
+  fieldValue: { color: colors.text, fontSize: 16 },
+  editLink: { color: colors.accent, fontSize: 14, fontWeight: '600' },
 
   input: {
     borderWidth: 1,
-    borderColor: C.accent,
+    borderColor: colors.accent,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
-    color: C.text,
-    backgroundColor: C.surface,
+    color: colors.text,
+    backgroundColor: colors.surface,
   },
   inputMultiline: { height: 100, textAlignVertical: 'top' },
 
@@ -434,9 +423,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     marginTop: 10,
   },
-  cancelLink: { color: C.textDim, fontSize: 14, marginRight: 20 },
+  cancelLink: { color: colors.textDim, fontSize: 14, marginRight: 20 },
   saveButton: {
-    backgroundColor: C.accent,
+    backgroundColor: colors.accent,
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 8,
@@ -451,15 +440,15 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: C.accent,
+    borderColor: colors.accent,
     marginRight: 8,
     marginBottom: 8,
   },
-  genderChipActive: { backgroundColor: C.accent },
-  genderChipText: { color: C.accent, fontSize: 14, textTransform: 'capitalize' },
+  genderChipActive: { backgroundColor: colors.accent },
+  genderChipText: { color: colors.accent, fontSize: 14, textTransform: 'capitalize' },
   genderChipTextActive: { color: '#fff' },
   cancelChip: { paddingHorizontal: 16, paddingVertical: 8 },
-  cancelChipText: { color: C.textDim, fontSize: 14 },
+  cancelChipText: { color: colors.textDim, fontSize: 14 },
 
   logoutButton: {
     marginTop: 16,
