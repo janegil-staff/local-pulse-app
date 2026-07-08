@@ -1,131 +1,129 @@
 // localpulse/app/src/screens/DiscoveryScreen.js
-import React, { useEffect, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet, ActivityIndicator, Image } from 'react-native';
+// People nearby — a grid of users. Tap a card to open their profile (where you
+// can Message / Report / Block). Replaces the old swipe deck.
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View, Text, FlatList, Image, Pressable, StyleSheet, ActivityIndicator, RefreshControl, Dimensions,
+} from 'react-native';
 import * as Location from 'expo-location';
-import { useDiscoveryStore } from '../store/discoveryStore.js';
 import { api } from '../api/client.js';
-import SwipeCard from '../components/SwipeCard.js';
-import { theme, makeStyles, useStyles } from '../theme/theme.js';
+import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
+
+const { width } = Dimensions.get('window');
+const GAP = 12;
+const COLS = 2;
+const CARD_W = (width - GAP * (COLS + 1)) / COLS;
+
 export default function DiscoveryScreen({ navigation }) {
   const styles = useStyles(stylesFactory);
-  const deck = useDiscoveryStore((s) => s.deck);
-  const loading = useDiscoveryStore((s) => s.loading);
-  const error = useDiscoveryStore((s) => s.error);
-  const lastMatch = useDiscoveryStore((s) => s.lastMatch);
-  const loadDeck = useDiscoveryStore((s) => s.loadDeck);
-  const swipe = useDiscoveryStore((s) => s.swipe);
-  const clearMatch = useDiscoveryStore((s) => s.clearMatch);
+  const [people, setPeople] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
-  // Push location so discovery is geo-accurate, then load the deck.
-  useEffect(() => {
-    (async () => {
+  const load = useCallback(async () => {
+    setError('');
+    try {
+      // Push a fresh location so results are geo-accurate, then fetch.
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status === 'granted') {
           const pos = await Location.getCurrentPositionAsync({});
           await api.updateLocation(pos.coords.longitude, pos.coords.latitude);
         }
-      } catch {
-        /* proceed without fresh location */
-      } finally {
-        loadDeck();
-      }
-    })();
-  }, [loadDeck]);
+      } catch { /* proceed without fresh location */ }
 
-  // Top card is the LAST item so it renders above the rest in the stack.
-  const top = deck[deck.length - 1];
+      const data = await api.getDiscovery();
+      // Accept a few possible shapes: { users }, { people }, { deck }, or a bare array.
+      const list = data.users ?? data.people ?? data.deck ?? (Array.isArray(data) ? data : []);
+      setPeople(list);
+    } catch (e) {
+      setError(e?.message ?? 'Could not load people nearby');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
-  const onButtonSwipe = useCallback(
-    (action) => { if (top) swipe(top.id, action); },
-    [top, swipe]
-  );
+  useEffect(() => { load(); }, [load]);
+
+  const onRefresh = () => { setRefreshing(true); load(); };
+
+  function openProfile(person) {
+    navigation.navigate('Profile', { username: person.username, user: person });
+  }
+
+  function renderCard({ item }) {
+    const photo = item.photos?.[0];
+    const name = item.displayName || item.username || 'Someone';
+    return (
+      <Pressable style={styles.card} onPress={() => openProfile(item)}>
+        {photo ? (
+          <Image source={{ uri: photo }} style={styles.photo} />
+        ) : (
+          <View style={[styles.photo, styles.noPhoto]}>
+            <Text style={styles.noPhotoText}>{name[0]?.toUpperCase()}</Text>
+          </View>
+        )}
+        <View style={styles.label}>
+          <Text style={styles.name} numberOfLines={1}>
+            {name}{item.age ? `, ${item.age}` : ''}
+          </Text>
+          {item.neighborhood ? (
+            <Text style={styles.meta} numberOfLines={1}>{item.neighborhood}</Text>
+          ) : null}
+        </View>
+        {item.online ? <View style={styles.onlineDot} /> : null}
+      </Pressable>
+    );
+  }
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.bg }}>
+    <View style={styles.root}>
       <ScreenHeader title="Discover" navigation={navigation} />
-
-      <View style={styles.deck}>
-        {loading && deck.length === 0 ? (
-          <ActivityIndicator color={theme.colors.accent} />
-        ) : deck.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No one new nearby</Text>
-            <Text style={styles.emptyBody}>
-              {error || 'Check back later, or widen your distance in settings.'}
+      {loading ? (
+        <View style={styles.centered}><ActivityIndicator color={theme.colors.accent} /></View>
+      ) : (
+        <FlatList
+          data={people}
+          keyExtractor={(item) => String(item.id ?? item._id ?? item.username)}
+          renderItem={renderCard}
+          numColumns={COLS}
+          columnWrapperStyle={{ paddingHorizontal: GAP, gap: GAP }}
+          contentContainerStyle={{ paddingTop: GAP, paddingBottom: 32, gap: GAP }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.accent} />
+          }
+          ListEmptyComponent={
+            <Text style={styles.empty}>
+              {error || 'No one nearby yet. Pull to refresh, or widen your distance in Settings.'}
             </Text>
-            <Pressable style={styles.reload} onPress={loadDeck}>
-              <Text style={styles.reloadText}>Reload</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <SwipeCard card={top} />
-        )}
-      </View>
-
-      {deck.length > 0 && (
-        <View style={styles.actions}>
-          <Pressable style={[styles.circle, styles.pass]} onPress={() => onButtonSwipe('pass')}>
-            <Text style={styles.passGlyph}>✕</Text>
-          </Pressable>
-          <Pressable style={[styles.circle, styles.like]} onPress={() => onButtonSwipe('like')}>
-            <Text style={styles.likeGlyph}>♥</Text>
-          </Pressable>
-        </View>
-      )}
-
-      {/* It's a match! modal */}
-      {lastMatch && (
-        <View style={styles.matchOverlay}>
-          <Text style={styles.matchTitle}>It's a match!</Text>
-          {lastMatch.user?.photos?.[0] ? (
-            <Image source={{ uri: lastMatch.user.photos[0] }} style={styles.matchPhoto} />
-          ) : null}
-          <Text style={styles.matchName}>You and {lastMatch.user?.displayName} liked each other</Text>
-          <Pressable
-            style={styles.matchBtn}
-            onPress={() => {
-              clearMatch();
-              navigation.navigate('Chat', {
-                conversationId: lastMatch.conversationId,
-                title: lastMatch.user?.displayName,
-              });
-            }}
-          >
-            <Text style={styles.matchBtnText}>Send a message</Text>
-          </Pressable>
-          <Pressable onPress={clearMatch}>
-            <Text style={styles.matchDismiss}>Keep swiping</Text>
-          </Pressable>
-        </View>
+          }
+        />
       )}
     </View>
   );
 }
 
-const stylesFactory = (({ colors, spacing, radius }) =>
+const stylesFactory = (({ colors, radius }) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.bg, padding: spacing(4) },
-    title: { color: colors.text, fontSize: 24, fontWeight: '800', marginBottom: spacing(3) },
-    deck: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    empty: { alignItems: 'center', padding: spacing(6) },
-    emptyTitle: { color: colors.text, fontSize: 18, fontWeight: '700' },
-    emptyBody: { color: colors.textDim, fontSize: 14, marginTop: spacing(2), textAlign: 'center', lineHeight: 20 },
-    reload: { marginTop: spacing(5), backgroundColor: colors.accent, borderRadius: radius.md, paddingHorizontal: spacing(6), paddingVertical: spacing(3) },
-    reloadText: { color: '#04101f', fontWeight: '700' },
-    actions: { flexDirection: 'row', justifyContent: 'center', gap: spacing(10), paddingVertical: spacing(5) },
-    circle: { width: 66, height: 66, borderRadius: 33, alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
-    pass: { borderColor: colors.danger, backgroundColor: colors.surface },
-    like: { borderColor: colors.success, backgroundColor: colors.surface },
-    passGlyph: { color: colors.danger, fontSize: 28, fontWeight: '700' },
-    likeGlyph: { color: colors.success, fontSize: 30 },
-    matchOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000000ee', alignItems: 'center', justifyContent: 'center', padding: spacing(8) },
-    matchTitle: { color: colors.accent, fontSize: 34, fontWeight: '900', marginBottom: spacing(5) },
-    matchPhoto: { width: 140, height: 140, borderRadius: 70, marginBottom: spacing(4) },
-    matchName: { color: colors.text, fontSize: 16, textAlign: 'center', marginBottom: spacing(6) },
-    matchBtn: { backgroundColor: colors.accent, borderRadius: radius.md, paddingHorizontal: spacing(8), paddingVertical: spacing(3.5) },
-    matchBtnText: { color: '#04101f', fontWeight: '700', fontSize: 16 },
-    matchDismiss: { color: colors.textDim, marginTop: spacing(4), fontSize: 14 },
+    root: { flex: 1, backgroundColor: colors.bg },
+    centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    card: {
+      width: CARD_W, aspectRatio: 0.72, borderRadius: 16, overflow: 'hidden',
+      backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
+    },
+    photo: { width: '100%', height: '100%' },
+    noPhoto: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceAlt },
+    noPhotoText: { color: colors.textDim, fontSize: 52, fontWeight: '800' },
+    label: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 10, backgroundColor: '#000000aa' },
+    onlineDot: {
+      position: 'absolute', top: 10, right: 10, width: 14, height: 14, borderRadius: 7,
+      backgroundColor: '#3BD16F', borderWidth: 2, borderColor: '#fff',
+    },
+    name: { color: '#fff', fontSize: 15, fontWeight: '700' },
+    meta: { color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 1 },
+    empty: { color: colors.textDim, textAlign: 'center', marginTop: 80, paddingHorizontal: 40, lineHeight: 22 },
   })
 );

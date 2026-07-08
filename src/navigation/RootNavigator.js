@@ -9,7 +9,6 @@ import AuthScreen from '../screens/AuthScreen.js';
 import OnboardingScreen from '../screens/OnboardingScreen.js';
 import DiscoveryScreen from '../screens/DiscoveryScreen.js';
 import FeedScreen from '../screens/FeedScreen.js';
-import MatchesScreen from '../screens/MatchesScreen.js';
 import ConversationsScreen from '../screens/ConversationsScreen.js';
 import ChatScreen from '../screens/ChatScreen.js';
 import SettingsScreen from '../screens/SettingsScreen.js';
@@ -21,14 +20,13 @@ import LegalScreen from '../screens/LegalScreen.js';
 import PinSetupScreen from '../screens/auth/PinSetupScreen.js';
 import PinConfirmScreen from '../screens/auth/PinConfirmScreen.js';
 import MyProfileScreen from '../screens/MyProfileScreen.js';
+import ChangeEmailScreen from '../screens/ChangeEmailScreen.js';
 import { registerForPush } from '../lib/push.js';
 import { theme } from '../theme/theme.js';
-import ChangeEmailScreen from '../screens/ChangeEmailScreen.js';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Blue app header applied to all stack screens that use the default header.
 const screenOptions = {
   headerStyle: { backgroundColor: theme.colors.accent },
   headerTintColor: '#fff',
@@ -42,6 +40,7 @@ function tabIcon(glyph) {
 }
 
 function Tabs() {
+  const unread = useChatStore((s) => s.unread);
   return (
     <Tab.Navigator
       screenOptions={{
@@ -51,10 +50,14 @@ function Tabs() {
         tabBarInactiveTintColor: theme.colors.textDim,
       }}
     >
-      {/* Settings and Messages moved out of the tab bar into header icons. */}
-      <Tab.Screen name="Discover" component={DiscoveryScreen} options={{ headerShown: false, tabBarIcon: tabIcon('🔥') }} />
+      {/* Matchmaking removed — open local chat app. */}
+      <Tab.Screen name="Discover" component={DiscoveryScreen} options={{ headerShown: false, tabBarIcon: tabIcon('◎') }} />
       <Tab.Screen name="Feed" component={FeedScreen} options={{ headerShown: false, tabBarIcon: tabIcon('⌂') }} />
-      <Tab.Screen name="Matches" component={MatchesScreen} options={{ headerShown: false, tabBarIcon: tabIcon('♥') }} />
+      <Tab.Screen
+        name="Messages"
+        component={ConversationsScreen}
+        options={{ headerShown: false, tabBarIcon: tabIcon('✉'), tabBarBadge: unread > 0 ? (unread > 99 ? '99+' : unread) : undefined }}
+      />
       <Tab.Screen
         name="MyProfile"
         component={MyProfileScreen}
@@ -69,7 +72,6 @@ export default function RootNavigator() {
   const initSocket = useChatStore((s) => s.initSocket);
 
   const loggedIn = Boolean(token);
-  // Stay in onboarding when logged in but the profile is missing or incomplete.
   const needsOnboarding = loggedIn && (!user || !user.profileComplete);
 
   useEffect(() => {
@@ -88,33 +90,30 @@ export default function RootNavigator() {
           <Stack.Screen name="PinSetup" component={PinSetupScreen} options={{ headerShown: false }} />
           <Stack.Screen name="PinConfirm" component={PinConfirmScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Terms" component={LegalScreen} initialParams={{ doc: 'terms' }} options={{ title: 'Terms of Service' }} />
-          <Stack.Screen name="Privacy" component={LegalScreen} initialParams={{ doc: 'privacy' }} options={{ title: 'Privacy Policy' }} />
+          <Stack.Screen name="Terms" component={LegalScreen} initialParams={{ doc: 'terms' }} options={{ headerShown: false }} />
+          <Stack.Screen name="Privacy" component={LegalScreen} initialParams={{ doc: 'privacy' }} options={{ headerShown: false }} />
         </>
       ) : needsOnboarding ? (
         <>
           <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
-          {/* PIN screens reachable during onboarding regardless of login state */}
           <Stack.Screen name="PinSetup" component={PinSetupScreen} options={{ headerShown: false }} />
           <Stack.Screen name="PinConfirm" component={PinConfirmScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Terms" component={LegalScreen} initialParams={{ doc: 'terms' }} options={{ title: 'Terms of Service' }} />
-          <Stack.Screen name="Privacy" component={LegalScreen} initialParams={{ doc: 'privacy' }} options={{ title: 'Privacy Policy' }} />
+          <Stack.Screen name="Terms" component={LegalScreen} initialParams={{ doc: 'terms' }} options={{ headerShown: false }} />
+          <Stack.Screen name="Privacy" component={LegalScreen} initialParams={{ doc: 'privacy' }} options={{ headerShown: false }} />
         </>
       ) : (
         <>
           <Stack.Screen name="Tabs" component={Tabs} options={{ headerShown: false }} />
-          {/* Settings + Messages: pushed on top from the header icons */}
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Messages" component={ConversationsScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Chat" component={ChatScreen} options={({ route }) => ({ title: route.params?.title || 'Chat' })} />
-          {/* Feed-side stack screens */}
+          <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Compose" component={ComposeScreen} options={{ title: 'New Post', presentation: 'modal' }} />
           <Stack.Screen name="PostDetail" component={PostDetailScreen} options={{ title: 'Post' }} />
-          <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+          <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Saved" component={SavedScreen} options={{ title: 'Saved' }} />
-          <Stack.Screen name="Terms" component={LegalScreen} initialParams={{ doc: 'terms' }} options={{ title: 'Terms of Service' }} />
-          <Stack.Screen name="Privacy" component={LegalScreen} initialParams={{ doc: 'privacy' }} options={{ title: 'Privacy Policy' }} />
-          <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Terms" component={LegalScreen} initialParams={{ doc: 'terms' }} options={{ headerShown: false }} />
+          <Stack.Screen name="Privacy" component={LegalScreen} initialParams={{ doc: 'privacy' }} options={{ headerShown: false }} />
         </>
       )}
     </Stack.Navigator>

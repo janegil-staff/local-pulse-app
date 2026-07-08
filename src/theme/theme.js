@@ -5,9 +5,9 @@
 // styles are rebuilt against the new colors.
 
 export const darkColors = {
-  accent: '#D6336C',
-  accentDark: '#A62754',
-  accentDim: '#68203C',
+  accent: '#3B82C4',
+  accentDark: '#2E6598',
+  accentDim: '#214364',
   bg: '#0f1216',
   surface: '#181d24',
   surfaceAlt: '#212832',
@@ -20,9 +20,9 @@ export const darkColors = {
 };
 
 export const lightColors = {
-  accent: '#C92F65',
-  accentDark: '#9A244D',
-  accentDim: '#EFB1C7',
+  accent: '#387BBA',
+  accentDark: '#2A5D8D',
+  accentDim: '#B4CFE8',
   bg: '#f6f8fa',
   surface: '#ffffff',
   surfaceAlt: '#eef1f5',

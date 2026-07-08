@@ -14,6 +14,8 @@ import { theme } from '../theme/theme.js';
 
 const C = theme.colors;
 
+const MAX_PHOTOS = 6;
+
 const LANGUAGES = [
   { code: 'no', flag: '🇳🇴', label: 'Norsk' },
   { code: 'en', flag: '🇬🇧', label: 'English' },
@@ -147,6 +149,8 @@ export default function OnboardingScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
 
   const [step, setStep] = useState(1);
+  const [accountCreated, setAccountCreated] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
@@ -198,27 +202,62 @@ export default function OnboardingScreen({ navigation, route }) {
     });
   };
 
-  const advanceToStep2 = () => {
+  // Step 1 → create the account NOW (username + email + PIN). After this the
+  // user has a real, loginable account and can resume if they bail.
+  const advanceToStep2 = async () => {
     setError('');
     const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRx.test(email.trim())) { setError(t.emailInvalid); return; }
     if (username.trim().length < 3) { setError(t.usernameShort); return; }
     if (!pinSet) { setError(t.pinRequired); return; }
     if (!tncAccepted || !infoAccepted) { setError(t.acceptTermsRequired); return; }
-    setStep(2);
+
+    // If we already created the account (e.g. came back to step 1), don't re-create.
+    if (accountCreated) { setStep(2); return; }
+
+    setLoading(true);
+    try {
+      await register(
+        {
+          email: email.trim().toLowerCase(),
+          password: pin,
+          pin,
+          username: username.trim(),
+          displayName: username.trim(),
+        },
+        { deferUser: true }, // don't publish the user yet — profile isn't complete
+      );
+      if (savePin) { try { await savePin(pin); } catch {} }
+      // Persist the chosen UI language to the account.
+      try { await api.updateMyProfile({ language: lang }); } catch {}
+      setAccountCreated(true);
+      setStep(2);
+    } catch (e) {
+      setError(e?.message ?? t.couldNotFinish);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Step 2 button: validate only — no account yet. Nothing hits the server
-  // until the very end (step 3), so photos are held locally until then.
-  const submitStep2 = () => {
+  // Step 2 → save dob + gender to the server, then advance.
+  const submitStep2 = async () => {
     setError('');
     if (!dobStr) { setError(t.dobRequired); return; }
-    setStep(3);
+    setLoading(true);
+    try {
+      await api.updateMyProfile({ dob: dobStr, gender });
+      setStep(3);
+    } catch (e) {
+      setError(e?.message ?? t.couldNotFinish);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Add a photo: pick and hold the LOCAL uri. No upload yet — there's no
-  // account/token until Finish. Photos upload after the account is created.
+  // Add a photo: pick, upload immediately (account exists from step 1), and
+  // save the returned URL to the profile so it persists per-step.
   const addPhoto = async () => {
+    if (photos.length >= MAX_PHOTOS) { Alert.alert('', t.maxPhotos); return; }
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) { Alert.alert('', t.photosOptional); return; }
@@ -229,55 +268,45 @@ export default function OnboardingScreen({ navigation, route }) {
         quality: 0.8,
       });
       if (result.canceled) return;
-      setPhotos((prev) => [...prev, result.assets[0].uri]); // local uri
+      setUploadingPhoto?.(true);
+      const res = await api.uploadImage(result.assets[0].uri);
+      const url = typeof res === 'string' ? res : res?.url;
+      if (!url) return;
+      const next = [...photos, url];
+      setPhotos(next);
+      await api.updateMyProfile({ photos: next });
     } catch (e) {
       setError(e?.message ?? t.couldNotFinish);
+    } finally {
+      setUploadingPhoto?.(false);
     }
   };
 
-  const removePhoto = (index) => setPhotos((prev) => prev.filter((_, i) => i !== index));
-
-  // Create the account with everything collected. Photos (local uris) are
-  // passed so they can be uploaded once we have a token.
-  const createAccount = async () => {
-    await register(
-      {
-        email: email.trim().toLowerCase(),
-        password: pin,
-        pin,
-        username: username.trim(),
-        displayName: username.trim(),
-        dob: dobStr,
-        gender,
-      },
-      { deferUser: true },
-    );
-    if (savePin) { try { await savePin(pin); } catch {} }
+  const removePhoto = async (index) => {
+    const next = photos.filter((_, i) => i !== index);
+    setPhotos(next);
+    try { await api.updateMyProfile({ photos: next }); } catch {}
   };
 
-  // Finish: create account → upload the held local photos → save bio + photo
-  // urls → publish the user. Everything persists here, at the true end of flow.
+  // Make a photo the profile picture by moving it to the front (photos[0]).
+  const setPrimary = async (index) => {
+    if (index === 0) return;
+    const next = [...photos];
+    const [picked] = next.splice(index, 1);
+    next.unshift(picked);
+    setPhotos(next);
+    try { await api.updateMyProfile({ photos: next }); } catch {}
+  };
+
+  // Finish: account and photos already saved per-step. Just save bio (if any)
+  // and publish the finished user so the navigator moves on.
   const finishStep3 = async () => {
     setError('');
     setLoading(true);
     try {
-      await createAccount(); // token now set on the client
-
-      const uploadedUrls = [];
-      for (const uri of photos) {
-        const res = await api.uploadImage(uri);
-        // uploadImage may return { url } or a bare string — normalize to string.
-        const url = typeof res === 'string' ? res : res?.url;
-        if (url) uploadedUrls.push(url);
+      if (bio.trim()) {
+        await api.updateMyProfile({ bio: bio.trim() });
       }
-
-      const payload = {};
-      if (uploadedUrls.length) payload.photos = uploadedUrls;
-      if (bio.trim()) payload.bio = bio.trim();
-      if (Object.keys(payload).length) {
-        await api.updateMyProfile(payload); // ⚠️ match your client
-      }
-
       await hydrate(); // publishes the finished user → navigator moves on
     } catch (e) {
       setError(e?.message ?? t.couldNotFinish);
@@ -286,12 +315,11 @@ export default function OnboardingScreen({ navigation, route }) {
     }
   };
 
-  // Skip: create the account with no photos/bio, then publish the user.
+  // Skip: nothing more to save — account exists, just publish the user.
   const skipStep3 = async () => {
     setError('');
     setLoading(true);
     try {
-      await createAccount();
       await hydrate();
     } catch (e) {
       setError(e?.message ?? t.couldNotFinish);
@@ -388,8 +416,8 @@ export default function OnboardingScreen({ navigation, route }) {
 
               <View style={{ height: 28 }} />
 
-              <TouchableOpacity style={[s.btn, !canStep1 && s.btnDisabled]} onPress={canStep1 ? advanceToStep2 : undefined} activeOpacity={canStep1 ? 0.85 : 1}>
-                <Text style={s.btnText}>{t.continue.toUpperCase()} →</Text>
+              <TouchableOpacity style={[s.btn, (!canStep1 || loading) && s.btnDisabled]} onPress={canStep1 && !loading ? advanceToStep2 : undefined} activeOpacity={canStep1 && !loading ? 0.85 : 1}>
+                {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>{t.continue.toUpperCase()} →</Text>}
               </TouchableOpacity>
 
               <View style={{ height: 24 }} />
@@ -451,18 +479,31 @@ export default function OnboardingScreen({ navigation, route }) {
           {step === 3 && (
             <>
               <Text style={s.sectionLabel}>{t.photosOptional}</Text>
+              {photos.length > 0 && <Text style={s.photoHint}>{t.tapToSetProfile}</Text>}
               <View style={s.photoGrid}>
                 {photos.map((uri, i) => (
-                  <View key={`${uri}-${i}`} style={s.photoCell}>
+                  <TouchableOpacity
+                    key={`${uri}-${i}`}
+                    style={[s.photoCell, i === 0 && s.photoCellPrimary]}
+                    onPress={() => setPrimary(i)}
+                    activeOpacity={0.8}
+                  >
                     <Image source={{ uri }} style={s.photoImg} />
+                    {i === 0 && (
+                      <View style={s.photoBadge}>
+                        <Text style={s.photoBadgeText}>{t.profilePhoto}</Text>
+                      </View>
+                    )}
                     <TouchableOpacity style={s.photoRemove} onPress={() => removePhoto(i)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                       <Text style={s.photoRemoveText}>×</Text>
                     </TouchableOpacity>
-                  </View>
+                  </TouchableOpacity>
                 ))}
-                <TouchableOpacity style={s.photoAdd} onPress={addPhoto} activeOpacity={0.8}>
-                  <Text style={s.photoAddPlus}>＋</Text>
-                </TouchableOpacity>
+                {photos.length < MAX_PHOTOS && (
+                  <TouchableOpacity style={s.photoAdd} onPress={addPhoto} activeOpacity={0.8}>
+                    <Text style={s.photoAddPlus}>＋</Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               <Text style={[s.sectionLabel, { marginTop: 24 }]}>{t.bioOptional}</Text>
@@ -587,7 +628,11 @@ const s = StyleSheet.create({
   metricsRow: { flexDirection: 'row', gap: 10, marginBottom: 28 },
   metricLabel: { color: C.textDim, fontSize: 14, fontWeight: '600', marginBottom: 6 },
   photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  photoHint: { color: C.textDim, fontSize: 13, marginBottom: 10 },
   photoCell: { width: 100, height: 100, borderRadius: 12, position: 'relative' },
+  photoCellPrimary: { borderWidth: 2, borderColor: C.accent },
+  photoBadge: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.accent, paddingVertical: 3, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, alignItems: 'center' },
+  photoBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
   photoImg: { width: 100, height: 100, borderRadius: 12, backgroundColor: C.surfaceAlt },
   photoRemove: { position: 'absolute', top: -6, right: -6, width: 24, height: 24, borderRadius: 12, backgroundColor: C.danger, alignItems: 'center', justifyContent: 'center' },
   photoRemoveText: { color: '#fff', fontSize: 16, fontWeight: '800', lineHeight: 18 },

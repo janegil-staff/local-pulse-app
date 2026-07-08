@@ -1,8 +1,11 @@
 // localpulse/app/src/api/client.js
 // On a device, localhost is the phone. Set EXPO_PUBLIC_API_URL to your Mac's
 // LAN IP in dev (e.g. http://192.168.1.71:4000), the Android emulator's
-// http://10.0.2.2:4000, or your deployed URL. Falls back to localhost.
-const HOST = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000';
+;// http://10.0.2.2:4000, or your deployed URL. Falls back to localhost.
+
+import { Platform } from 'react-native';
+const HOST = Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://localhost:4000';
+
 export const API_URL = `${HOST}/api`;
 export const SOCKET_URL = HOST;
 
@@ -101,7 +104,10 @@ export const api = {
   blockUser: (userId) => request(`/users/${userId}/block`, { method: 'POST' }),
   unblockUser: (userId) => request(`/users/${userId}/block`, { method: 'DELETE' }),
   getBlocked: () => request('/blocks'),
-
+  getRequests: () => request('/chat/requests'),
+  acceptConversation: (id) => request(`/chat/conversations/${id}/accept`, { method: 'POST' }),
+  getChatUnreadCount: () => request('/chat/unread-count'),
+  markConversationRead: (id) => request(`/chat/conversations/${id}/read`, { method: 'POST' }),
   uploadImage: (uri) => {
     const name = (uri.split('/').pop() || 'photo.jpg').split('?')[0];
     const ext = (name.split('.').pop() || 'jpg').toLowerCase();

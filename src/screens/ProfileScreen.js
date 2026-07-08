@@ -1,17 +1,18 @@
 // localpulse/app/src/screens/ProfileScreen.js
-// Public profile — view another user, reached via navigation.navigate('Profile', { username }).
-// Fetches by username, shows photos/bio/age/neighborhood, with Message + Report/Block.
-import React, { useEffect, useState, useCallback } from 'react';
+// Public profile — view another user. Hero photo gallery, info sections,
+// online status, and Message / Report / Block actions.
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View, Text, ScrollView, Image, StyleSheet, Pressable, Alert,
   ActivityIndicator, Dimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../api/client.js';
 import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 
 const { width } = Dimensions.get('window');
-
+const HERO_H = Math.round(width * 1.1);
 const REPORT_REASONS = ['Inappropriate photos', 'Harassment', 'Spam or scam', 'Fake profile', 'Other'];
 
 export default function ProfileScreen({ route, navigation }) {
@@ -21,11 +22,12 @@ export default function ProfileScreen({ route, navigation }) {
   const [profile, setProfile] = useState(route?.params?.user ?? null);
   const [loading, setLoading] = useState(!route?.params?.user);
   const [error, setError] = useState('');
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const scrollRef = useRef(null);
 
   const load = useCallback(async () => {
     if (!username) { setError('No user specified'); setLoading(false); return; }
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
       const data = await api.getProfile(username);
       setProfile(data.profile ?? data.user ?? data);
@@ -36,7 +38,7 @@ export default function ProfileScreen({ route, navigation }) {
     }
   }, [username]);
 
-  useEffect(() => { if (!profile) load(); }, [load, profile]);
+  useEffect(() => { if (!profile || !profile.photos) load(); }, [load, profile]);
 
   const userId = profile?.id ?? profile?._id;
 
@@ -44,7 +46,7 @@ export default function ProfileScreen({ route, navigation }) {
     try {
       const convo = await api.openConversation(userId);
       navigation.navigate('Chat', {
-        conversationId: convo.id ?? convo.conversationId ?? convo._id,
+        conversationId: convo.conversationId ?? convo.id ?? convo._id,
         title: profile?.displayName || profile?.username,
       });
     } catch (e) {
@@ -53,45 +55,29 @@ export default function ProfileScreen({ route, navigation }) {
   }
 
   function confirmBlock() {
-    Alert.alert(
-      'Block user',
-      `Block ${profile?.displayName || profile?.username}? They won't be able to see you or message you.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Block',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.blockUser(userId);
-              Alert.alert('Blocked', 'You will no longer see this person.', [
-                { text: 'OK', onPress: () => navigation.goBack() },
-              ]);
-            } catch (e) {
-              Alert.alert('Error', e?.message ?? 'Could not block.');
-            }
-          },
+    Alert.alert('Block user', `Block ${profile?.displayName || profile?.username}? They won't be able to see you or message you.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Block', style: 'destructive',
+        onPress: async () => {
+          try {
+            await api.blockUser(userId);
+            Alert.alert('Blocked', 'You will no longer see this person.', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+          } catch (e) { Alert.alert('Error', e?.message ?? 'Could not block.'); }
         },
-      ]
-    );
+      },
+    ]);
   }
 
   function report() {
     const buttons = REPORT_REASONS.map((reason) => ({
       text: reason,
       onPress: async () => {
-        try {
-          await api.reportUser(userId, reason);
-          Alert.alert('Reported', 'Thanks — our team will review this profile.');
-        } catch (e) {
-          Alert.alert('Error', e?.message ?? 'Could not send report.');
-        }
+        try { await api.reportUser(userId, reason); Alert.alert('Reported', 'Thanks — our team will review this profile.'); }
+        catch (e) { Alert.alert('Error', e?.message ?? 'Could not send report.'); }
       },
     }));
-    Alert.alert('Report user', 'Why are you reporting this profile?', [
-      ...buttons,
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    Alert.alert('Report user', 'Why are you reporting this profile?', [...buttons, { text: 'Cancel', style: 'cancel' }]);
   }
 
   function moreActions() {
@@ -110,7 +96,6 @@ export default function ProfileScreen({ route, navigation }) {
       </View>
     );
   }
-
   if (error || !profile) {
     return (
       <View style={styles.screen}>
@@ -123,48 +108,89 @@ export default function ProfileScreen({ route, navigation }) {
   const photos = profile.photos || [];
   const name = profile.displayName || profile.username || 'Someone';
 
+  function onPhotoScroll(e) {
+    const i = Math.round(e.nativeEvent.contentOffset.x / width);
+    if (i !== photoIndex) setPhotoIndex(i);
+  }
+
   return (
     <View style={styles.screen}>
       <ScreenHeader title={profile.username || 'Profile'} onBack={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={{ paddingBottom: theme.spacing(10) }}>
-        {photos.length > 0 ? (
-          <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
-            {photos.map((uri, i) => (
-              <Image key={`${uri}-${i}`} source={{ uri }} style={styles.photo} />
-            ))}
-          </ScrollView>
-        ) : (
-          <View style={[styles.photo, styles.noPhoto]}>
-            <Text style={styles.noPhotoText}>{name[0]?.toUpperCase()}</Text>
-          </View>
-        )}
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        {/* Hero gallery */}
+        <View style={styles.hero}>
+          {photos.length > 0 ? (
+            <ScrollView
+              ref={scrollRef}
+              horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+              onScroll={onPhotoScroll} scrollEventThrottle={16}
+            >
+              {photos.map((uri, i) => (
+                <Image key={`${uri}-${i}`} source={{ uri }} style={styles.heroImg} />
+              ))}
+            </ScrollView>
+          ) : (
+            <View style={[styles.heroImg, styles.heroEmpty]}>
+              <Text style={styles.heroEmptyText}>{name[0]?.toUpperCase()}</Text>
+            </View>
+          )}
 
-        <View style={styles.body}>
-          <Text style={styles.name}>
-            {name}{profile.age ? `, ${profile.age}` : ''}
-          </Text>
-          {profile.neighborhood ? (
-            <Text style={styles.neighborhood}>{profile.neighborhood}</Text>
-          ) : null}
+          <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.heroScrim} pointerEvents="none" />
 
-          {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
-
-          {Array.isArray(profile.interests) && profile.interests.length > 0 && (
-            <View style={styles.interests}>
-              {profile.interests.map((tag) => (
-                <View key={tag} style={styles.chip}><Text style={styles.chipText}>{tag}</Text></View>
+          {/* photo dots */}
+          {photos.length > 1 && (
+            <View style={styles.dots}>
+              {photos.map((_, i) => (
+                <View key={i} style={[styles.dot, i === photoIndex && styles.dotActive]} />
               ))}
             </View>
           )}
 
-          <View style={styles.actions}>
-            <Pressable style={styles.messageBtn} onPress={message}>
-              <Text style={styles.messageText}>Message</Text>
-            </Pressable>
-            <Pressable style={styles.moreBtn} onPress={moreActions}>
-              <Text style={styles.moreText}>•••</Text>
-            </Pressable>
+          {/* name + online */}
+          <View style={styles.heroContent}>
+            <View style={styles.nameRow}>
+              <Text style={styles.heroName}>
+                {name}{profile.age ? <Text style={styles.heroAge}>  {profile.age}</Text> : null}
+              </Text>
+              {profile.online ? (
+                <View style={styles.onlinePill}>
+                  <View style={styles.onlineDot} />
+                  <Text style={styles.onlineText}>Online</Text>
+                </View>
+              ) : null}
+            </View>
+            {profile.neighborhood ? <Text style={styles.heroMeta}>📍 {profile.neighborhood}</Text> : null}
           </View>
+        </View>
+
+        {/* About */}
+        {profile.bio ? (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>About</Text>
+            <Text style={styles.bio}>{profile.bio}</Text>
+          </View>
+        ) : null}
+
+        {/* Interests */}
+        {Array.isArray(profile.interests) && profile.interests.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>Interests</Text>
+            <View style={styles.chips}>
+              {profile.interests.map((tag) => (
+                <View key={tag} style={styles.chip}><Text style={styles.chipText}>{tag}</Text></View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Actions */}
+        <View style={styles.actions}>
+          <Pressable style={styles.messageBtn} onPress={message}>
+            <Text style={styles.messageText}>Message</Text>
+          </Pressable>
+          <Pressable style={styles.moreBtn} onPress={moreActions}>
+            <Text style={styles.moreText}>•••</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </View>
@@ -177,23 +203,37 @@ const stylesFactory = (({ colors, spacing, radius }) =>
     centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing(8) },
     errorText: { color: colors.textDim, fontSize: 15, textAlign: 'center' },
 
-    photo: { width, height: width, backgroundColor: colors.surface },
-    noPhoto: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceAlt },
-    noPhotoText: { color: colors.textDim, fontSize: 72, fontWeight: '800' },
+    hero: { width, height: HERO_H, position: 'relative', backgroundColor: colors.surface },
+    heroImg: { width, height: HERO_H },
+    heroEmpty: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceAlt },
+    heroEmptyText: { color: colors.textDim, fontSize: 88, fontWeight: '800' },
+    heroScrim: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '45%' },
 
-    body: { padding: spacing(5) },
-    name: { color: colors.text, fontSize: 26, fontWeight: '800' },
-    neighborhood: { color: colors.textDim, fontSize: 15, marginTop: spacing(1) },
-    bio: { color: colors.text, fontSize: 16, lineHeight: 23, marginTop: spacing(4) },
+    dots: { position: 'absolute', top: 14, alignSelf: 'center', flexDirection: 'row', gap: 6 },
+    dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.5)' },
+    dotActive: { backgroundColor: '#fff', width: 18 },
 
-    interests: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing(2), marginTop: spacing(4) },
-    chip: { backgroundColor: colors.surfaceAlt, borderRadius: radius.lg, paddingHorizontal: spacing(3), paddingVertical: spacing(1.5), borderWidth: 1, borderColor: colors.border },
-    chipText: { color: colors.textDim, fontSize: 13 },
+    heroContent: { position: 'absolute', left: 20, right: 20, bottom: 18 },
+    nameRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
+    heroName: { color: '#fff', fontSize: 30, fontWeight: '800', textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 6 },
+    heroAge: { color: '#fff', fontSize: 26, fontWeight: '400' },
+    heroMeta: { color: 'rgba(255,255,255,0.9)', fontSize: 15, marginTop: 4, textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 6 },
+    onlinePill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.45)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+    onlineDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#3BD16F' },
+    onlineText: { color: '#fff', fontSize: 12, fontWeight: '600' },
 
-    actions: { flexDirection: 'row', alignItems: 'center', gap: spacing(3), marginTop: spacing(7) },
-    messageBtn: { flex: 1, height: 52, borderRadius: radius.md, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+    card: { backgroundColor: colors.surface, marginHorizontal: 16, marginTop: 16, borderRadius: 18, padding: 18, borderWidth: 1, borderColor: colors.border },
+    cardLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 },
+    bio: { color: colors.text, fontSize: 16, lineHeight: 23 },
+
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    chip: { backgroundColor: colors.surfaceAlt, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: colors.border },
+    chipText: { color: colors.text, fontSize: 14 },
+
+    actions: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginTop: 24 },
+    messageBtn: { flex: 1, height: 54, borderRadius: radius.md, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
     messageText: { color: '#fff', fontSize: 16, fontWeight: '800' },
-    moreBtn: { width: 52, height: 52, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+    moreBtn: { width: 54, height: 54, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
     moreText: { color: colors.textDim, fontSize: 20, fontWeight: '700' },
   })
 );

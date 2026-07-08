@@ -8,6 +8,7 @@ export const useChatStore = create((set, get) => ({
   messages: [],        // for the active conversation
   activeId: null,
   typingUserId: null,
+  unread: 0,           // total unread across accepted conversations (tab badge)
   bound: false,
 
   // Wire socket listeners once, after login.
@@ -16,18 +17,25 @@ export const useChatStore = create((set, get) => ({
     const s = connectChatSocket();
 
     s.on('chat:message', (msg) => {
-      // Append if it's the active conversation; always bump the list preview.
-      set((st) => ({
-        messages:
-          String(msg.conversationId) === String(st.activeId)
-            ? [...st.messages, msg]
-            : st.messages,
+      const st = get();
+      const isActive = String(msg.conversationId) === String(st.activeId);
+      set({
+        messages: isActive ? [...st.messages, msg] : st.messages,
         conversations: st.conversations.map((c) =>
           String(c.id) === String(msg.conversationId)
             ? { ...c, lastMessage: msg.text, lastMessageAt: msg.createdAt }
             : c
         ),
-      }));
+      });
+    });
+
+    // Incoming notification for a conversation you're NOT currently viewing →
+    // bump the unread total (for the Messages tab badge).
+    s.on('chat:notify', ({ conversationId, pending }) => {
+      const st = get();
+      if (pending) return; // requests don't count toward the messages badge
+      if (String(conversationId) === String(st.activeId)) return; // you're reading it
+      set({ unread: st.unread + 1 });
     });
 
     s.on('chat:typing', ({ userId }) => {
@@ -36,6 +44,15 @@ export const useChatStore = create((set, get) => ({
     });
 
     set({ bound: true });
+    // Prime the unread total from the server.
+    get().refreshUnread();
+  },
+
+  refreshUnread: async () => {
+    try {
+      const { count } = await api.getChatUnreadCount();
+      set({ unread: count || 0 });
+    } catch { /* ignore */ }
   },
 
   loadConversations: async () => {
@@ -54,6 +71,11 @@ export const useChatStore = create((set, get) => ({
     s?.emit('chat:join', { conversationId });
     const { messages } = await api.getMessages(conversationId);
     set({ messages });
+    // Mark this conversation read, then refresh the unread total.
+    try {
+      await api.markConversationRead(conversationId);
+      get().refreshUnread();
+    } catch { /* ignore */ }
   },
 
   leaveConversation: () => {

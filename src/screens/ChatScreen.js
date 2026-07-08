@@ -5,11 +5,12 @@ import {
 } from 'react-native';
 import { useChatStore } from '../store/chatStore.js';
 import { useAuth } from '../context/AuthContext.js';
+import ScreenHeader from '../components/ScreenHeader.js';
 import { theme, makeStyles, useStyles } from '../theme/theme.js';
 
-export default function ChatScreen({ route }) {
+export default function ChatScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
-  const { conversationId } = route.params;
+  const { conversationId, title } = route.params;
   const { user: me } = useAuth();
   const messages = useChatStore((s) => s.messages);
   const typingUserId = useChatStore((s) => s.typingUserId);
@@ -36,49 +37,53 @@ export default function ChatScreen({ route }) {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={90}
-    >
-      <FlatList
-        ref={listRef}
-        data={messages}
-        keyExtractor={(m) => String(m.id)}
-        contentContainerStyle={{ padding: theme.spacing(3) }}
-        renderItem={({ item }) => {
-          const mine = String(item.sender?.id) === String(me?.id);
-          return (
-            <View style={[styles.bubbleRow, mine ? styles.rowMine : styles.rowTheirs]}>
-              <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
-                <Text style={[styles.msgText, mine && styles.msgTextMine]}>{item.text}</Text>
+    <View style={styles.root}>
+      <ScreenHeader title={title || 'Chat'} onBack={() => navigation.goBack()} />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={90}
+      >
+        <FlatList
+          ref={listRef}
+          data={messages}
+          keyExtractor={(m) => String(m.id)}
+          contentContainerStyle={{ padding: theme.spacing(3) }}
+          renderItem={({ item }) => {
+            const mine = String(item.sender?.id) === String(me?.id);
+            return (
+              <View style={[styles.bubbleRow, mine ? styles.rowMine : styles.rowTheirs]}>
+                <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
+                  <Text style={[styles.msgText, mine && styles.msgTextMine]}>{item.text}</Text>
+                </View>
               </View>
-            </View>
-          );
-        }}
-      />
-      {typingUserId ? <Text style={styles.typing}>typing…</Text> : null}
-
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          placeholder="Message…"
-          placeholderTextColor={theme.colors.textDim}
-          value={text}
-          onChangeText={(t) => { setText(t); emitTyping(); }}
-          multiline
+            );
+          }}
         />
-        <Pressable style={styles.sendBtn} onPress={submit}>
-          <Text style={styles.sendText}>Send</Text>
-        </Pressable>
-      </View>
-    </KeyboardAvoidingView>
+        {typingUserId ? <Text style={styles.typing}>typing…</Text> : null}
+
+        <View style={styles.inputRow}>
+          <TextInput
+            style={styles.input}
+            placeholder="Message…"
+            placeholderTextColor={theme.colors.textDim}
+            value={text}
+            onChangeText={(t) => { setText(t); emitTyping(); }}
+            multiline
+          />
+          <Pressable style={styles.sendBtn} onPress={submit}>
+            <Text style={styles.sendText}>Send</Text>
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const stylesFactory = (({ colors, spacing, radius }) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.bg },
+    flex: { flex: 1 },
     bubbleRow: { marginBottom: spacing(2), flexDirection: 'row' },
     rowMine: { justifyContent: 'flex-end' },
     rowTheirs: { justifyContent: 'flex-start' },
@@ -86,11 +91,11 @@ const stylesFactory = (({ colors, spacing, radius }) =>
     bubbleMine: { backgroundColor: colors.accent, borderBottomRightRadius: 4 },
     bubbleTheirs: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderBottomLeftRadius: 4 },
     msgText: { color: colors.text, fontSize: 15, lineHeight: 20 },
-    msgTextMine: { color: '#04101f' },
+    msgTextMine: { color: '#fff' },
     typing: { color: colors.textDim, fontSize: 12, paddingHorizontal: spacing(4), paddingBottom: spacing(1), fontStyle: 'italic' },
     inputRow: { flexDirection: 'row', padding: spacing(3), gap: spacing(2), borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
     input: { flex: 1, backgroundColor: colors.surfaceAlt, color: colors.text, borderRadius: radius.md, paddingHorizontal: spacing(4), paddingVertical: spacing(2.5), fontSize: 15, borderWidth: 1, borderColor: colors.border, maxHeight: 120 },
     sendBtn: { backgroundColor: colors.accent, borderRadius: radius.md, paddingHorizontal: spacing(4), justifyContent: 'center' },
-    sendText: { color: '#04101f', fontWeight: '700' },
+    sendText: { color: '#fff', fontWeight: '700' },
   })
 );

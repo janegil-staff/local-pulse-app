@@ -10,10 +10,22 @@ import { useAuth } from '../context/AuthContext.js';
 import { useThemeMode } from '../theme/ThemeContext.js';
 import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
+import Svg, { Path, Polyline, Line } from 'react-native-svg';
+
+// Standard "log out" icon (door with arrow out), matching the screenshot.
+function LogOutIcon() {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <Polyline points="16 17 21 12 16 7" />
+      <Line x1="21" y1="12" x2="9" y2="12" />
+    </Svg>
+  );
+}
 
 const SHOW = [
-  { key: 'female', label: 'Women' },
-  { key: 'male', label: 'Men' },
+  { key: 'women', label: 'Women' },
+  { key: 'men', label: 'Men' },
   { key: 'everyone', label: 'Everyone' },
 ];
 
@@ -67,6 +79,13 @@ export default function SettingsScreen({ navigation }) {
   const loadProfile = useProfileStore((s) => s.loadProfile);
   const savePreferences = useProfileStore((s) => s.savePreferences);
   const { logout } = useAuth();
+
+  function confirmLogout() {
+    Alert.alert('Log out?', 'You\u2019ll need your email and PIN to sign back in.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Log out', style: 'destructive', onPress: () => logout() },
+    ]);
+  }
   const { pref, setPref } = useThemeMode();
 
   const [show, setShow] = useState('everyone');
@@ -164,6 +183,11 @@ export default function SettingsScreen({ navigation }) {
       <ScreenHeader
         title="Settings"
         onBack={() => navigation.goBack()}
+        right={
+          <Pressable onPress={confirmLogout} hitSlop={12}>
+            <LogOutIcon />
+          </Pressable>
+        }
       />
 
       <ScrollView

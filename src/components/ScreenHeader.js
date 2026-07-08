@@ -21,7 +21,7 @@ import { theme } from '../theme/theme.js';
 const C = theme.colors;
 const hit = { top: 12, bottom: 12, left: 12, right: 12 };
 
-export default function ScreenHeader({ title, navigation, onBack }) {
+export default function ScreenHeader({ title, navigation, onBack, right }) {
   const insets = useSafeAreaInsets();
   const isStack = !!onBack;
 
@@ -40,8 +40,11 @@ export default function ScreenHeader({ title, navigation, onBack }) {
     </TouchableOpacity>
   );
 
-  // RIGHT: messages envelope on tab screens only; empty spacer on stack screens.
-  const right = isStack ? (
+  // RIGHT: a caller-provided action if given; else messages envelope on tab
+  // screens; else an empty spacer on stack screens.
+  const rightSlot = right ? (
+    <View style={s.side}>{right}</View>
+  ) : isStack ? (
     <View style={s.side} />
   ) : (
     <TouchableOpacity style={s.side} onPress={() => go('Messages')} hitSlop={hit}>
@@ -53,7 +56,7 @@ export default function ScreenHeader({ title, navigation, onBack }) {
     <View style={[s.header, { paddingTop: insets.top + 8 }]}>
       {left}
       <Text style={s.title} numberOfLines={1}>{title}</Text>
-      {right}
+      {rightSlot}
     </View>
   );
 }
