@@ -1,20 +1,57 @@
+// localpulse/app/App.js
+import React from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import RootNavigator from './src/navigation/RootNavigator.js';
+import { AuthProvider, useAuth } from './src/context/AuthContext.js';
+import { ThemeProvider, useThemeMode } from './src/theme/ThemeContext.js';
+import { theme } from './src/theme/theme.js';
 
-export default function App() {
+function AppInner() {
+  const { hydrated } = useAuth();
+  const { mode } = useThemeMode();
+
+  const navTheme = {
+    ...(mode === 'light' ? DefaultTheme : DarkTheme),
+    colors: {
+      ...(mode === 'light' ? DefaultTheme.colors : DarkTheme.colors),
+      background: theme.colors.bg,
+      card: theme.colors.bg,
+      text: theme.colors.text,
+      border: theme.colors.border,
+      primary: theme.colors.accent,
+    },
+  };
+
+  if (!hydrated) {
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.colors.bg, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={theme.colors.accent} />
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <NavigationContainer theme={navTheme}>
+          <RootNavigator />
+          <StatusBar style={mode === 'light' ? 'dark' : 'light'} />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <AppInner />
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
