@@ -1,473 +1,199 @@
-// src/screens/MyProfileScreen.js
-//
-// "My Profile" tab — the logged-in user's own profile with inline editing.
-// Fields: photos, bio, username, gender, email. Plus a logout button.
-//
-// Rewritten to match your actual app: static `theme.colors.*` import (no hook),
-// emoji-glyph convention, JS/ESM. Remaining guesses are marked "⚠️ ADJUST":
-//   - API method names (updateMyProfile / uploadImage) — match your api/client.
-//   - user shape (photos/bio/username/email/gender) — match your backend.
-//   - theme.colors keys — I used bg/surface/text/textDim/accent/border from
-//     your RootNavigator. Add any that don't exist.
-
-import React, { useState, useCallback } from 'react';
+// localpulse/app/src/screens/ProfileScreen.js
+// Public profile — view another user, reached via navigation.navigate('Profile', { username }).
+// Fetches by username, shows photos/bio/age/neighborhood, with Message + Report/Block.
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Image,
-  Alert,
-  ActivityIndicator,
-  RefreshControl,
+  View, Text, ScrollView, Image, StyleSheet, Pressable, Alert,
+  ActivityIndicator, Dimensions,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { api } from '../api/client.js';
+import { theme, useStyles } from '../theme/theme.js';
+import ScreenHeader from '../components/ScreenHeader.js';
 
-import { useAuth } from '../context/AuthContext.js';
-import * as api from '../api/client.js'; // ⚠️ ADJUST if your client path/name differs.
-import { theme } from '../theme/theme.js';
+const { width } = Dimensions.get('window');
 
-const GENDERS = ['male', 'female', 'other']; // ⚠️ ADJUST to your gender options.
-const C = theme.colors;
+const REPORT_REASONS = ['Inappropriate photos', 'Harassment', 'Spam or scam', 'Fake profile', 'Other'];
 
-export default function MyProfileScreen() {
-  // ⚠️ ADJUST: refreshUser re-fetches current user after a save; logout clears auth.
-  const { user, refreshUser, logout } = useAuth();
+export default function ProfileScreen({ route, navigation }) {
+  const styles = useStyles(stylesFactory);
+  const username = route?.params?.username;
 
-  const [refreshing, setRefreshing] = useState(false);
-  const [editing, setEditing] = useState(null); // 'username'|'bio'|'email'|'gender'|null
-  const [draft, setDraft] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [profile, setProfile] = useState(route?.params?.user ?? null);
+  const [loading, setLoading] = useState(!route?.params?.user);
+  const [error, setError] = useState('');
 
-  const photos = user?.photos || []; // ⚠️ ADJUST if named differently.
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
+  const load = useCallback(async () => {
+    if (!username) { setError('No user specified'); setLoading(false); return; }
+    setLoading(true);
+    setError('');
     try {
-      await refreshUser?.();
+      const data = await api.getProfile(username);
+      setProfile(data.profile ?? data.user ?? data);
     } catch (e) {
-      // Pull-to-refresh failing shouldn't alert.
+      setError(e?.message ?? 'Could not load profile');
     } finally {
-      setRefreshing(false);
+      setLoading(false);
     }
-  }, [refreshUser]);
+  }, [username]);
 
-  function startEdit(field, currentValue) {
-    setEditing(field);
-    setDraft(currentValue == null ? '' : String(currentValue));
-  }
+  useEffect(() => { if (!profile) load(); }, [load, profile]);
 
-  function cancelEdit() {
-    setEditing(null);
-    setDraft('');
-  }
+  const userId = profile?.id ?? profile?._id;
 
-  async function saveField(field) {
-    const value = field === 'bio' ? draft : draft.trim();
-
-    if (field === 'username' && value.length < 3) {
-      Alert.alert('Username too short', 'Pick a username with at least 3 characters.');
-      return;
-    }
-    if (field === 'email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
-      Alert.alert('Check your email', 'That doesn\u2019t look like a valid email address.');
-      return;
-    }
-
-    setSaving(true);
+  async function message() {
     try {
-      await api.updateMyProfile({ [field]: value }); // ⚠️ ADJUST method/payload.
-      await refreshUser?.();
-      setEditing(null);
-      setDraft('');
+      const convo = await api.openConversation(userId);
+      navigation.navigate('Chat', {
+        conversationId: convo.id ?? convo.conversationId ?? convo._id,
+        title: profile?.displayName || profile?.username,
+      });
     } catch (e) {
-      Alert.alert('Couldn\u2019t save', e?.message || 'Something went wrong. Try again.');
-    } finally {
-      setSaving(false);
+      Alert.alert('Could not open chat', e?.message ?? 'Try again.');
     }
   }
 
-  async function saveGender(value) {
-    setSaving(true);
-    try {
-      await api.updateMyProfile({ gender: value }); // ⚠️ ADJUST method/payload.
-      await refreshUser?.();
-      setEditing(null);
-    } catch (e) {
-      Alert.alert('Couldn\u2019t save', e?.message || 'Something went wrong. Try again.');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function addPhoto() {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Permission needed', 'Allow photo access to add a picture.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-    if (result.canceled) return;
-
-    const asset = result.assets[0];
-    setUploadingPhoto(true);
-    try {
-      const url = await api.uploadImage(asset.uri); // ⚠️ ADJUST method.
-      const nextPhotos = [...photos, url];
-      await api.updateMyProfile({ photos: nextPhotos }); // ⚠️ ADJUST payload.
-      await refreshUser?.();
-    } catch (e) {
-      Alert.alert('Upload failed', e?.message || 'Couldn\u2019t upload that photo. Try again.');
-    } finally {
-      setUploadingPhoto(false);
-    }
-  }
-
-  function removePhoto(index) {
-    Alert.alert('Remove photo?', 'This photo will be removed from your profile.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          const nextPhotos = photos.filter((_, i) => i !== index);
-          setSaving(true);
-          try {
-            await api.updateMyProfile({ photos: nextPhotos }); // ⚠️ ADJUST payload.
-            await refreshUser?.();
-          } catch (e) {
-            Alert.alert('Couldn\u2019t remove', e?.message || 'Try again.');
-          } finally {
-            setSaving(false);
-          }
+  function confirmBlock() {
+    Alert.alert(
+      'Block user',
+      `Block ${profile?.displayName || profile?.username}? They won't be able to see you or message you.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.blockUser(userId);
+              Alert.alert('Blocked', 'You will no longer see this person.', [
+                { text: 'OK', onPress: () => navigation.goBack() },
+              ]);
+            } catch (e) {
+              Alert.alert('Error', e?.message ?? 'Could not block.');
+            }
+          },
         },
+      ]
+    );
+  }
+
+  function report() {
+    const buttons = REPORT_REASONS.map((reason) => ({
+      text: reason,
+      onPress: async () => {
+        try {
+          await api.reportUser(userId, reason);
+          Alert.alert('Reported', 'Thanks — our team will review this profile.');
+        } catch (e) {
+          Alert.alert('Error', e?.message ?? 'Could not send report.');
+        }
       },
-    ]);
-  }
-
-  function confirmLogout() {
-    Alert.alert('Log out?', 'You\u2019ll need your email and PIN to sign back in.', [
+    }));
+    Alert.alert('Report user', 'Why are you reporting this profile?', [
+      ...buttons,
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: () => logout?.() },
     ]);
   }
 
-  if (!user) {
+  function moreActions() {
+    Alert.alert(profile?.displayName || profile?.username || 'User', undefined, [
+      { text: 'Report', onPress: report },
+      { text: 'Block', style: 'destructive', onPress: confirmBlock },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }
+
+  if (loading) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator color={C.accent} />
+      <View style={styles.screen}>
+        <ScreenHeader title="Profile" onBack={() => navigation.goBack()} />
+        <View style={styles.centered}><ActivityIndicator color={theme.colors.accent} /></View>
       </View>
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Profile</Text>
+  if (error || !profile) {
+    return (
+      <View style={styles.screen}>
+        <ScreenHeader title="Profile" onBack={() => navigation.goBack()} />
+        <View style={styles.centered}><Text style={styles.errorText}>{error || 'Profile not found'}</Text></View>
       </View>
+    );
+  }
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />
-        }
-      >
-        <Text style={styles.sectionLabel}>Photos</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoRow}>
-          {photos.map((uri, i) => (
-            <View key={`${uri}-${i}`} style={styles.photoWrap}>
-              <Image source={{ uri }} style={styles.photo} />
-              <TouchableOpacity style={styles.photoRemove} onPress={() => removePhoto(i)}>
-                <Text style={styles.photoRemoveText}>×</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-          <TouchableOpacity style={styles.addPhoto} onPress={addPhoto} disabled={uploadingPhoto}>
-            {uploadingPhoto ? (
-              <ActivityIndicator color={C.accent} />
-            ) : (
-              <Text style={styles.addPhotoText}>＋</Text>
-            )}
-          </TouchableOpacity>
-        </ScrollView>
+  const photos = profile.photos || [];
+  const name = profile.displayName || profile.username || 'Someone';
 
-        <EditableRow
-          label="Username"
-          value={user.username}
-          editing={editing === 'username'}
-          draft={draft}
-          setDraft={setDraft}
-          saving={saving}
-          onStart={() => startEdit('username', user.username)}
-          onCancel={cancelEdit}
-          onSave={() => saveField('username')}
-          autoCapitalize="none"
-        />
-
-        <EditableRow
-          label="Email"
-          value={user.email}
-          editing={editing === 'email'}
-          draft={draft}
-          setDraft={setDraft}
-          saving={saving}
-          onStart={() => startEdit('email', user.email)}
-          onCancel={cancelEdit}
-          onSave={() => saveField('email')}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-
-        <EditableRow
-          label="Bio"
-          value={user.bio}
-          editing={editing === 'bio'}
-          draft={draft}
-          setDraft={setDraft}
-          saving={saving}
-          onStart={() => startEdit('bio', user.bio)}
-          onCancel={cancelEdit}
-          onSave={() => saveField('bio')}
-          multiline
-          placeholder="Tell people a bit about yourself\u2026"
-        />
-
-        <View style={styles.fieldBlock}>
-          <View style={styles.fieldHeader}>
-            <Text style={styles.fieldLabel}>Gender</Text>
-            {editing !== 'gender' && (
-              <TouchableOpacity onPress={() => setEditing('gender')}>
-                <Text style={styles.editLink}>Edit</Text>
-              </TouchableOpacity>
-            )}
+  return (
+    <View style={styles.screen}>
+      <ScreenHeader title={profile.username || 'Profile'} onBack={() => navigation.goBack()} />
+      <ScrollView contentContainerStyle={{ paddingBottom: theme.spacing(10) }}>
+        {photos.length > 0 ? (
+          <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
+            {photos.map((uri, i) => (
+              <Image key={`${uri}-${i}`} source={{ uri }} style={styles.photo} />
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={[styles.photo, styles.noPhoto]}>
+            <Text style={styles.noPhotoText}>{name[0]?.toUpperCase()}</Text>
           </View>
-          {editing === 'gender' ? (
-            <View style={styles.genderRow}>
-              {GENDERS.map((g) => {
-                const selected = user.gender === g;
-                return (
-                  <TouchableOpacity
-                    key={g}
-                    style={[styles.genderChip, selected && styles.genderChipActive]}
-                    onPress={() => saveGender(g)}
-                    disabled={saving}
-                  >
-                    <Text style={[styles.genderChipText, selected && styles.genderChipTextActive]}>
-                      {g}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-              <TouchableOpacity onPress={() => setEditing(null)} style={styles.cancelChip}>
-                <Text style={styles.cancelChipText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <Text style={styles.fieldValue}>{user.gender || '\u2014'}</Text>
-          )}
-        </View>
+        )}
 
-        <TouchableOpacity style={styles.logoutButton} onPress={confirmLogout}>
-          <Text style={styles.logoutText}>Log out</Text>
-        </TouchableOpacity>
+        <View style={styles.body}>
+          <Text style={styles.name}>
+            {name}{profile.age ? `, ${profile.age}` : ''}
+          </Text>
+          {profile.neighborhood ? (
+            <Text style={styles.neighborhood}>{profile.neighborhood}</Text>
+          ) : null}
+
+          {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
+
+          {Array.isArray(profile.interests) && profile.interests.length > 0 && (
+            <View style={styles.interests}>
+              {profile.interests.map((tag) => (
+                <View key={tag} style={styles.chip}><Text style={styles.chipText}>{tag}</Text></View>
+              ))}
+            </View>
+          )}
+
+          <View style={styles.actions}>
+            <Pressable style={styles.messageBtn} onPress={message}>
+              <Text style={styles.messageText}>Message</Text>
+            </Pressable>
+            <Pressable style={styles.moreBtn} onPress={moreActions}>
+              <Text style={styles.moreText}>•••</Text>
+            </Pressable>
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
 }
 
-function EditableRow({
-  label,
-  value,
-  editing,
-  draft,
-  setDraft,
-  saving,
-  onStart,
-  onCancel,
-  onSave,
-  multiline,
-  placeholder,
-  autoCapitalize = 'sentences',
-  keyboardType = 'default',
-}) {
-  return (
-    <View style={styles.fieldBlock}>
-      <View style={styles.fieldHeader}>
-        <Text style={styles.fieldLabel}>{label}</Text>
-        {!editing && (
-          <TouchableOpacity onPress={onStart}>
-            <Text style={styles.editLink}>Edit</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+const stylesFactory = (({ colors, spacing, radius }) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.bg },
+    centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing(8) },
+    errorText: { color: colors.textDim, fontSize: 15, textAlign: 'center' },
 
-      {editing ? (
-        <View>
-          <TextInput
-            style={[styles.input, multiline && styles.inputMultiline]}
-            value={draft}
-            onChangeText={setDraft}
-            multiline={multiline}
-            placeholder={placeholder}
-            placeholderTextColor={C.textDim}
-            autoCapitalize={autoCapitalize}
-            keyboardType={keyboardType}
-            autoFocus
-          />
-          <View style={styles.editActions}>
-            <TouchableOpacity onPress={onCancel} disabled={saving}>
-              <Text style={styles.cancelLink}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={onSave} disabled={saving}>
-              {saving ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <Text style={styles.saveButtonText}>Save</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      ) : (
-        <Text style={styles.fieldValue}>{value || '\u2014'}</Text>
-      )}
-    </View>
-  );
-}
+    photo: { width, height: width, backgroundColor: colors.surface },
+    noPhoto: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceAlt },
+    noPhotoText: { color: colors.textDim, fontSize: 72, fontWeight: '800' },
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
-  centered: { alignItems: 'center', justifyContent: 'center' },
+    body: { padding: spacing(5) },
+    name: { color: colors.text, fontSize: 26, fontWeight: '800' },
+    neighborhood: { color: colors.textDim, fontSize: 15, marginTop: spacing(1) },
+    bio: { color: colors.text, fontSize: 16, lineHeight: 23, marginTop: spacing(4) },
 
-  header: {
-    backgroundColor: C.surface,
-    paddingTop: 56,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: C.border,
-  },
-  headerTitle: { color: C.text, fontSize: 22, fontWeight: '700' },
+    interests: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing(2), marginTop: spacing(4) },
+    chip: { backgroundColor: colors.surfaceAlt, borderRadius: radius.lg, paddingHorizontal: spacing(3), paddingVertical: spacing(1.5), borderWidth: 1, borderColor: colors.border },
+    chipText: { color: colors.textDim, fontSize: 13 },
 
-  scrollContent: { padding: 20, paddingBottom: 48 },
-
-  sectionLabel: {
-    color: C.textDim,
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-
-  photoRow: { flexDirection: 'row', marginBottom: 24 },
-  photoWrap: { marginRight: 12, position: 'relative' },
-  photo: { width: 96, height: 96, borderRadius: 12, backgroundColor: C.surface },
-  photoRemove: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: C.text,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  photoRemoveText: { color: C.bg, fontSize: 18, lineHeight: 20, fontWeight: '700' },
-  addPhoto: {
-    width: 96,
-    height: 96,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: C.accent,
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addPhotoText: { color: C.accent, fontSize: 32, fontWeight: '300' },
-
-  fieldBlock: {
-    marginBottom: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: C.border,
-  },
-  fieldHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  fieldLabel: {
-    color: C.textDim,
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  fieldValue: { color: C.text, fontSize: 16 },
-  editLink: { color: C.accent, fontSize: 14, fontWeight: '600' },
-
-  input: {
-    borderWidth: 1,
-    borderColor: C.accent,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: C.text,
-    backgroundColor: C.surface,
-  },
-  inputMultiline: { height: 100, textAlignVertical: 'top' },
-
-  editActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: 10,
-  },
-  cancelLink: { color: C.textDim, fontSize: 14, marginRight: 20 },
-  saveButton: {
-    backgroundColor: C.accent,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 8,
-    minWidth: 72,
-    alignItems: 'center',
-  },
-  saveButtonText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-
-  genderRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 },
-  genderChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: C.accent,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  genderChipActive: { backgroundColor: C.accent },
-  genderChipText: { color: C.accent, fontSize: 14, textTransform: 'capitalize' },
-  genderChipTextActive: { color: '#fff' },
-  cancelChip: { paddingHorizontal: 16, paddingVertical: 8 },
-  cancelChipText: { color: C.textDim, fontSize: 14 },
-
-  logoutButton: {
-    marginTop: 16,
-    paddingVertical: 14,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#c0392b',
-    alignItems: 'center',
-  },
-  logoutText: { color: '#c0392b', fontSize: 16, fontWeight: '600' },
-});
+    actions: { flexDirection: 'row', alignItems: 'center', gap: spacing(3), marginTop: spacing(7) },
+    messageBtn: { flex: 1, height: 52, borderRadius: radius.md, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+    messageText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+    moreBtn: { width: 52, height: 52, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+    moreText: { color: colors.textDim, fontSize: 20, fontWeight: '700' },
+  })
+);
