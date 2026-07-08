@@ -12,8 +12,8 @@ import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 
 const SHOW = [
-  { key: 'women', label: 'Women' },
-  { key: 'men', label: 'Men' },
+  { key: 'female', label: 'Women' },
+  { key: 'male', label: 'Men' },
   { key: 'everyone', label: 'Everyone' },
 ];
 

@@ -16,16 +16,14 @@ export function ThemeProvider({ children }) {
   const system = useColorScheme(); // 'light' | 'dark' | null
   const [pref, setPrefState] = useState('system');
   const [ready, setReady] = useState(false);
-  // Bumping this key remounts the tree so module-level makeStyles rebuild.
+  // A revision counter that re-renders consumers in place (NO remount).
   const [rev, setRev] = useState(0);
 
-  // Resolve the effective mode from preference + system.
   const resolve = useCallback(
     (p) => (p === 'system' ? (system === 'light' ? 'light' : 'dark') : p),
     [system]
   );
 
-  // Load saved preference on mount.
   useEffect(() => {
     (async () => {
       try {
@@ -43,7 +41,6 @@ export function ThemeProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // React to system changes while on 'system'.
   useEffect(() => {
     if (pref === 'system' && ready) {
       applyMode(resolve('system'));
@@ -65,9 +62,8 @@ export function ThemeProvider({ children }) {
   if (!ready) return null;
 
   return (
-    <ThemeContext.Provider value={{ mode: theme.mode, theme, pref, setPref }}>
-      {/* key remounts children so all makeStyles pick up the new palette */}
-      <React.Fragment key={rev}>{children}</React.Fragment>
+    <ThemeContext.Provider value={{ mode: theme.mode, theme, pref, setPref, rev }}>
+      {children}
     </ThemeContext.Provider>
   );
 }
