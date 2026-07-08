@@ -1,7 +1,7 @@
 // localpulse/app/src/screens/SettingsScreen.js
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, Pressable, StyleSheet, Alert, ScrollView, Switch, TextInput, StatusBar,
+  View, Text, Pressable, StyleSheet, Alert, ScrollView, Switch, TextInput, StatusBar, Modal, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../api/client.js';
@@ -12,8 +12,8 @@ import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 
 const SHOW = [
-  { key: 'female', label: 'Women' },
-  { key: 'male', label: 'Men' },
+  { key: 'women', label: 'Women' },
+  { key: 'men', label: 'Men' },
   { key: 'everyone', label: 'Everyone' },
 ];
 
@@ -74,6 +74,12 @@ export default function SettingsScreen({ navigation }) {
   const [ageMax, setAgeMax] = useState('99');
   const [distance, setDistance] = useState('50');
 
+  // Inline username edit
+  const [usernameModal, setUsernameModal] = useState(false);
+  const [usernameDraft, setUsernameDraft] = useState('');
+  const [usernameSaving, setUsernameSaving] = useState(false);
+  const [usernameError, setUsernameError] = useState('');
+
   const isDark = pref === 'dark' || (pref === 'system' && theme.mode === 'dark');
 
   useEffect(() => { loadProfile(); }, [loadProfile]);
@@ -86,6 +92,32 @@ export default function SettingsScreen({ navigation }) {
       setDistance(String(p.maxDistanceKm ?? 50));
     }
   }, [profile]);
+
+  function openUsernameEdit() {
+    setUsernameDraft(profile?.username || '');
+    setUsernameError('');
+    setUsernameModal(true);
+  }
+
+  async function saveUsername() {
+    const uname = usernameDraft.trim();
+    setUsernameError('');
+    if (uname.length < 3 || uname.length > 24) {
+      setUsernameError('Username must be 3 to 24 characters.');
+      return;
+    }
+    if (uname === profile?.username) { setUsernameModal(false); return; }
+    setUsernameSaving(true);
+    try {
+      await api.updateMyProfile({ username: uname });
+      await loadProfile();
+      setUsernameModal(false);
+    } catch (e) {
+      setUsernameError(e?.message ?? 'Could not change username.');
+    } finally {
+      setUsernameSaving(false);
+    }
+  }
 
   async function savePrefs(patch) {
     try {
@@ -140,7 +172,7 @@ export default function SettingsScreen({ navigation }) {
       >
         {/* Account */}
         <Section title="ACCOUNT">
-          <Row label="Username" value={profile?.username || '—'} last={false} />
+          <Row label="Username" value={profile?.username || '—'} onPress={openUsernameEdit} last={false} />
           <Row
             label="Email"
             value={profile?.email || '—'}
@@ -214,6 +246,36 @@ export default function SettingsScreen({ navigation }) {
 
         <Text style={styles.version}>Nearby</Text>
       </ScrollView>
+
+      <Modal visible={usernameModal} transparent animationType="fade" onRequestClose={() => setUsernameModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Change username</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={usernameDraft}
+              onChangeText={setUsernameDraft}
+              autoCapitalize="none"
+              autoFocus
+              placeholder="Username"
+              placeholderTextColor={theme.colors.textDim}
+              selectionColor={theme.colors.accent}
+            />
+            {!!usernameError && <Text style={styles.modalError}>{usernameError}</Text>}
+            <View style={styles.modalBtns}>
+              <Pressable onPress={() => setUsernameModal(false)}>
+                <Text style={styles.modalCancel}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.modalSave, usernameDraft.trim().length < 3 && styles.modalSaveDisabled]}
+                onPress={usernameDraft.trim().length >= 3 && !usernameSaving ? saveUsername : undefined}
+              >
+                {usernameSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Save</Text>}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -250,5 +312,15 @@ const stylesFactory = (({ colors, spacing, radius }) =>
     rangeDash: { color: colors.textDim, fontSize: 16 },
 
     version: { color: colors.textDim, fontSize: 13, textAlign: 'center', marginTop: spacing(2) },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center', padding: spacing(8) },
+    modalSheet: { width: '100%', backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, padding: spacing(5) },
+    modalTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: spacing(4) },
+    modalInput: { color: colors.text, fontSize: 17, borderBottomWidth: 1.5, borderBottomColor: colors.border, paddingVertical: spacing(2) },
+    modalError: { color: colors.danger, fontSize: 14, marginTop: spacing(3) },
+    modalBtns: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: spacing(5), marginTop: spacing(5) },
+    modalCancel: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
+    modalSave: { backgroundColor: colors.accent, borderRadius: radius.sm, paddingHorizontal: spacing(6), paddingVertical: spacing(2.5), minWidth: 72, alignItems: 'center' },
+    modalSaveDisabled: { backgroundColor: colors.accentDim },
+    modalSaveText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   })
 );
