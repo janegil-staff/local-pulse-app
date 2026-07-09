@@ -5,52 +5,26 @@
 //   navigation.navigate('LocationPicker', { mode: 'home' })    → sets my location
 //   navigation.navigate('LocationPicker', { mode: 'browse' })  → sets where I browse
 //
-// Search hits our own /geocode endpoint (server-side Nominatim), debounced so
-// we stay well inside the 1 req/sec policy.
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+// Both modes save on tap and pop the screen. Onboarding needs to stage a pick
+// and commit it on Continue instead, so it has its own inline step rather than
+// a third mode here — but both share usePlaceSearch.
+import React, { useState } from 'react';
 import {
   View, Text, TextInput, FlatList, Pressable, StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { api } from '../api/client.js';
+import { usePlaceSearch } from '../hooks/usePlaceSearch.js';
 import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
-
-const DEBOUNCE_MS = 220;
 
 export default function LocationPickerScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
   const mode = route?.params?.mode === 'browse' ? 'browse' : 'home';
 
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-  const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
-  const timer = useRef(null);
-  const seq = useRef(0); // guards against out-of-order responses
-
-  const search = useCallback(async (q) => {
-    const trimmed = q.trim();
-    if (trimmed.length < 2) { setResults([]); setSearching(false); return; }
-    const mySeq = ++seq.current;
-    setSearching(true);
-    try {
-      const data = await api.searchPlaces(trimmed);
-      // A slower request for an earlier prefix must not clobber newer results.
-      if (mySeq !== seq.current) return;
-      setResults(data.results ?? []);
-    } catch (e) {
-      if (mySeq === seq.current) setResults([]);
-    } finally {
-      if (mySeq === seq.current) setSearching(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => search(query), DEBOUNCE_MS);
-    return () => timer.current && clearTimeout(timer.current);
-  }, [query, search]);
+  const { results, searching } = usePlaceSearch(query);
 
   async function pick(place) {
     setSaving(true);

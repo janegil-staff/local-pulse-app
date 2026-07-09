@@ -133,7 +133,9 @@ const en = {
   showDistanceSub: "Others can see roughly how far away you are",
   hapticFeedback: "Haptic feedback",
   hapticFeedbackSub: "Vibrate on taps and confirmations",
-  couldNotSave: "Could not save. Please try again."
+  couldNotSave: "Could not save. Please try again.",
+  usingCurrentLocation: "Using your current location",
+  locationRequired: "Choose a location to continue."
 };
 const no = {
   appName: 'Nearby',
@@ -259,7 +261,9 @@ const no = {
   showDistanceSub: "Andre kan se omtrent hvor langt unna du er",
   hapticFeedback: "Haptisk tilbakemelding",
   hapticFeedbackSub: "Vibrer ved trykk og bekreftelser",
-  couldNotSave: "Kunne ikke lagre. Prøv igjen."
+  couldNotSave: "Kunne ikke lagre. Prøv igjen.",
+  usingCurrentLocation: "Bruker din posisjon",
+  locationRequired: "Velg et sted for å fortsette."
 };
 const de = {
   appName: 'Nearby',
@@ -385,7 +389,9 @@ const de = {
   showDistanceSub: "Andere sehen ungefähr, wie weit du entfernt bist",
   hapticFeedback: "Haptisches Feedback",
   hapticFeedbackSub: "Bei Tippen und Bestätigungen vibrieren",
-  couldNotSave: "Konnte nicht gespeichert werden. Bitte erneut versuchen."
+  couldNotSave: "Konnte nicht gespeichert werden. Bitte erneut versuchen.",
+  usingCurrentLocation: "Dein aktueller Standort wird verwendet",
+  locationRequired: "Wähle einen Ort, um fortzufahren."
 };
 const da = {
   appName: 'Nearby',
@@ -511,7 +517,9 @@ const da = {
   showDistanceSub: "Andre kan se cirka, hvor langt væk du er",
   hapticFeedback: "Haptisk feedback",
   hapticFeedbackSub: "Vibrer ved tryk og bekræftelser",
-  couldNotSave: "Kunne ikke gemme. Prøv igen."
+  couldNotSave: "Kunne ikke gemme. Prøv igen.",
+  usingCurrentLocation: "Bruger din nuværende placering",
+  locationRequired: "Vælg en placering for at fortsætte."
 };
 const sv = {
   appName: 'Nearby',
@@ -637,7 +645,9 @@ const sv = {
   showDistanceSub: "Andra ser ungefär hur långt bort du är",
   hapticFeedback: "Haptisk återkoppling",
   hapticFeedbackSub: "Vibrera vid tryck och bekräftelser",
-  couldNotSave: "Kunde inte spara. Försök igen."
+  couldNotSave: "Kunde inte spara. Försök igen.",
+  usingCurrentLocation: "Använder din nuvarande plats",
+  locationRequired: "Välj en plats för att fortsätta."
 };
 const fi = {
   appName: 'Nearby',
@@ -763,7 +773,9 @@ const fi = {
   showDistanceSub: "Muut näkevät suunnilleen, kuinka kaukana olet",
   hapticFeedback: "Haptinen palaute",
   hapticFeedbackSub: "Värise napautuksissa ja vahvistuksissa",
-  couldNotSave: "Tallennus epäonnistui. Yritä uudelleen."
+  couldNotSave: "Tallennus epäonnistui. Yritä uudelleen.",
+  usingCurrentLocation: "Käytetään nykyistä sijaintiasi",
+  locationRequired: "Valitse sijainti jatkaaksesi."
 };
 const fr = {
   appName: 'Nearby',
@@ -889,7 +901,9 @@ const fr = {
   showDistanceSub: "Les autres voient approximativement votre éloignement",
   hapticFeedback: "Retour haptique",
   hapticFeedbackSub: "Vibrer lors des appuis et confirmations",
-  couldNotSave: "Impossible d'enregistrer. Veuillez réessayer."
+  couldNotSave: "Impossible d'enregistrer. Veuillez réessayer.",
+  usingCurrentLocation: "Utilisation de votre position actuelle",
+  locationRequired: "Choisissez une localisation pour continuer."
 };
 const es = {
   appName: 'Nearby',
@@ -1015,7 +1029,9 @@ const es = {
   showDistanceSub: "Los demás ven aproximadamente a qué distancia estás",
   hapticFeedback: "Respuesta háptica",
   hapticFeedbackSub: "Vibrar al tocar y confirmar",
-  couldNotSave: "No se pudo guardar. Inténtalo de nuevo."
+  couldNotSave: "No se pudo guardar. Inténtalo de nuevo.",
+  usingCurrentLocation: "Usando tu ubicación actual",
+  locationRequired: "Elige una ubicación para continuar."
 };
 const it = {
   appName: 'Nearby',
@@ -1141,7 +1157,9 @@ const it = {
   showDistanceSub: "Gli altri vedono all’incirca quanto sei lontano",
   hapticFeedback: "Feedback aptico",
   hapticFeedbackSub: "Vibra ai tocchi e alle conferme",
-  couldNotSave: "Impossibile salvare. Riprova."
+  couldNotSave: "Impossibile salvare. Riprova.",
+  usingCurrentLocation: "Uso della tua posizione attuale",
+  locationRequired: "Scegli una posizione per continuare."
 };
 const nl = {
   appName: 'Nearby',
@@ -1267,7 +1285,9 @@ const nl = {
   showDistanceSub: "Anderen zien ongeveer hoe ver je weg bent",
   hapticFeedback: "Haptische feedback",
   hapticFeedbackSub: "Tril bij tikken en bevestigingen",
-  couldNotSave: "Kon niet opslaan. Probeer opnieuw."
+  couldNotSave: "Kon niet opslaan. Probeer opnieuw.",
+  usingCurrentLocation: "Je huidige locatie wordt gebruikt",
+  locationRequired: "Kies een locatie om door te gaan."
 };
 const pl = {
   appName: 'Nearby',
@@ -1393,7 +1413,9 @@ const pl = {
   showDistanceSub: "Inni widzą w przybliżeniu, jak daleko jesteś",
   hapticFeedback: "Wibracje dotykowe",
   hapticFeedbackSub: "Wibruj przy dotknięciach i potwierdzeniach",
-  couldNotSave: "Nie udało się zapisać. Spróbuj ponownie."
+  couldNotSave: "Nie udało się zapisać. Spróbuj ponownie.",
+  usingCurrentLocation: "Używana jest Twoja obecna lokalizacja",
+  locationRequired: "Wybierz lokalizację, aby kontynuować."
 };
 const pt = {
   appName: 'Nearby',
@@ -1519,7 +1541,9 @@ const pt = {
   showDistanceSub: "Os outros veem aproximadamente a que distância estás",
   hapticFeedback: "Resposta tátil",
   hapticFeedbackSub: "Vibrar ao tocar e confirmar",
-  couldNotSave: "Não foi possível guardar. Tenta novamente."
+  couldNotSave: "Não foi possível guardar. Tenta novamente.",
+  usingCurrentLocation: "A usar a tua localização atual",
+  locationRequired: "Escolhe uma localização para continuar."
 };
 const TRANSLATIONS = {
   no,

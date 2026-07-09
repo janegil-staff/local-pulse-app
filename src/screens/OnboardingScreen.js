@@ -1,3 +1,12 @@
+// localpulse/app/src/screens/OnboardingScreen.js
+//
+// Four steps: account → details → location → photos/bio.
+// The account is created at the end of step 1, so every later step saves
+// directly to the server and the user can bail and resume.
+//
+// Location has no Skip: getDeck() throws without coordinates, so a skipped
+// location means the first Discover load is an error screen. Photos and bio
+// are genuinely optional; location is not.
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
@@ -5,16 +14,19 @@ import {
   Image, Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext.js';
 import { useLang } from '../context/LangContext.js';
+import { usePlaceSearch } from '../hooks/usePlaceSearch.js';
 import { api } from '../api/client.js';
 import { theme } from '../theme/theme.js';
 
 const C = theme.colors;
 
 const MAX_PHOTOS = 6;
+const TOTAL_STEPS = 4;
 
 const LANGUAGES = [
   { code: 'no', flag: '🇳🇴', label: 'Norsk' },
@@ -83,60 +95,16 @@ function Field({ label, value, onChangeText, keyboardType, autoCapitalize = 'non
   );
 }
 
-function ListPicker({ label, value, options, unit, onSelect }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <View style={{ flex: 1 }}>
-      <Text style={s.metricLabel}>{label}</Text>
-      <TouchableOpacity style={[s.dropTrigger, open && { borderColor: C.accent }]} onPress={() => setOpen(true)} activeOpacity={0.8}>
-        <Text style={{ color: value ? C.text : C.textDim, fontSize: 16, fontWeight: '600' }}>
-          {value ? `${value}${unit ?? ''}` : '—'}
-        </Text>
-        <Text style={{ color: C.textDim, fontSize: 10 }}>▼</Text>
-      </TouchableOpacity>
-      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setOpen(false)}>
-          <View style={s.modalSheet}>
-            <Text style={s.modalTitle}>{label}</Text>
-            <FlatList
-              data={options}
-              keyExtractor={(item) => item}
-              style={{ maxHeight: 260 }}
-              showsVerticalScrollIndicator={false}
-              getItemLayout={(_, index) => ({ length: 44, offset: 44 * index, index })}
-              initialScrollIndex={value ? Math.max(0, options.indexOf(value) - 2) : 0}
-              renderItem={({ item }) => {
-                const active = item === value;
-                return (
-                  <TouchableOpacity
-                    style={[s.modalItem, active && { backgroundColor: C.accent + '18' }]}
-                    onPress={() => { onSelect(item); setOpen(false); }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={{ color: active ? C.accent : C.text, fontSize: 16, fontWeight: active ? '700' : '500' }}>
-                      {item}{unit ?? ''}
-                    </Text>
-                    {active && <Text style={{ color: C.accent, fontSize: 16 }}>✓</Text>}
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
-    </View>
-  );
-}
-
 function StepIndicator({ step }) {
+  const steps = Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1);
   return (
     <View style={s.stepRow}>
-      {[1, 2, 3].map((n) => (
+      {steps.map((n) => (
         <React.Fragment key={n}>
           <View style={[s.stepCircle, { backgroundColor: step >= n ? C.accent : C.surface, borderColor: step >= n ? C.accent : C.border }]}>
             <Text style={{ fontSize: 12, fontWeight: '700', color: step >= n ? '#fff' : C.textDim }}>{n}</Text>
           </View>
-          {n < 3 && <View style={[s.stepLine, { backgroundColor: step > n ? C.accent : C.border }]} />}
+          {n < TOTAL_STEPS && <View style={[s.stepLine, { backgroundColor: step > n ? C.accent : C.border }]} />}
         </React.Fragment>
       ))}
     </View>
@@ -165,8 +133,14 @@ export default function OnboardingScreen({ navigation, route }) {
   const [dobDay, setDobDay] = useState('');
   const [dobPicker, setDobPicker] = useState(null);
 
-  // Step 3
-  const [photos, setPhotos] = useState([]); // local image uris (uploaded at finish)
+  // Step 3 — location. The pick is staged locally and committed by Continue,
+  // unlike LocationPickerScreen which saves on tap and pops.
+  const [placeQuery, setPlaceQuery] = useState('');
+  const [picked, setPicked] = useState(null); // { lat, lng, name, fullName } | { gps: true, lat, lng }
+  const { results: placeResults, searching: placeSearching } = usePlaceSearch(placeQuery);
+
+  // Step 4
+  const [photos, setPhotos] = useState([]);
   const [bio, setBio] = useState('');
 
   const [loading, setLoading] = useState(false);
@@ -194,7 +168,7 @@ export default function OnboardingScreen({ navigation, route }) {
 
   // Navigate to the two-screen PIN flow (Choose PIN -> Confirm PIN).
   // PinConfirm navigates back to 'Onboarding' with { ...returnParams, pin },
-  // which the useEffect below picks up and stores.
+  // which the useEffect above picks up and stores.
   const openPinEntry = () => {
     navigation.navigate('PinSetup', {
       returnTo: 'Onboarding',
@@ -212,7 +186,6 @@ export default function OnboardingScreen({ navigation, route }) {
     if (!pinSet) { setError(t.pinRequired); return; }
     if (!tncAccepted || !infoAccepted) { setError(t.acceptTermsRequired); return; }
 
-    // If we already created the account (e.g. came back to step 1), don't re-create.
     if (accountCreated) { setStep(2); return; }
 
     setLoading(true);
@@ -227,9 +200,8 @@ export default function OnboardingScreen({ navigation, route }) {
         },
         { deferUser: true }, // don't publish the user yet — profile isn't complete
       );
-      if (savePin) { try { await savePin(pin); } catch {} }
-      // Persist the chosen UI language to the account.
-      try { await api.updateMyProfile({ language: lang }); } catch {}
+      if (savePin) { try { await savePin(pin); } catch { } }
+      try { await api.updateMyProfile({ language: lang }); } catch { }
       setAccountCreated(true);
       setStep(2);
     } catch (e) {
@@ -247,6 +219,48 @@ export default function OnboardingScreen({ navigation, route }) {
     try {
       await api.updateMyProfile({ dob: dobStr, gender });
       setStep(3);
+    } catch (e) {
+      setError(e?.message ?? t.couldNotFinish);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Ask for GPS immediately — the user tapped a button that says so, which is
+  // the moment the OS prompt is least likely to be denied. Denial isn't fatal:
+  // the search field is still right there.
+  const useCurrentLocation = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('', t.locationPermissionDenied);
+        return;
+      }
+      const pos = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = pos.coords;
+      setPicked({ gps: true, lat: latitude, lng: longitude });
+      setPlaceQuery('');
+    } catch (e) {
+      setError(e?.message ?? t.couldNotFinish);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 3 → commit the staged pick, then advance.
+  const submitStep3 = async () => {
+    setError('');
+    if (!picked) { setError(t.locationRequired); return; }
+    setLoading(true);
+    try {
+      if (picked.gps) {
+        await api.setLocation({ lat: picked.lat, lng: picked.lng, mode: 'gps' });
+      } else {
+        await api.setLocation({ lat: picked.lat, lng: picked.lng, name: picked.name, mode: 'manual' });
+      }
+      setStep(4);
     } catch (e) {
       setError(e?.message ?? t.couldNotFinish);
     } finally {
@@ -285,29 +299,29 @@ export default function OnboardingScreen({ navigation, route }) {
   const removePhoto = async (index) => {
     const next = photos.filter((_, i) => i !== index);
     setPhotos(next);
-    try { await api.updateMyProfile({ photos: next }); } catch {}
+    try { await api.updateMyProfile({ photos: next }); } catch { }
   };
 
   // Make a photo the profile picture by moving it to the front (photos[0]).
   const setPrimary = async (index) => {
     if (index === 0) return;
     const next = [...photos];
-    const [picked] = next.splice(index, 1);
-    next.unshift(picked);
+    const [moved] = next.splice(index, 1);
+    next.unshift(moved);
     setPhotos(next);
-    try { await api.updateMyProfile({ photos: next }); } catch {}
+    try { await api.updateMyProfile({ photos: next }); } catch { }
   };
 
-  // Finish: account and photos already saved per-step. Just save bio (if any)
-  // and publish the finished user so the navigator moves on.
-  const finishStep3 = async () => {
+  // Finish: account, location, and photos already saved per-step. Just save
+  // bio (if any) and publish the finished user so the navigator moves on.
+  const finishStep4 = async () => {
     setError('');
     setLoading(true);
     try {
       if (bio.trim()) {
         await api.updateMyProfile({ bio: bio.trim() });
       }
-      await hydrate(); // publishes the finished user → navigator moves on
+      await hydrate();
     } catch (e) {
       setError(e?.message ?? t.couldNotFinish);
     } finally {
@@ -316,7 +330,7 @@ export default function OnboardingScreen({ navigation, route }) {
   };
 
   // Skip: nothing more to save — account exists, just publish the user.
-  const skipStep3 = async () => {
+  const skipStep4 = async () => {
     setError('');
     setLoading(true);
     try {
@@ -330,10 +344,16 @@ export default function OnboardingScreen({ navigation, route }) {
 
   const dobOptions =
     dobPicker === 'year' ? DOB_YEARS
-    : dobPicker === 'month' ? MONTHS.map((_, i) => String(i + 1).padStart(2, '0'))
-    : dobPicker === 'day'
-      ? Array.from({ length: dobYear && dobMonth ? daysInMonth(dobYear, Number(dobMonth) - 1) : 31 }, (_, i) => String(i + 1).padStart(2, '0'))
-      : [];
+      : dobPicker === 'month' ? MONTHS.map((_, i) => String(i + 1).padStart(2, '0'))
+        : dobPicker === 'day'
+          ? Array.from({ length: dobYear && dobMonth ? daysInMonth(dobYear, Number(dobMonth) - 1) : 31 }, (_, i) => String(i + 1).padStart(2, '0'))
+          : [];
+
+  const headerTitle =
+    step === 1 ? t.stepAccount
+      : step === 2 ? t.stepDetails
+        : step === 3 ? t.stepLocation
+          : t.stepPhotos;
 
   return (
     <View style={s.bg}>
@@ -346,9 +366,7 @@ export default function OnboardingScreen({ navigation, route }) {
         >
           <Text style={s.backArrow}>‹</Text>
         </TouchableOpacity>
-        <Text style={s.headerTitle} numberOfLines={1}>
-          {step === 1 ? t.stepAccount : step === 2 ? t.stepDetails : t.stepPhotos}
-        </Text>
+        <Text style={s.headerTitle} numberOfLines={1}>{headerTitle}</Text>
         <View style={s.headerBack} />
       </View>
 
@@ -430,7 +448,7 @@ export default function OnboardingScreen({ navigation, route }) {
           {step === 2 && (
             <>
               <Image
-                source={require('../../assets/images/signup_hero.png')} /* ⚠️ set to your saved path */
+                source={require('../../assets/images/signup_hero.png')}
                 style={s.heroImage}
                 resizeMode="cover"
               />
@@ -439,7 +457,9 @@ export default function OnboardingScreen({ navigation, route }) {
                 {[
                   { key: 'female', label: t.female, icon: 'female' },
                   { key: 'male', label: t.male, icon: 'male' },
-                  { key: 'undefined', label: t.genderUndefined, icon: 'unknown' },
+                  // 'other', not 'undefined' — must match the GENDERS enum on
+                  // the User model or the update silently fails validation.
+                  { key: 'other', label: t.genderUndefined, icon: 'unknown' },
                 ].map(({ key, label, icon }) => {
                   const active = gender === key;
                   return (
@@ -472,11 +492,90 @@ export default function OnboardingScreen({ navigation, route }) {
               <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={!loading ? submitStep2 : undefined} activeOpacity={0.85}>
                 {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>{t.continue.toUpperCase()} →</Text>}
               </TouchableOpacity>
-
             </>
           )}
 
           {step === 3 && (
+            <>
+              {/* No sectionLabel here — the header already says "Location", and
+                  a second "Set your location" directly under it just repeats. */}
+              <Text style={s.locExplain}>{t.locationExplainer}</Text>
+
+              <View style={s.searchWrap}>
+                <TextInput
+                  style={s.searchInput}
+                  placeholder={t.searchCityOrArea}
+                  placeholderTextColor={C.textDim}
+                  value={placeQuery}
+                  onChangeText={setPlaceQuery}
+                  autoCorrect={false}
+                  autoCapitalize="words"
+                  returnKeyType="search"
+                  clearButtonMode="while-editing"
+                />
+                {placeSearching ? (
+                  <ActivityIndicator style={s.inlineSpinner} size="small" color={C.textDim} />
+                ) : null}
+              </View>
+
+              <TouchableOpacity style={s.currentBtn} onPress={!loading ? useCurrentLocation : undefined} activeOpacity={0.8}>
+                <Text style={s.currentText}>{t.enableLocation}</Text>
+              </TouchableOpacity>
+
+              {/* The staged pick. Nothing is written until Continue. */}
+              {picked && (
+                <View style={s.pickedRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.pickedName}>
+                      {picked.gps ? (picked.name || t.usingCurrentLocation) : picked.name}
+                    </Text>
+                    {picked.gps && picked.name ? (
+                      <Text style={s.pickedFull}>{t.usingCurrentLocation}</Text>
+                    ) : !picked.gps && picked.fullName ? (
+                      <Text style={s.pickedFull} numberOfLines={1}>{picked.fullName}</Text>
+                    ) : null}
+                  </View>
+                  <Text style={s.pickedCheck}>✓</Text>
+                </View>
+              )}
+
+              {/* Picking clears the query, which empties this list — the staged
+                  row above becomes the only copy. Rendered inline rather than
+                  in a FlatList: this screen is already inside a ScrollView, and
+                  nesting the two breaks scrolling. The list is short. */}
+              {placeResults.map((p, i) => (
+                <TouchableOpacity
+                  key={`${p.lat},${p.lng},${i}`}
+                  style={s.placeRow}
+                  onPress={() => { setPicked(p); setPlaceQuery(''); }}
+                  activeOpacity={0.7}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.placeName}>{p.name}</Text>
+                    <Text style={s.placeFull} numberOfLines={1}>{p.fullName}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+
+              {placeQuery.trim().length >= 2 && !placeSearching && placeResults.length === 0 && (
+                <Text style={s.locEmpty}>{t.noPlacesFound}</Text>
+              )}
+
+              {!!error && <Text style={[s.error, { marginTop: 18 }]}>{error}</Text>}
+
+              <View style={{ height: 24 }} />
+
+              <TouchableOpacity
+                style={[s.btn, (!picked || loading) && s.btnDisabled]}
+                onPress={picked && !loading ? submitStep3 : undefined}
+                activeOpacity={picked && !loading ? 0.85 : 1}
+              >
+                {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>{t.continue.toUpperCase()} →</Text>}
+              </TouchableOpacity>
+            </>
+          )}
+
+          {step === 4 && (
             <>
               <Text style={s.sectionLabel}>{t.photosOptional}</Text>
               {photos.length > 0 && <Text style={s.photoHint}>{t.tapToSetProfile}</Text>}
@@ -521,15 +620,14 @@ export default function OnboardingScreen({ navigation, route }) {
 
               {!!error && <Text style={s.error}>{error}</Text>}
 
-              <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={!loading ? finishStep3 : undefined} activeOpacity={0.85}>
+              <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={!loading ? finishStep4 : undefined} activeOpacity={0.85}>
                 {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>{t.finish.toUpperCase()}</Text>}
               </TouchableOpacity>
 
               <View style={{ height: 16 }} />
-              <TouchableOpacity onPress={!loading ? skipStep3 : undefined}>
+              <TouchableOpacity onPress={!loading ? skipStep4 : undefined}>
                 <Text style={s.alreadyText}>{t.skipForNow}</Text>
               </TouchableOpacity>
-
             </>
           )}
 
@@ -585,7 +683,7 @@ const s = StyleSheet.create({
   backArrow: { color: '#fff', fontSize: 34, lineHeight: 36 },
   stepRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 28 },
   stepCircle: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  stepLine: { width: 40, height: 2, marginHorizontal: 6 },
+  stepLine: { width: 28, height: 2, marginHorizontal: 6 },
   sectionLabel: { color: C.textDim, fontSize: 16, fontWeight: '700', marginBottom: 14, marginTop: 6, letterSpacing: 0.3 },
   heroImage: { width: '100%', height: 180, borderRadius: 16, marginBottom: 24 },
   error: { color: C.danger, fontSize: 14, marginBottom: 14 },
@@ -599,15 +697,6 @@ const s = StyleSheet.create({
   langItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.border, gap: 10 },
   langItemLabel: { flex: 1, fontSize: 16 },
   pinRow: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, paddingBottom: 8, borderBottomWidth: 2, borderBottomColor: C.border },
-  pinSheet: { width: '100%', borderRadius: 18, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface, padding: 24 },
-  pinSheetTitle: { color: C.text, fontSize: 18, fontWeight: '800', marginBottom: 18, textAlign: 'center' },
-  pinInput: { color: C.text, fontSize: 30, letterSpacing: 12, textAlign: 'center', borderBottomWidth: 1.5, borderBottomColor: C.border, paddingVertical: 10, marginBottom: 18 },
-  pinFieldLabel: { color: C.textDim, fontSize: 14, fontWeight: '600', marginBottom: 2, textAlign: 'center' },
-  pinErrorText: { color: C.danger, fontSize: 14, textAlign: 'center', marginBottom: 8 },
-  pinBtns: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 20 },
-  pinCancel: { color: C.textDim, fontSize: 16, fontWeight: '700' },
-  pinSave: { backgroundColor: C.accent, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 10 },
-  pinSaveText: { color: '#fff', fontSize: 16, fontWeight: '800' },
   pinLabel: { color: C.textDim, fontSize: 16, fontWeight: '600' },
   pinAction: { color: C.accent, fontSize: 16, fontWeight: '700' },
   pinDone: { color: C.success },
@@ -625,8 +714,34 @@ const s = StyleSheet.create({
   dobBox: { flex: 1, paddingHorizontal: 12, paddingVertical: 14, borderWidth: 1.5, borderColor: C.border, borderRadius: 10, backgroundColor: C.surface, alignItems: 'center' },
   dobValue: { fontSize: 16, fontWeight: '600' },
   dobPreview: { color: C.textDim, fontSize: 13, marginBottom: 22, textAlign: 'center' },
-  metricsRow: { flexDirection: 'row', gap: 10, marginBottom: 28 },
-  metricLabel: { color: C.textDim, fontSize: 14, fontWeight: '600', marginBottom: 6 },
+
+  // Location step
+  locExplain: { color: C.textDim, fontSize: 14, lineHeight: 20, marginBottom: 18 },
+  searchWrap: { justifyContent: 'center', marginBottom: 12 },
+  searchInput: {
+    backgroundColor: C.surface, color: C.text, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 14, fontSize: 16,
+    borderWidth: 1.5, borderColor: C.border,
+  },
+  inlineSpinner: { position: 'absolute', right: 14, top: '50%', marginTop: -8 },
+  currentBtn: { paddingVertical: 14, borderRadius: 12, borderWidth: 1.5, borderColor: C.accent, alignItems: 'center', marginBottom: 18 },
+  currentText: { color: C.accent, fontWeight: '700', fontSize: 15 },
+  pickedRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 14, paddingVertical: 14, borderRadius: 12,
+    borderWidth: 1.5, borderColor: C.accent, backgroundColor: C.accent + '14', marginBottom: 12,
+  },
+  pickedName: { color: C.text, fontSize: 16, fontWeight: '700' },
+  pickedFull: { color: C.textDim, fontSize: 12, marginTop: 2 },
+  pickedCheck: { color: C.accent, fontSize: 18, fontWeight: '800' },
+  placeRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border,
+  },
+  placeName: { color: C.text, fontSize: 16, fontWeight: '600' },
+  placeFull: { color: C.textDim, fontSize: 12, marginTop: 2 },
+  locEmpty: { color: C.textDim, fontSize: 14, textAlign: 'center', marginTop: 24 },
+
   photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   photoHint: { color: C.textDim, fontSize: 13, marginBottom: 10 },
   photoCell: { width: 100, height: 100, borderRadius: 12, position: 'relative' },
@@ -639,7 +754,6 @@ const s = StyleSheet.create({
   photoAdd: { width: 100, height: 100, borderRadius: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: C.accent, alignItems: 'center', justifyContent: 'center' },
   photoAddPlus: { color: C.accent, fontSize: 34, fontWeight: '300' },
   bioInput: { minHeight: 110, borderWidth: 1.5, borderColor: C.border, borderRadius: 12, backgroundColor: C.surface, color: C.text, fontSize: 16, padding: 14, marginBottom: 8 },
-  dropTrigger: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10, paddingVertical: 12, borderWidth: 1.5, borderColor: C.border, borderRadius: 8, backgroundColor: C.surface },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 32 },
   modalSheet: { width: '100%', borderRadius: 18, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface, overflow: 'hidden' },
   modalTitle: { color: C.text, fontSize: 16, fontWeight: '700', padding: 14, borderBottomWidth: 1, borderBottomColor: C.border },
