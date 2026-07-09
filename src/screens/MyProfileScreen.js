@@ -1,8 +1,9 @@
-// src/screens/MyProfileScreen.js
+// localpulse/app/src/screens/MyProfileScreen.js
 //
 // "My Profile" tab — the logged-in user's own profile with inline editing.
 // Hero-photo layout (Tinder/Hinge style): large photo up top with name overlaid,
-// detail cards below. All fields (photos, bio, username, email, gender) editable.
+// detail cards below. Photos and bio are edited here; username, email, and
+// gender live in Settings → Personal settings.
 
 import React, { useState, useCallback } from 'react';
 import {
@@ -27,7 +28,6 @@ import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 import { avatarSource } from '../lib/avatar.js';
 
-const GENDERS = ['male', 'female', 'other'];
 const { width } = Dimensions.get('window');
 const HERO_H = Math.round(width * 1.15);
 
@@ -62,17 +62,6 @@ export default function MyProfileScreen({ navigation }) {
       await hydrate?.();
       setEditing(null);
       setDraft('');
-    } catch (e) {
-      Alert.alert('Couldn\u2019t save', e?.message || 'Something went wrong. Try again.');
-    } finally { setSaving(false); }
-  }
-
-  async function saveGender(value) {
-    setSaving(true);
-    try {
-      await api.updateMyProfile({ gender: value });
-      await hydrate?.();
-      setEditing(null);
     } catch (e) {
       Alert.alert('Couldn\u2019t save', e?.message || 'Something went wrong. Try again.');
     } finally { setSaving(false); }
@@ -154,8 +143,6 @@ export default function MyProfileScreen({ navigation }) {
     );
   }
 
-  const hero = photos[0];
-  const rest = photos.slice(1);
   const displayName = user.displayName || user.username || 'You';
 
   return (
@@ -183,6 +170,7 @@ export default function MyProfileScreen({ navigation }) {
               {displayName}
               {user.age ? <Text style={styles.heroAge}>  {user.age}</Text> : null}
             </Text>
+            {/* Display only — edited in Settings → Personal settings. */}
             {user.gender ? <Text style={styles.heroMeta}>{user.gender}</Text> : null}
           </View>
           <TouchableOpacity style={styles.heroCam} onPress={addPhoto} disabled={uploadingPhoto} activeOpacity={0.85}>
@@ -217,7 +205,7 @@ export default function MyProfileScreen({ navigation }) {
         </View>
 
         {/* ── About ────────────────────────────── */}
-        {/* Username and email are edited in Settings. */}
+        {/* Username, email, and gender are edited in Settings. */}
         <View style={styles.card}>
           <EditableRow
             label="Bio"
@@ -228,40 +216,6 @@ export default function MyProfileScreen({ navigation }) {
             onCancel={cancelEdit} onSave={() => saveField('bio')}
             multiline placeholder="Tell people a bit about yourself…"
           />
-        </View>
-
-        {/* ── Gender ───────────────────────────── */}
-        <View style={styles.card}>
-          <View style={styles.rowHeader}>
-            <Text style={styles.cardLabel}>Gender</Text>
-            {editing !== 'gender' && (
-              <TouchableOpacity onPress={() => setEditing('gender')}>
-                <Text style={styles.editLink}>Edit</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          {editing === 'gender' ? (
-            <View style={styles.genderRow}>
-              {GENDERS.map((g) => {
-                const selected = user.gender === g;
-                return (
-                  <TouchableOpacity
-                    key={g}
-                    style={[styles.genderChip, selected && styles.genderChipActive]}
-                    onPress={() => saveGender(g)}
-                    disabled={saving}
-                  >
-                    <Text style={[styles.genderChipText, selected && styles.genderChipTextActive]}>{g}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-              <TouchableOpacity onPress={() => setEditing(null)} style={styles.cancelChip}>
-                <Text style={styles.cancelChipText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <Text style={styles.value}>{user.gender || '\u2014'}</Text>
-          )}
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={confirmLogout} activeOpacity={0.85}>
@@ -378,15 +332,6 @@ const stylesFactory = ({ colors }) => StyleSheet.create({
   cancelLink: { color: colors.textDim, fontSize: 14, marginRight: 20 },
   saveButton: { backgroundColor: colors.accent, paddingHorizontal: 22, paddingVertical: 9, borderRadius: 10, minWidth: 78, alignItems: 'center' },
   saveButtonText: { color: '#fff', fontSize: 14, fontWeight: '800' },
-
-  // Gender
-  genderRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 12 },
-  genderChip: { paddingHorizontal: 18, paddingVertical: 9, borderRadius: 22, borderWidth: 1, borderColor: colors.accent, marginRight: 8, marginBottom: 8 },
-  genderChipActive: { backgroundColor: colors.accent },
-  genderChipText: { color: colors.accent, fontSize: 14, textTransform: 'capitalize', fontWeight: '600' },
-  genderChipTextActive: { color: '#fff' },
-  cancelChip: { paddingHorizontal: 16, paddingVertical: 9 },
-  cancelChipText: { color: colors.textDim, fontSize: 14 },
 
   // Logout
   logoutButton: { marginHorizontal: 16, marginTop: 24, paddingVertical: 15, borderRadius: 14, borderWidth: 1, borderColor: colors.danger, alignItems: 'center' },

@@ -24,6 +24,7 @@ import ChangeEmailScreen from '../screens/ChangeEmailScreen.js';
 import LocationPickerScreen from '../screens/LocationPickerScreen.js';
 import { registerForPush } from '../lib/push.js';
 import { theme } from '../theme/theme.js';
+import PersonalSettingsScreen from '../screens/PersonalSettingsScreen.js';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -101,6 +102,11 @@ export default function RootNavigator() {
           <Stack.Screen name="Tabs" component={Tabs} options={{ headerShown: false }} />
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Messages" component={ConversationsScreen} options={{ headerShown: false }} />
+          <Stack.Screen
+            name="PersonalSettings"
+            component={PersonalSettingsScreen}
+            options={{ headerShown: false }}
+          />
           <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} options={{ headerShown: false }} />
           <Stack.Screen name="LocationPicker" component={LocationPickerScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />

@@ -1,20 +1,14 @@
 // localpulse/app/src/screens/SettingsScreen.js
-import React, { useEffect, useState } from 'react';
-import {
-  View, Text, Pressable, StyleSheet, Alert, ScrollView, Switch, TextInput, StatusBar, Modal, ActivityIndicator,
-} from 'react-native';
+import React from 'react';
+import { View, Text, Pressable, Alert, ScrollView, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../api/client.js';
-import { useProfileStore } from '../store/profileStore.js';
 import { useAuth } from '../context/AuthContext.js';
 import { useThemeMode } from '../theme/ThemeContext.js';
 import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
+import { Row, ToggleRow, Section, settingsStyles } from '../components/SettingsRows.js';
 import Svg, { Path, Polyline, Line } from 'react-native-svg';
-
-// Fallback radius when the user turns "Anywhere" back off. Matches the
-// server-side default in the User model.
-const DEFAULT_DISTANCE_KM = 50;
 
 // Standard "log out" icon (door with arrow out), matching the screenshot.
 function LogOutIcon() {
@@ -27,170 +21,19 @@ function LogOutIcon() {
   );
 }
 
-const SHOW = [
-  { key: 'female', label: 'Women' },
-  { key: 'male', label: 'Men' },
-  { key: 'everyone', label: 'Everyone' },
-];
-
-// ── Reusable rows (Recover pattern) ──────────────────────────────
-function Row({ label, value, onPress, danger, last }) {
-  const styles = useStyles(stylesFactory);
-  return (
-    <Pressable
-      style={[styles.row, !last && styles.rowDivider]}
-      onPress={onPress}
-      disabled={!onPress}
-    >
-      <Text style={[styles.rowLabel, danger && styles.rowLabelDanger]}>{label}</Text>
-      <View style={styles.rowRight}>
-        {value != null ? <Text style={styles.rowValue}>{value}</Text> : null}
-        {onPress ? <Text style={styles.chevron}>›</Text> : null}
-      </View>
-    </Pressable>
-  );
-}
-
-function ToggleRow({ label, sublabel, value, onValueChange, last }) {
-  const styles = useStyles(stylesFactory);
-  return (
-    <View style={[styles.row, !last && styles.rowDivider]}>
-      <View style={{ flex: 1, paddingRight: 12 }}>
-        <Text style={styles.rowLabel}>{label}</Text>
-        {sublabel ? <Text style={styles.rowSublabel}>{sublabel}</Text> : null}
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onValueChange}
-        trackColor={{ true: theme.colors.accent, false: theme.colors.border }}
-        thumbColor="#fff"
-      />
-    </View>
-  );
-}
-
-function Section({ title, children }) {
-  const styles = useStyles(stylesFactory);
-  return (
-    <View style={styles.sectionWrap}>
-      {title ? <Text style={styles.sectionTitle}>{title}</Text> : null}
-      <View style={styles.section}>{children}</View>
-    </View>
-  );
-}
-
 export default function SettingsScreen({ navigation }) {
-  const styles = useStyles(stylesFactory);
+  const styles = useStyles(settingsStyles);
   const insets = useSafeAreaInsets();
-  const profile = useProfileStore((s) => s.profile);
-  const loadProfile = useProfileStore((s) => s.loadProfile);
-  const savePreferences = useProfileStore((s) => s.savePreferences);
   const { logout } = useAuth();
+  const { pref, setPref } = useThemeMode();
+
+  const isDark = pref === 'dark' || (pref === 'system' && theme.mode === 'dark');
 
   function confirmLogout() {
     Alert.alert('Log out?', 'You\u2019ll need your email and PIN to sign back in.', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Log out', style: 'destructive', onPress: () => logout() },
     ]);
-  }
-  const { pref, setPref } = useThemeMode();
-
-  const [show, setShow] = useState('everyone');
-  const [ageMin, setAgeMin] = useState('18');
-  const [ageMax, setAgeMax] = useState('99');
-  // null = "Anywhere" (no distance limit). Otherwise the km value as a string,
-  // because that's what TextInput needs.
-  const [distance, setDistance] = useState(String(DEFAULT_DISTANCE_KM));
-  const anywhere = distance === null;
-
-  // Inline username edit
-  const [usernameModal, setUsernameModal] = useState(false);
-  const [usernameDraft, setUsernameDraft] = useState('');
-  const [usernameSaving, setUsernameSaving] = useState(false);
-  const [usernameError, setUsernameError] = useState('');
-
-  const isDark = pref === 'dark' || (pref === 'system' && theme.mode === 'dark');
-
-  useEffect(() => { loadProfile(); }, [loadProfile]);
-  // Refetch on focus: returning from LocationPicker changes locationName /
-  // locationMode on the server, and the row above reads them.
-  useEffect(
-    () => navigation.addListener('focus', loadProfile),
-    [navigation, loadProfile],
-  );
-  useEffect(() => {
-    if (profile?.preferences) {
-      const p = profile.preferences;
-      setShow(p.show || 'everyone');
-      setAgeMin(String(p.ageMin ?? 18));
-      setAgeMax(String(p.ageMax ?? 99));
-      setDistance(p.maxDistanceKm == null ? null : String(p.maxDistanceKm));
-    }
-  }, [profile]);
-
-  function openUsernameEdit() {
-    setUsernameDraft(profile?.username || '');
-    setUsernameError('');
-    setUsernameModal(true);
-  }
-
-  async function saveUsername() {
-    const uname = usernameDraft.trim();
-    setUsernameError('');
-    if (uname.length < 3 || uname.length > 24) {
-      setUsernameError('Username must be 3 to 24 characters.');
-      return;
-    }
-    if (uname === profile?.username) { setUsernameModal(false); return; }
-    setUsernameSaving(true);
-    try {
-      await api.updateMyProfile({ username: uname });
-      await loadProfile();
-      setUsernameModal(false);
-    } catch (e) {
-      setUsernameError(e?.message ?? 'Could not change username.');
-    } finally {
-      setUsernameSaving(false);
-    }
-  }
-
-  async function savePrefs(patch) {
-    try {
-      await savePreferences(patch);
-    } catch (e) {
-      Alert.alert('Error', e.message);
-    }
-  }
-
-  // Toggling "Anywhere" writes null (no limit) or restores the default radius.
-  // Sending null rather than 0 keeps the meaning explicit in the DB and lets
-  // $geoNear omit maxDistance entirely.
-  function toggleAnywhere(on) {
-    if (on) {
-      setDistance(null);
-      savePrefs({ maxDistanceKm: null });
-    } else {
-      setDistance(String(DEFAULT_DISTANCE_KM));
-      savePrefs({ maxDistanceKm: DEFAULT_DISTANCE_KM });
-    }
-  }
-
-  // Guard the blur handler: an empty or nonsense field would send NaN, which
-  // Mongoose casts to a validation error rather than silently ignoring.
-  function saveDistance() {
-    const n = Number(distance);
-    if (!Number.isFinite(n) || n < 1) {
-      setDistance(String(profile?.preferences?.maxDistanceKm ?? DEFAULT_DISTANCE_KM));
-      return;
-    }
-    savePrefs({ maxDistanceKm: n });
-  }
-
-  function cycleShow() {
-    const idx = SHOW.findIndex((s) => s.key === show);
-    const next = SHOW[(idx + 1) % SHOW.length];
-    setShow(next.key);
-    savePrefs({ show: next.key });
   }
 
   function confirmDelete() {
@@ -215,8 +58,6 @@ export default function SettingsScreen({ navigation }) {
     );
   }
 
-  const showLabel = SHOW.find((s) => s.key === show)?.label ?? 'Everyone';
-
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
@@ -234,24 +75,11 @@ export default function SettingsScreen({ navigation }) {
         style={styles.root}
         contentContainerStyle={{ padding: theme.spacing(4), paddingBottom: insets.bottom + theme.spacing(10) }}
       >
-        {/* Account */}
-        <Section title="ACCOUNT">
-          <Row label="Username" value={profile?.username || '—'} onPress={openUsernameEdit} last={false} />
+        {/* Account + Discovery moved here — this screen was getting long. */}
+        <Section>
           <Row
-            label="Email"
-            value={profile?.email || '—'}
-            onPress={() => navigation.navigate('ChangeEmail')}
-            last={false}
-          />
-          {/* Where you appear to be. Browsing elsewhere is on the Discover header. */}
-          <Row
-            label="Your location"
-            value={
-              profile?.locationMode === 'manual'
-                ? (profile?.locationName || 'Set manually')
-                : 'Using GPS'
-            }
-            onPress={() => navigation.navigate('LocationPicker', { mode: 'home' })}
+            label="Personal settings"
+            onPress={() => navigation.navigate('PersonalSettings')}
             last
           />
         </Section>
@@ -272,55 +100,6 @@ export default function SettingsScreen({ navigation }) {
           />
         </Section>
 
-        {/* Discovery */}
-        <Section title="DISCOVERY">
-          <Row label="Show me" value={showLabel} onPress={cycleShow} last={false} />
-          <View style={[styles.row, styles.rowDivider]}>
-            <Text style={styles.rowLabel}>Age range</Text>
-            <View style={styles.rangeRight}>
-              <TextInput
-                style={styles.rangeInput}
-                value={ageMin}
-                onChangeText={setAgeMin}
-                onBlur={() => savePrefs({ ageMin: Number(ageMin) })}
-                keyboardType="number-pad"
-              />
-              <Text style={styles.rangeDash}>–</Text>
-              <TextInput
-                style={styles.rangeInput}
-                value={ageMax}
-                onChangeText={setAgeMax}
-                onBlur={() => savePrefs({ ageMax: Number(ageMax) })}
-                keyboardType="number-pad"
-              />
-            </View>
-          </View>
-
-          <ToggleRow
-            label="Anywhere"
-            sublabel="Show people at any distance"
-            value={anywhere}
-            onValueChange={toggleAnywhere}
-            last={anywhere}
-          />
-
-          {/* Hidden entirely when "Anywhere" is on — a number-pad field has no
-              way to represent "no limit", and leaving it visible-but-disabled
-              would just look broken. */}
-          {!anywhere && (
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>Max distance (km)</Text>
-              <TextInput
-                style={styles.rangeInput}
-                value={distance}
-                onChangeText={setDistance}
-                onBlur={saveDistance}
-                keyboardType="number-pad"
-              />
-            </View>
-          )}
-        </Section>
-
         {/* Legal */}
         <Section title="LEGAL">
           <Row label="Terms of Service" onPress={() => navigation.navigate('Terms')} last={false} />
@@ -329,88 +108,12 @@ export default function SettingsScreen({ navigation }) {
 
         {/* Danger zone */}
         <Section>
-          <Row label="Log out" onPress={logout} last={false} />
+          <Row label="Log out" onPress={confirmLogout} last={false} />
           <Row label="Delete account" onPress={confirmDelete} danger last />
         </Section>
 
-        <Text style={styles.version}>Nearby</Text>
+        <Text style={styles.version}>LocalPulse</Text>
       </ScrollView>
-
-      <Modal visible={usernameModal} transparent animationType="fade" onRequestClose={() => setUsernameModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Change username</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={usernameDraft}
-              onChangeText={setUsernameDraft}
-              autoCapitalize="none"
-              autoFocus
-              placeholder="Username"
-              placeholderTextColor={theme.colors.textDim}
-              selectionColor={theme.colors.accent}
-            />
-            {!!usernameError && <Text style={styles.modalError}>{usernameError}</Text>}
-            <View style={styles.modalBtns}>
-              <Pressable onPress={() => setUsernameModal(false)}>
-                <Text style={styles.modalCancel}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.modalSave, usernameDraft.trim().length < 3 && styles.modalSaveDisabled]}
-                onPress={usernameDraft.trim().length >= 3 && !usernameSaving ? saveUsername : undefined}
-              >
-                {usernameSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Save</Text>}
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
-
-const stylesFactory = (({ colors, spacing, radius }) =>
-  StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.bg },
-    root: { flex: 1, backgroundColor: colors.bg },
-
-    sectionWrap: { marginBottom: spacing(6) },
-    sectionTitle: { color: colors.textDim, fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: spacing(2), marginLeft: spacing(1) },
-    section: {
-      backgroundColor: colors.surface, borderRadius: radius.md,
-      borderWidth: 1, borderColor: colors.border, overflow: 'hidden',
-    },
-
-    row: {
-      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-      paddingHorizontal: spacing(4), paddingVertical: spacing(4), minHeight: 54,
-    },
-    rowDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
-    rowLabel: { color: colors.text, fontSize: 16 },
-    rowSublabel: { color: colors.textDim, fontSize: 13, marginTop: 2 },
-    rowLabelDanger: { color: colors.danger, fontWeight: '600' },
-    rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing(2) },
-    rowValue: { color: colors.textDim, fontSize: 15 },
-    chevron: { color: colors.textDim, fontSize: 22, fontWeight: '300' },
-
-    rangeRight: { flexDirection: 'row', alignItems: 'center', gap: spacing(2) },
-    rangeInput: {
-      backgroundColor: colors.surfaceAlt, color: colors.text, borderRadius: radius.sm,
-      paddingHorizontal: spacing(3), paddingVertical: spacing(2), fontSize: 15,
-      borderWidth: 1, borderColor: colors.border, minWidth: 56, textAlign: 'center',
-    },
-    rangeDash: { color: colors.textDim, fontSize: 16 },
-
-    version: { color: colors.textDim, fontSize: 13, textAlign: 'center', marginTop: spacing(2) },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center', padding: spacing(8) },
-    modalSheet: { width: '100%', backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, padding: spacing(5) },
-    modalTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: spacing(4) },
-    modalInput: { color: colors.text, fontSize: 17, borderBottomWidth: 1.5, borderBottomColor: colors.border, paddingVertical: spacing(2) },
-    modalError: { color: colors.danger, fontSize: 14, marginTop: spacing(3) },
-    modalBtns: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: spacing(5), marginTop: spacing(5) },
-    modalCancel: { color: colors.textDim, fontSize: 16, fontWeight: '600' },
-    modalSave: { backgroundColor: colors.accent, borderRadius: radius.sm, paddingHorizontal: spacing(6), paddingVertical: spacing(2.5), minWidth: 72, alignItems: 'center' },
-    modalSaveDisabled: { backgroundColor: colors.accentDim },
-    modalSaveText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  })
-);
