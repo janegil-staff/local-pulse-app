@@ -2,7 +2,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View, Text, TextInput, Pressable, FlatList, StyleSheet, KeyboardAvoidingView, Platform,
+  Image, Alert, ActivityIndicator,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChatStore } from '../store/chatStore.js';
 import { useAuth } from '../context/AuthContext.js';
@@ -16,9 +18,11 @@ export default function ChatScreen({ route, navigation }) {
   const { user: me } = useAuth();
   const messages = useChatStore((s) => s.messages);
   const typingUserId = useChatStore((s) => s.typingUserId);
+  const sendingImage = useChatStore((s) => s.sendingImage);
   const enterConversation = useChatStore((s) => s.enterConversation);
   const leaveConversation = useChatStore((s) => s.leaveConversation);
   const send = useChatStore((s) => s.send);
+  const sendImage = useChatStore((s) => s.sendImage);
   const emitTyping = useChatStore((s) => s.emitTyping);
   const [text, setText] = useState('');
   const listRef = useRef(null);
@@ -38,6 +42,25 @@ export default function ChatScreen({ route, navigation }) {
     setText('');
   }
 
+  async function attachImage() {
+    if (sendingImage) return;
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permission needed', 'Allow photo access to send a picture.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaType ? ['images'] : ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (result.canceled) return;
+
+    // sendImage resolves to an error string, or null on success — the server
+    // rejects photos in pending conversations, and that message lands here.
+    const err = await sendImage(result.assets[0].uri);
+    if (err) Alert.alert('Could not send', err);
+  }
+
   return (
     <View style={styles.root}>
       <ScreenHeader title={title || 'Chat'} onBack={() => navigation.goBack()} />
@@ -53,6 +76,15 @@ export default function ChatScreen({ route, navigation }) {
           contentContainerStyle={{ padding: theme.spacing(3), flexGrow: 1, justifyContent: 'flex-end' }}
           renderItem={({ item }) => {
             const mine = String(item.sender?.id) === String(me?.id);
+            // Image bubbles drop the padding and background — the photo is the
+            // bubble. Text bubbles are unchanged.
+            if (item.imageUrl) {
+              return (
+                <View style={[styles.bubbleRow, mine ? styles.rowMine : styles.rowTheirs]}>
+                  <Image source={{ uri: item.imageUrl }} style={styles.imageBubble} resizeMode="cover" />
+                </View>
+              );
+            }
             return (
               <View style={[styles.bubbleRow, mine ? styles.rowMine : styles.rowTheirs]}>
                 <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
@@ -65,6 +97,11 @@ export default function ChatScreen({ route, navigation }) {
         {typingUserId ? <Text style={styles.typing}>typing…</Text> : null}
 
         <View style={[styles.inputRow, { paddingBottom: Math.max(insets.bottom, theme.spacing(3)) }]}>
+          <Pressable style={styles.attachBtn} onPress={attachImage} disabled={sendingImage}>
+            {sendingImage
+              ? <ActivityIndicator size="small" color={theme.colors.textDim} />
+              : <Text style={styles.attachText}>＋</Text>}
+          </Pressable>
           <TextInput
             style={styles.input}
             placeholder="Message…"
@@ -92,10 +129,13 @@ const stylesFactory = (({ colors, spacing, radius }) =>
     bubble: { maxWidth: '78%', paddingHorizontal: spacing(3.5), paddingVertical: spacing(2.5), borderRadius: radius.lg },
     bubbleMine: { backgroundColor: colors.accent, borderBottomRightRadius: 4 },
     bubbleTheirs: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderBottomLeftRadius: 4 },
+    imageBubble: { width: 220, height: 220, borderRadius: radius.lg, backgroundColor: colors.surfaceAlt },
     msgText: { color: colors.text, fontSize: 15, lineHeight: 20 },
     msgTextMine: { color: '#fff' },
     typing: { color: colors.textDim, fontSize: 12, paddingHorizontal: spacing(4), paddingBottom: spacing(1), fontStyle: 'italic' },
     inputRow: { flexDirection: 'row', paddingHorizontal: spacing(3), paddingTop: spacing(3), gap: spacing(2), borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface, alignItems: 'flex-end' },
+    attachBtn: { width: 44, height: 44, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
+    attachText: { color: colors.textDim, fontSize: 24, fontWeight: '300', marginTop: -2 },
     input: { flex: 1, backgroundColor: colors.surfaceAlt, color: colors.text, borderRadius: radius.md, paddingHorizontal: spacing(4), paddingVertical: spacing(2.5), fontSize: 15, borderWidth: 1, borderColor: colors.border, maxHeight: 120 },
     sendBtn: { backgroundColor: colors.accent, borderRadius: radius.md, paddingHorizontal: spacing(4), height: 44, justifyContent: 'center' },
     sendText: { color: '#fff', fontWeight: '700' },
