@@ -102,6 +102,12 @@ export default function SettingsScreen({ navigation }) {
   const isDark = pref === 'dark' || (pref === 'system' && theme.mode === 'dark');
 
   useEffect(() => { loadProfile(); }, [loadProfile]);
+  // Refetch on focus: returning from LocationPicker changes locationName /
+  // locationMode on the server, and the row above reads them.
+  useEffect(
+    () => navigation.addListener('focus', loadProfile),
+    [navigation, loadProfile],
+  );
   useEffect(() => {
     if (profile?.preferences) {
       const p = profile.preferences;
@@ -201,6 +207,17 @@ export default function SettingsScreen({ navigation }) {
             label="Email"
             value={profile?.email || '—'}
             onPress={() => navigation.navigate('ChangeEmail')}
+            last={false}
+          />
+          {/* Where you appear to be. Browsing elsewhere is on the Discover header. */}
+          <Row
+            label="Your location"
+            value={
+              profile?.locationMode === 'manual'
+                ? (profile?.locationName || 'Set manually')
+                : 'Using GPS'
+            }
+            onPress={() => navigation.navigate('LocationPicker', { mode: 'home' })}
             last
           />
         </Section>

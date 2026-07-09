@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import {
   View, Text, TextInput, Pressable, FlatList, StyleSheet, KeyboardAvoidingView, Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChatStore } from '../store/chatStore.js';
 import { useAuth } from '../context/AuthContext.js';
 import ScreenHeader from '../components/ScreenHeader.js';
@@ -10,6 +11,7 @@ import { theme, makeStyles, useStyles } from '../theme/theme.js';
 
 export default function ChatScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
+  const insets = useSafeAreaInsets();
   const { conversationId, title } = route.params;
   const { user: me } = useAuth();
   const messages = useChatStore((s) => s.messages);
@@ -41,14 +43,14 @@ export default function ChatScreen({ route, navigation }) {
       <ScreenHeader title={title || 'Chat'} onBack={() => navigation.goBack()} />
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={90}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
       >
         <FlatList
           ref={listRef}
           data={messages}
           keyExtractor={(m) => String(m.id)}
-          contentContainerStyle={{ padding: theme.spacing(3) }}
+          contentContainerStyle={{ padding: theme.spacing(3), flexGrow: 1, justifyContent: 'flex-end' }}
           renderItem={({ item }) => {
             const mine = String(item.sender?.id) === String(me?.id);
             return (
@@ -62,7 +64,7 @@ export default function ChatScreen({ route, navigation }) {
         />
         {typingUserId ? <Text style={styles.typing}>typing…</Text> : null}
 
-        <View style={styles.inputRow}>
+        <View style={[styles.inputRow, { paddingBottom: Math.max(insets.bottom, theme.spacing(3)) }]}>
           <TextInput
             style={styles.input}
             placeholder="Message…"
@@ -93,9 +95,9 @@ const stylesFactory = (({ colors, spacing, radius }) =>
     msgText: { color: colors.text, fontSize: 15, lineHeight: 20 },
     msgTextMine: { color: '#fff' },
     typing: { color: colors.textDim, fontSize: 12, paddingHorizontal: spacing(4), paddingBottom: spacing(1), fontStyle: 'italic' },
-    inputRow: { flexDirection: 'row', padding: spacing(3), gap: spacing(2), borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
+    inputRow: { flexDirection: 'row', paddingHorizontal: spacing(3), paddingTop: spacing(3), gap: spacing(2), borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface, alignItems: 'flex-end' },
     input: { flex: 1, backgroundColor: colors.surfaceAlt, color: colors.text, borderRadius: radius.md, paddingHorizontal: spacing(4), paddingVertical: spacing(2.5), fontSize: 15, borderWidth: 1, borderColor: colors.border, maxHeight: 120 },
-    sendBtn: { backgroundColor: colors.accent, borderRadius: radius.md, paddingHorizontal: spacing(4), justifyContent: 'center' },
+    sendBtn: { backgroundColor: colors.accent, borderRadius: radius.md, paddingHorizontal: spacing(4), height: 44, justifyContent: 'center' },
     sendText: { color: '#fff', fontWeight: '700' },
   })
 );

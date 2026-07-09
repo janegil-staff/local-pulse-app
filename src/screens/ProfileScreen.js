@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '../api/client.js';
 import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
+import { avatarSource } from '../lib/avatar.js';
 
 const { width } = Dimensions.get('window');
 const HERO_H = Math.round(width * 1.1);
@@ -130,9 +131,7 @@ export default function ProfileScreen({ route, navigation }) {
               ))}
             </ScrollView>
           ) : (
-            <View style={[styles.heroImg, styles.heroEmpty]}>
-              <Text style={styles.heroEmptyText}>{name[0]?.toUpperCase()}</Text>
-            </View>
+            <Image source={avatarSource(profile)} style={styles.heroImg} />
           )}
 
           <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.heroScrim} pointerEvents="none" />
@@ -159,7 +158,13 @@ export default function ProfileScreen({ route, navigation }) {
                 </View>
               ) : null}
             </View>
-            {profile.neighborhood ? <Text style={styles.heroMeta}>📍 {profile.neighborhood}</Text> : null}
+            {profile.locationName || profile.neighborhood || profile.distanceKm != null ? (
+              <Text style={styles.heroMeta}>
+                {profile.locationName || profile.neighborhood || ''}
+                {(profile.locationName || profile.neighborhood) && profile.distanceKm != null ? '  ·  ' : ''}
+                {profile.distanceKm != null ? `~${profile.distanceKm} km away` : ''}
+              </Text>
+            ) : null}
           </View>
         </View>
 

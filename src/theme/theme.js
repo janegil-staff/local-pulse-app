@@ -1,8 +1,18 @@
 // localpulse/app/src/theme/theme.js
-// Light + dark palettes. `theme` is a live proxy to the active palette so that
-// existing `makeStyles(theme)(...)` module-level calls keep working — the
-// ThemeProvider swaps the active palette and remounts the tree via a key, so
-// styles are rebuilt against the new colors.
+//
+// Light + dark palettes.
+//
+// `theme` is a live object whose `.colors` are swapped in place by applyMode().
+// `useStyles(factory)` is a REAL hook: it subscribes to mode changes and
+// rebuilds the factory when the palette swaps. Nothing remounts — the tree
+// stays mounted, navigation state is preserved, and every component using
+// useStyles simply re-renders with the new colors.
+//
+// (An earlier design forced a remount with key={rev}; that reset navigation
+// on every theme toggle, so it was removed. Without a subscription here,
+// useStyles would silently freeze at whatever palette was active on first
+// render — which is exactly the "toggle does nothing" bug.)
+import { useSyncExternalStore, useMemo } from 'react';
 
 export const darkColors = {
   accent: '#3B82C4',
@@ -39,32 +49,65 @@ const base = {
   radius: { sm: 8, md: 12, lg: 18 },
 };
 
-// The live active theme. Screens import this; ThemeProvider mutates `.colors`
-// and forces a remount so module-level makeStyles picks up the new palette.
+// The live active theme. Screens may read `theme.colors.x` inline; that always
+// reflects the current palette because applyMode mutates it in place.
 export const theme = {
   mode: 'dark',
   colors: { ...darkColors },
   ...base,
 };
 
-// Swap the active palette in place.
-export function applyMode(mode) {
-  theme.mode = mode;
-  const palette = mode === 'light' ? lightColors : darkColors;
-  Object.assign(theme.colors, palette);
+// ── Subscription store ────────────────────────────────────────────────
+// A bare listener set. Lives here (not in ThemeContext) to avoid a circular
+// import: ThemeContext already imports from this module.
+let version = 0;
+const listeners = new Set();
+
+function subscribe(cb) {
+  listeners.add(cb);
+  return () => listeners.delete(cb);
+}
+function getSnapshot() {
+  return version;
 }
 
+// Swap the active palette in place and notify subscribers.
+export function applyMode(mode) {
+  const next = mode === 'light' ? lightColors : darkColors;
+  if (theme.mode === mode) return;   // no-op: don't churn renders
+  theme.mode = mode;
+  Object.assign(theme.colors, next);
+  version += 1;
+  listeners.forEach((cb) => cb());
+}
+
+// ── Hooks ─────────────────────────────────────────────────────────────
+
+// Re-renders the caller whenever the palette changes. Returns the mode so it
+// can double as `const mode = useThemeVersion()` if ever useful.
+export function useThemeVersion() {
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+// Rebuilds `factory(theme)` whenever the palette changes.
+//
+//   const styles = useStyles(stylesFactory);
+//   const stylesFactory = ({ colors, spacing, radius }) => StyleSheet.create({...});
+//
+// The factory must be defined at module scope (a stable reference), otherwise
+// the memo is defeated and styles are rebuilt every render — which still
+// *works*, just wastefully.
+export function useStyles(factory) {
+  const v = useThemeVersion();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => factory(theme), [factory, v]);
+}
+
+// Legacy: module-level `const s = makeStyles(theme)(factory)`. This is FROZEN —
+// it cannot react to mode changes. Kept only so old call sites don't crash.
+// Migrate to useStyles; see scripts/convert-to-usestyles.cjs.
 export function makeStyles(t = theme) {
   return (factory) => factory(t);
-}
-
-// Hook version: rebuilds the given factory against the live theme on every
-// render. Because ThemeProvider remounts the tree (key bump) on mode change,
-// components using this get fresh styles in the new palette. Use as:
-//   const styles = useStyles((t) => StyleSheet.create({ ... }))
-// where the factory receives the live theme ({ colors, spacing, radius }).
-export function useStyles(factory) {
-  return factory(theme);
 }
 
 export const POST_TYPE_META = {

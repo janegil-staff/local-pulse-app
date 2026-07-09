@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useFeedStore } from '../store/feedStore.js';
+import ScreenHeader from '../components/ScreenHeader.js';
 import { theme, makeStyles, useStyles, POST_TYPE_META } from '../theme/theme.js';
 
 const TYPES = Object.keys(POST_TYPE_META);
@@ -23,55 +24,59 @@ export default function ComposeScreen({ navigation }) {
   }
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={{ padding: theme.spacing(4) }}>
-      <Text style={styles.label}>Type</Text>
-      <View style={styles.typeRow}>
-        {TYPES.map((t) => {
-          const meta = POST_TYPE_META[t];
-          const active = t === type;
-          return (
-            <Pressable
-              key={t}
-              onPress={() => setType(t)}
-              style={[styles.chip, active && styles.chipActive]}
-            >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                {meta.emoji} {meta.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+    <View style={styles.root}>
+      <ScreenHeader title="New Post" onBack={() => navigation.goBack()} />
 
-      <Text style={styles.label}>What's happening?</Text>
-      <TextInput
-        style={styles.textArea}
-        placeholder="Share something with your neighborhood…"
-        placeholderTextColor={theme.colors.textDim}
-        value={text}
-        onChangeText={setText}
-        multiline
-        maxLength={1000}
-        autoFocus
-      />
+      <ScrollView contentContainerStyle={{ padding: theme.spacing(4) }} keyboardShouldPersistTaps="handled">
+        <Text style={styles.label}>Type</Text>
+        <View style={styles.typeRow}>
+          {TYPES.map((t) => {
+            const meta = POST_TYPE_META[t];
+            const active = t === type;
+            return (
+              <Pressable
+                key={t}
+                onPress={() => setType(t)}
+                style={[styles.chip, active && styles.chipActive]}
+              >
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                  {meta.emoji} {meta.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
 
-      <Text style={styles.label}>Place (optional)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. Bergen sentrum"
-        placeholderTextColor={theme.colors.textDim}
-        value={placeName}
-        onChangeText={setPlaceName}
-      />
+        <Text style={styles.label}>What's happening?</Text>
+        <TextInput
+          style={styles.textArea}
+          placeholder="Share something with your neighborhood…"
+          placeholderTextColor={theme.colors.textDim}
+          value={text}
+          onChangeText={setText}
+          multiline
+          maxLength={1000}
+          autoFocus
+        />
 
-      <Pressable
-        style={[styles.btn, (!text.trim() || posting) && styles.btnDisabled]}
-        onPress={submit}
-        disabled={!text.trim() || posting}
-      >
-        <Text style={styles.btnText}>{posting ? 'Posting…' : 'Post'}</Text>
-      </Pressable>
-    </ScrollView>
+        <Text style={styles.label}>Place (optional)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. Bergen sentrum"
+          placeholderTextColor={theme.colors.textDim}
+          value={placeName}
+          onChangeText={setPlaceName}
+        />
+
+        <Pressable
+          style={[styles.btn, (!text.trim() || posting) && styles.btnDisabled]}
+          onPress={submit}
+          disabled={!text.trim() || posting}
+        >
+          <Text style={styles.btnText}>{posting ? 'Posting…' : 'Post'}</Text>
+        </Pressable>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -103,6 +108,6 @@ const stylesFactory = (({ colors, spacing, radius }) =>
       paddingVertical: spacing(4), alignItems: 'center', marginTop: spacing(6),
     },
     btnDisabled: { backgroundColor: colors.accentDim, opacity: 0.6 },
-    btnText: { color: '#04101f', fontSize: 16, fontWeight: '700' },
+    btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   })
 );

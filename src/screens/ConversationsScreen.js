@@ -13,6 +13,7 @@ import { theme, useStyles } from '../theme/theme.js';
 export default function ConversationsScreen({ navigation }) {
   const styles = useStyles(stylesFactory);
   const initSocket = useChatStore((s) => s.initSocket);
+  const refreshUnread = useChatStore((s) => s.refreshUnread);
 
   const [tab, setTab] = useState('messages'); // 'messages' | 'requests'
   const [conversations, setConversations] = useState([]);
@@ -28,10 +29,11 @@ export default function ConversationsScreen({ navigation }) {
       ]);
       setConversations(c.conversations ?? []);
       setRequests(r.requests ?? []);
+      refreshUnread(); // keep the header badge in sync
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refreshUnread]);
 
   useEffect(() => {
     initSocket();
@@ -74,8 +76,13 @@ export default function ConversationsScreen({ navigation }) {
         </View>
         <View style={styles.body}>
           <Text style={styles.name}>{name}</Text>
-          <Text style={styles.preview} numberOfLines={1}>{item.lastMessage || 'No messages yet'}</Text>
+          <Text style={[styles.preview, item.unread > 0 && styles.previewUnread]} numberOfLines={1}>{item.lastMessage || 'No messages yet'}</Text>
         </View>
+        {tab === 'messages' && item.unread > 0 ? (
+          <View style={styles.unreadBadge}>
+            <Text style={styles.unreadText}>{item.unread > 99 ? '99+' : item.unread}</Text>
+          </View>
+        ) : null}
         {tab === 'requests' && (
           <Pressable style={styles.acceptBtn} onPress={() => accept(item)}>
             <Text style={styles.acceptText}>Accept</Text>
@@ -87,7 +94,7 @@ export default function ConversationsScreen({ navigation }) {
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title="Messages" navigation={navigation} />
+      <ScreenHeader title="Messages" onBack={() => navigation.goBack()} />
 
       <View style={styles.tabs}>
         <Pressable style={[styles.tab, tab === 'messages' && styles.tabActive]} onPress={() => setTab('messages')}>
@@ -138,6 +145,9 @@ const stylesFactory = (({ colors, spacing }) =>
     body: { flex: 1 },
     name: { color: colors.text, fontSize: 16, fontWeight: '600' },
     preview: { color: colors.textDim, fontSize: 14, marginTop: spacing(1) },
+    previewUnread: { color: colors.text, fontWeight: '600' },
+    unreadBadge: { minWidth: 22, height: 22, borderRadius: 11, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+    unreadText: { color: '#fff', fontSize: 12, fontWeight: '800' },
 
     acceptBtn: { backgroundColor: colors.accent, borderRadius: 8, paddingHorizontal: spacing(4), paddingVertical: spacing(2) },
     acceptText: { color: '#fff', fontSize: 14, fontWeight: '700' },

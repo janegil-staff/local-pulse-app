@@ -21,6 +21,7 @@ import PinSetupScreen from '../screens/auth/PinSetupScreen.js';
 import PinConfirmScreen from '../screens/auth/PinConfirmScreen.js';
 import MyProfileScreen from '../screens/MyProfileScreen.js';
 import ChangeEmailScreen from '../screens/ChangeEmailScreen.js';
+import LocationPickerScreen from '../screens/LocationPickerScreen.js';
 import { registerForPush } from '../lib/push.js';
 import { theme } from '../theme/theme.js';
 
@@ -40,7 +41,6 @@ function tabIcon(glyph) {
 }
 
 function Tabs() {
-  const unread = useChatStore((s) => s.unread);
   return (
     <Tab.Navigator
       screenOptions={{
@@ -50,14 +50,9 @@ function Tabs() {
         tabBarInactiveTintColor: theme.colors.textDim,
       }}
     >
-      {/* Matchmaking removed — open local chat app. */}
+      {/* Messages lives in the header (✉), not the tab bar. */}
       <Tab.Screen name="Discover" component={DiscoveryScreen} options={{ headerShown: false, tabBarIcon: tabIcon('◎') }} />
       <Tab.Screen name="Feed" component={FeedScreen} options={{ headerShown: false, tabBarIcon: tabIcon('⌂') }} />
-      <Tab.Screen
-        name="Messages"
-        component={ConversationsScreen}
-        options={{ headerShown: false, tabBarIcon: tabIcon('✉'), tabBarBadge: unread > 0 ? (unread > 99 ? '99+' : unread) : undefined }}
-      />
       <Tab.Screen
         name="MyProfile"
         component={MyProfileScreen}
@@ -107,8 +102,9 @@ export default function RootNavigator() {
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Messages" component={ConversationsScreen} options={{ headerShown: false }} />
           <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="LocationPicker" component={LocationPickerScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Compose" component={ComposeScreen} options={{ title: 'New Post', presentation: 'modal' }} />
+          <Stack.Screen name="Compose" component={ComposeScreen} options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen name="PostDetail" component={PostDetailScreen} options={{ title: 'Post' }} />
           <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Saved" component={SavedScreen} options={{ title: 'Saved' }} />

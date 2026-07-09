@@ -3,8 +3,10 @@
 // LAN IP in dev (e.g. http://192.168.1.71:4000), the Android emulator's
 ;// http://10.0.2.2:4000, or your deployed URL. Falls back to localhost.
 
-import { Platform } from 'react-native';
-const HOST = Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://localhost:4000';
+//import { Platform } from 'react-native';
+//const HOST = Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://localhost:4000';
+
+const HOST = "https://lionfish-app-ed6lo.ondigitalocean.app"
 
 export const API_URL = `${HOST}/api`;
 export const SOCKET_URL = HOST;
@@ -55,6 +57,16 @@ export const api = {
   register: (b) => request('/auth/register', { method: 'POST', body: b, auth: false }),
   login: (b) => request('/auth/login', { method: 'POST', body: b, auth: false }),
   me: () => request('/auth/me'),
+
+  // ── Location ──────────────────────────────────────────────
+  searchPlaces: (q) => request(`/geocode${qs({ q })}`),
+
+  setLocation: ({ lat, lng, name, mode }) =>
+    request('/location', { method: 'POST', body: { lat, lng, name, mode } }),
+
+  setBrowseLocation: (payload) =>
+    request('/browse-location', { method: 'POST', body: payload }),
+
 
   createPost: (b) => request('/posts', { method: 'POST', body: b }),
   getFeed: (p) => request(`/posts/feed${qs(p)}`),

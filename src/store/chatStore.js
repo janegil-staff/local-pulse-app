@@ -8,7 +8,8 @@ export const useChatStore = create((set, get) => ({
   messages: [],        // for the active conversation
   activeId: null,
   typingUserId: null,
-  unread: 0,           // total unread across accepted conversations (tab badge)
+  unread: 0,           // unread messages in accepted conversations
+  requestCount: 0,     // pending message requests awaiting your response
   bound: false,
 
   // Wire socket listeners once, after login.
@@ -29,13 +30,16 @@ export const useChatStore = create((set, get) => ({
       });
     });
 
-    // Incoming notification for a conversation you're NOT currently viewing →
-    // bump the unread total (for the Messages tab badge).
+    // Incoming notification → bump the badge. Requests count too: a pending
+    // conversation still needs the user's attention.
     s.on('chat:notify', ({ conversationId, pending }) => {
       const st = get();
-      if (pending) return; // requests don't count toward the messages badge
       if (String(conversationId) === String(st.activeId)) return; // you're reading it
-      set({ unread: st.unread + 1 });
+      if (pending) {
+        set({ requestCount: st.requestCount + 1 });
+      } else {
+        set({ unread: st.unread + 1 });
+      }
     });
 
     s.on('chat:typing', ({ userId }) => {
@@ -52,6 +56,11 @@ export const useChatStore = create((set, get) => ({
     try {
       const { count } = await api.getChatUnreadCount();
       set({ unread: count || 0 });
+    } catch { /* ignore */ }
+    // Also refresh how many pending requests are waiting.
+    try {
+      const { requests } = await api.getRequests();
+      set({ requestCount: (requests ?? []).length });
     } catch { /* ignore */ }
   },
 

@@ -25,6 +25,7 @@ import { useAuth } from '../context/AuthContext.js';
 import { api } from '../api/client.js';
 import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
+import { avatarSource } from '../lib/avatar.js';
 
 const GENDERS = ['male', 'female', 'other'];
 const { width } = Dimensions.get('window');
@@ -55,14 +56,6 @@ export default function MyProfileScreen({ navigation }) {
 
   async function saveField(field) {
     const value = field === 'bio' ? draft : draft.trim();
-    if (field === 'username' && value.length < 3) {
-      Alert.alert('Username too short', 'Pick a username with at least 3 characters.');
-      return;
-    }
-    if (field === 'email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
-      Alert.alert('Check your email', 'That doesn\u2019t look like a valid email address.');
-      return;
-    }
     setSaving(true);
     try {
       await api.updateMyProfile({ [field]: value });
@@ -178,13 +171,7 @@ export default function MyProfileScreen({ navigation }) {
       >
         {/* ── Hero ─────────────────────────────── */}
         <View style={styles.hero}>
-          {hero ? (
-            <Image source={{ uri: hero }} style={styles.heroImg} />
-          ) : (
-            <View style={[styles.heroImg, styles.heroEmpty]}>
-              <Text style={styles.heroEmptyText}>{displayName[0]?.toUpperCase()}</Text>
-            </View>
-          )}
+          <Image source={avatarSource(user)} style={styles.heroImg} />
           {/* dark gradient scrim for legible text */}
           <LinearGradient
             colors={['transparent', 'rgba(0,0,0,0.75)']}
@@ -230,27 +217,8 @@ export default function MyProfileScreen({ navigation }) {
         </View>
 
         {/* ── About ────────────────────────────── */}
+        {/* Username and email are edited in Settings. */}
         <View style={styles.card}>
-          <EditableRow
-            label="Username"
-            value={user.username}
-            editing={editing === 'username'}
-            draft={draft} setDraft={setDraft} saving={saving}
-            onStart={() => startEdit('username', user.username)}
-            onCancel={cancelEdit} onSave={() => saveField('username')}
-            autoCapitalize="none"
-          />
-          <View style={styles.divider} />
-          <EditableRow
-            label="Email"
-            value={user.email}
-            editing={editing === 'email'}
-            draft={draft} setDraft={setDraft} saving={saving}
-            onStart={() => startEdit('email', user.email)}
-            onCancel={cancelEdit} onSave={() => saveField('email')}
-            autoCapitalize="none" keyboardType="email-address"
-          />
-          <View style={styles.divider} />
           <EditableRow
             label="Bio"
             value={user.bio}
@@ -258,7 +226,7 @@ export default function MyProfileScreen({ navigation }) {
             draft={draft} setDraft={setDraft} saving={saving}
             onStart={() => startEdit('bio', user.bio)}
             onCancel={cancelEdit} onSave={() => saveField('bio')}
-            multiline placeholder="Tell people a bit about yourself\u2026"
+            multiline placeholder="Tell people a bit about yourself…"
           />
         </View>
 

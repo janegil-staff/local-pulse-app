@@ -1,14 +1,25 @@
 // localpulse/app/src/theme/ThemeContext.js
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+//
+// Owns the user's theme *preference* ('system' | 'light' | 'dark') and
+// persists it. The actual palette swap happens in theme.js via applyMode(),
+// which notifies every component using useStyles().
+//
+// Deliberately does NOT remount the tree. An earlier version keyed the
+// children on a revision counter, which rebuilt navigation on every toggle
+// and bounced the user back to Discover.
+import React, {
+  createContext, useContext, useEffect, useState, useCallback,
+} from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { applyMode, theme } from './theme.js';
+import { applyMode, theme, useThemeVersion } from './theme.js';
 
 const KEY = 'theme.pref.v1'; // 'system' | 'light' | 'dark'
 
 const ThemeContext = createContext({
-  mode: 'dark',        // resolved mode actually in use
-  pref: 'system',      // user preference
+  mode: 'dark',   // resolved mode actually in use
+  pref: 'system', // user preference
+  theme,
   setPref: () => {},
 });
 
@@ -16,53 +27,60 @@ export function ThemeProvider({ children }) {
   const system = useColorScheme(); // 'light' | 'dark' | null
   const [pref, setPrefState] = useState('system');
   const [ready, setReady] = useState(false);
-  // A revision counter that re-renders consumers in place (NO remount).
-  const [rev, setRev] = useState(0);
+
+  // Subscribe so this provider re-renders when the palette changes, keeping
+  // `mode` in the context value fresh for consumers that read it.
+  useThemeVersion();
 
   const resolve = useCallback(
     (p) => (p === 'system' ? (system === 'light' ? 'light' : 'dark') : p),
-    [system]
+    [system],
   );
 
+  // Load the saved preference once.
   useEffect(() => {
+    let cancelled = false;
     (async () => {
+      let p = 'system';
       try {
-        const saved = await AsyncStorage.getItem(KEY);
-        const p = saved || 'system';
-        setPrefState(p);
-        applyMode(resolve(p));
+        p = (await AsyncStorage.getItem(KEY)) || 'system';
       } catch {
-        applyMode('dark');
-      } finally {
-        setReady(true);
-        setRev((r) => r + 1);
+        // fall through with 'system'
       }
+      if (cancelled) return;
+      setPrefState(p);
+      applyMode(p === 'system' ? (system === 'light' ? 'light' : 'dark') : p);
+      setReady(true);
     })();
+    return () => { cancelled = true; };
+    // Intentionally once on mount; `system` is handled by the effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Follow the OS when the preference is 'system'.
   useEffect(() => {
-    if (pref === 'system' && ready) {
-      applyMode(resolve('system'));
-      setRev((r) => r + 1);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [system]);
+    if (!ready) return;
+    if (pref !== 'system') return;
+    applyMode(resolve('system'));
+  }, [system, pref, ready, resolve]);
 
   const setPref = useCallback(
     async (p) => {
       setPrefState(p);
       applyMode(resolve(p));
-      setRev((r) => r + 1);
-      try { await AsyncStorage.setItem(KEY, p); } catch { /* ignore */ }
+      try {
+        await AsyncStorage.setItem(KEY, p);
+      } catch {
+        // preference just won't persist; not worth surfacing
+      }
     },
-    [resolve]
+    [resolve],
   );
 
   if (!ready) return null;
 
   return (
-    <ThemeContext.Provider value={{ mode: theme.mode, theme, pref, setPref, rev }}>
+    <ThemeContext.Provider value={{ mode: theme.mode, theme, pref, setPref }}>
       {children}
     </ThemeContext.Provider>
   );

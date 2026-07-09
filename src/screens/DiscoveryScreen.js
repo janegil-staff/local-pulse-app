@@ -9,10 +9,11 @@ import * as Location from 'expo-location';
 import { api } from '../api/client.js';
 import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
+import { avatarSource } from '../lib/avatar.js';
 
 const { width } = Dimensions.get('window');
-const GAP = 12;
-const COLS = 2;
+const GAP = 8;
+const COLS = 3;
 const CARD_W = (width - GAP * (COLS + 1)) / COLS;
 
 export default function DiscoveryScreen({ navigation }) {
@@ -21,6 +22,9 @@ export default function DiscoveryScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  // Where these results are centred. null → the viewer's own location.
+  const [browsingFrom, setBrowsingFrom] = useState(null);
+  const [browsingElsewhere, setBrowsingElsewhere] = useState(false);
 
   const load = useCallback(async () => {
     setError('');
@@ -38,6 +42,8 @@ export default function DiscoveryScreen({ navigation }) {
       // Accept a few possible shapes: { users }, { people }, { deck }, or a bare array.
       const list = data.users ?? data.people ?? data.deck ?? (Array.isArray(data) ? data : []);
       setPeople(list);
+      setBrowsingFrom(data.browsingFrom ?? null);
+      setBrowsingElsewhere(Boolean(data.browsingElsewhere));
     } catch (e) {
       setError(e?.message ?? 'Could not load people nearby');
     } finally {
@@ -48,30 +54,34 @@ export default function DiscoveryScreen({ navigation }) {
 
   useEffect(() => { load(); }, [load]);
 
+  // The picker changes the browse area on the server, so refresh on return.
+  useEffect(() => navigation.addListener('focus', load), [navigation, load]);
+
   const onRefresh = () => { setRefreshing(true); load(); };
+
+  async function browseNearMeAgain() {
+    setLoading(true);
+    try {
+      await api.setBrowseLocation({ clear: true });
+    } catch { /* fall through to reload anyway */ }
+    load();
+  }
 
   function openProfile(person) {
     navigation.navigate('Profile', { username: person.username, user: person });
   }
 
   function renderCard({ item }) {
-    const photo = item.photos?.[0];
     const name = item.displayName || item.username || 'Someone';
     return (
       <Pressable style={styles.card} onPress={() => openProfile(item)}>
-        {photo ? (
-          <Image source={{ uri: photo }} style={styles.photo} />
-        ) : (
-          <View style={[styles.photo, styles.noPhoto]}>
-            <Text style={styles.noPhotoText}>{name[0]?.toUpperCase()}</Text>
-          </View>
-        )}
+        <Image source={avatarSource(item)} style={styles.photo} />
         <View style={styles.label}>
           <Text style={styles.name} numberOfLines={1}>
             {name}{item.age ? `, ${item.age}` : ''}
           </Text>
-          {item.neighborhood ? (
-            <Text style={styles.meta} numberOfLines={1}>{item.neighborhood}</Text>
+          {item.distanceKm != null ? (
+            <Text style={styles.meta} numberOfLines={1}>~{item.distanceKm} km</Text>
           ) : null}
         </View>
         {item.online ? <View style={styles.onlineDot} /> : null}
@@ -81,7 +91,18 @@ export default function DiscoveryScreen({ navigation }) {
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title="Discover" navigation={navigation} />
+      <ScreenHeader
+        title={browsingFrom || 'Discover'}
+        subtitle={browsingElsewhere ? 'Browsing another area' : undefined}
+        navigation={navigation}
+        onTitlePress={() => navigation.navigate('LocationPicker', { mode: 'browse' })}
+      />
+
+      {browsingElsewhere ? (
+        <Pressable style={styles.banner} onPress={browseNearMeAgain}>
+          <Text style={styles.bannerText}>Browse near me again</Text>
+        </Pressable>
+      ) : null}
       {loading ? (
         <View style={styles.centered}><ActivityIndicator color={theme.colors.accent} /></View>
       ) : (
@@ -110,20 +131,25 @@ const stylesFactory = (({ colors, radius }) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.bg },
     centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    banner: {
+      backgroundColor: colors.surfaceAlt, paddingVertical: 10, alignItems: 'center',
+      borderBottomWidth: 1, borderBottomColor: colors.border,
+    },
+    bannerText: { color: colors.accent, fontSize: 13, fontWeight: '700' },
     card: {
-      width: CARD_W, aspectRatio: 0.72, borderRadius: 16, overflow: 'hidden',
+      width: CARD_W, aspectRatio: 1, borderRadius: 12, overflow: 'hidden',
       backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
     },
     photo: { width: '100%', height: '100%' },
     noPhoto: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceAlt },
-    noPhotoText: { color: colors.textDim, fontSize: 52, fontWeight: '800' },
-    label: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 10, backgroundColor: '#000000aa' },
+    noPhotoText: { color: colors.textDim, fontSize: 34, fontWeight: '800' },
+    label: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 6, paddingVertical: 5, backgroundColor: '#000000aa' },
     onlineDot: {
-      position: 'absolute', top: 10, right: 10, width: 14, height: 14, borderRadius: 7,
+      position: 'absolute', top: 6, right: 6, width: 11, height: 11, borderRadius: 6,
       backgroundColor: '#3BD16F', borderWidth: 2, borderColor: '#fff',
     },
-    name: { color: '#fff', fontSize: 15, fontWeight: '700' },
-    meta: { color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 1 },
+    name: { color: '#fff', fontSize: 12, fontWeight: '700' },
+    meta: { color: 'rgba(255,255,255,0.85)', fontSize: 10, marginTop: 1 },
     empty: { color: colors.textDim, textAlign: 'center', marginTop: 80, paddingHorizontal: 40, lineHeight: 22 },
   })
 );
