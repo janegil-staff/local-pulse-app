@@ -12,6 +12,10 @@ import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 import Svg, { Path, Polyline, Line } from 'react-native-svg';
 
+// Fallback radius when the user turns "Anywhere" back off. Matches the
+// server-side default in the User model.
+const DEFAULT_DISTANCE_KM = 50;
+
 // Standard "log out" icon (door with arrow out), matching the screenshot.
 function LogOutIcon() {
   return (
@@ -24,8 +28,8 @@ function LogOutIcon() {
 }
 
 const SHOW = [
-  { key: 'women', label: 'Women' },
-  { key: 'men', label: 'Men' },
+  { key: 'female', label: 'Women' },
+  { key: 'male', label: 'Men' },
   { key: 'everyone', label: 'Everyone' },
 ];
 
@@ -47,11 +51,14 @@ function Row({ label, value, onPress, danger, last }) {
   );
 }
 
-function ToggleRow({ label, value, onValueChange, last }) {
+function ToggleRow({ label, sublabel, value, onValueChange, last }) {
   const styles = useStyles(stylesFactory);
   return (
     <View style={[styles.row, !last && styles.rowDivider]}>
-      <Text style={styles.rowLabel}>{label}</Text>
+      <View style={{ flex: 1, paddingRight: 12 }}>
+        <Text style={styles.rowLabel}>{label}</Text>
+        {sublabel ? <Text style={styles.rowSublabel}>{sublabel}</Text> : null}
+      </View>
       <Switch
         value={value}
         onValueChange={onValueChange}
@@ -91,7 +98,10 @@ export default function SettingsScreen({ navigation }) {
   const [show, setShow] = useState('everyone');
   const [ageMin, setAgeMin] = useState('18');
   const [ageMax, setAgeMax] = useState('99');
-  const [distance, setDistance] = useState('50');
+  // null = "Anywhere" (no distance limit). Otherwise the km value as a string,
+  // because that's what TextInput needs.
+  const [distance, setDistance] = useState(String(DEFAULT_DISTANCE_KM));
+  const anywhere = distance === null;
 
   // Inline username edit
   const [usernameModal, setUsernameModal] = useState(false);
@@ -114,7 +124,7 @@ export default function SettingsScreen({ navigation }) {
       setShow(p.show || 'everyone');
       setAgeMin(String(p.ageMin ?? 18));
       setAgeMax(String(p.ageMax ?? 99));
-      setDistance(String(p.maxDistanceKm ?? 50));
+      setDistance(p.maxDistanceKm == null ? null : String(p.maxDistanceKm));
     }
   }, [profile]);
 
@@ -150,6 +160,30 @@ export default function SettingsScreen({ navigation }) {
     } catch (e) {
       Alert.alert('Error', e.message);
     }
+  }
+
+  // Toggling "Anywhere" writes null (no limit) or restores the default radius.
+  // Sending null rather than 0 keeps the meaning explicit in the DB and lets
+  // $geoNear omit maxDistance entirely.
+  function toggleAnywhere(on) {
+    if (on) {
+      setDistance(null);
+      savePrefs({ maxDistanceKm: null });
+    } else {
+      setDistance(String(DEFAULT_DISTANCE_KM));
+      savePrefs({ maxDistanceKm: DEFAULT_DISTANCE_KM });
+    }
+  }
+
+  // Guard the blur handler: an empty or nonsense field would send NaN, which
+  // Mongoose casts to a validation error rather than silently ignoring.
+  function saveDistance() {
+    const n = Number(distance);
+    if (!Number.isFinite(n) || n < 1) {
+      setDistance(String(profile?.preferences?.maxDistanceKm ?? DEFAULT_DISTANCE_KM));
+      return;
+    }
+    savePrefs({ maxDistanceKm: n });
   }
 
   function cycleShow() {
@@ -261,16 +295,30 @@ export default function SettingsScreen({ navigation }) {
               />
             </View>
           </View>
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>Max distance (km)</Text>
-            <TextInput
-              style={styles.rangeInput}
-              value={distance}
-              onChangeText={setDistance}
-              onBlur={() => savePrefs({ maxDistanceKm: Number(distance) })}
-              keyboardType="number-pad"
-            />
-          </View>
+
+          <ToggleRow
+            label="Anywhere"
+            sublabel="Show people at any distance"
+            value={anywhere}
+            onValueChange={toggleAnywhere}
+            last={anywhere}
+          />
+
+          {/* Hidden entirely when "Anywhere" is on — a number-pad field has no
+              way to represent "no limit", and leaving it visible-but-disabled
+              would just look broken. */}
+          {!anywhere && (
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>Max distance (km)</Text>
+              <TextInput
+                style={styles.rangeInput}
+                value={distance}
+                onChangeText={setDistance}
+                onBlur={saveDistance}
+                keyboardType="number-pad"
+              />
+            </View>
+          )}
         </Section>
 
         {/* Legal */}
@@ -339,6 +387,7 @@ const stylesFactory = (({ colors, spacing, radius }) =>
     },
     rowDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
     rowLabel: { color: colors.text, fontSize: 16 },
+    rowSublabel: { color: colors.textDim, fontSize: 13, marginTop: 2 },
     rowLabelDanger: { color: colors.danger, fontWeight: '600' },
     rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing(2) },
     rowValue: { color: colors.textDim, fontSize: 15 },
