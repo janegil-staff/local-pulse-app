@@ -2,7 +2,7 @@
 //
 // Account identity (username, email, gender, home location) and Discovery
 // preferences. Split out of SettingsScreen, which was getting long.
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, Pressable, Alert, ScrollView, TextInput, StatusBar, Modal, ActivityIndicator,
 } from 'react-native';
@@ -53,6 +53,12 @@ export default function PersonalSettingsScreen({ navigation }) {
   const [genderEditing, setGenderEditing] = useState(false);
   const [genderSaving, setGenderSaving] = useState(false);
 
+  // onBlur never fires when the screen unmounts, so the last edit to a
+  // TextInput is lost on back. This ref lets the beforeRemove listener read
+  // the current drafts without re-subscribing on every keystroke.
+  const draftsRef = useRef({ ageMin, ageMax, distance });
+  draftsRef.current = { ageMin, ageMax, distance };
+
   useEffect(() => { loadProfile(); }, [loadProfile]);
   // Refetch on focus: returning from LocationPicker changes locationName /
   // locationMode on the server, and the row below reads them.
@@ -69,6 +75,36 @@ export default function PersonalSettingsScreen({ navigation }) {
       setDistance(p.maxDistanceKm == null ? null : String(p.maxDistanceKm));
     }
   }, [profile]);
+
+  // Flush pending TextInput edits before the screen goes away — beforeRemove
+  // fires while still mounted, and covers gestures and hardware back too.
+  // Compares against the loaded profile so we don't POST on every back-press.
+  // Calls savePreferences directly rather than savePrefs: an Alert on failure
+  // would fire against a screen that no longer exists.
+  useEffect(
+    () => navigation.addListener('beforeRemove', () => {
+      const p = profile?.preferences;
+      if (!p) return;
+      const { ageMin: a, ageMax: b, distance: d } = draftsRef.current;
+
+      const patch = {};
+      const nMin = Number(a);
+      const nMax = Number(b);
+      if (Number.isFinite(nMin) && nMin !== p.ageMin) patch.ageMin = nMin;
+      if (Number.isFinite(nMax) && nMax !== p.ageMax) patch.ageMax = nMax;
+
+      // d === null means Anywhere, which the toggle already saved.
+      if (d !== null) {
+        const nDist = Number(d);
+        if (Number.isFinite(nDist) && nDist >= 1 && nDist !== p.maxDistanceKm) {
+          patch.maxDistanceKm = nDist;
+        }
+      }
+
+      if (Object.keys(patch).length) savePreferences(patch).catch(() => {});
+    }),
+    [navigation, profile, savePreferences],
+  );
 
   function openUsernameEdit() {
     setUsernameDraft(profile?.username || '');
@@ -141,6 +177,18 @@ export default function PersonalSettingsScreen({ navigation }) {
       return;
     }
     savePrefs({ maxDistanceKm: n });
+  }
+
+  // Same guard as saveDistance: an empty field is Number('') === 0, not
+  // "unchanged", so it would silently write ageMin: 0.
+  function saveAge(which, raw) {
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 18 || n > 120) {
+      const fallback = String(profile?.preferences?.[which] ?? (which === 'ageMin' ? 18 : 99));
+      if (which === 'ageMin') setAgeMin(fallback); else setAgeMax(fallback);
+      return;
+    }
+    savePrefs({ [which]: n });
   }
 
   function cycleShow() {
@@ -229,7 +277,7 @@ export default function PersonalSettingsScreen({ navigation }) {
                 style={styles.rangeInput}
                 value={ageMin}
                 onChangeText={setAgeMin}
-                onBlur={() => savePrefs({ ageMin: Number(ageMin) })}
+                onBlur={() => saveAge('ageMin', ageMin)}
                 keyboardType="number-pad"
               />
               <Text style={styles.rangeDash}>–</Text>
@@ -237,7 +285,7 @@ export default function PersonalSettingsScreen({ navigation }) {
                 style={styles.rangeInput}
                 value={ageMax}
                 onChangeText={setAgeMax}
-                onBlur={() => savePrefs({ ageMax: Number(ageMax) })}
+                onBlur={() => saveAge('ageMax', ageMax)}
                 keyboardType="number-pad"
               />
             </View>

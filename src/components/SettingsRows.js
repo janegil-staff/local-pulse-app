@@ -76,6 +76,8 @@ export const settingsStyles = (({ colors, spacing, radius }) =>
 
     // Gender picker (PersonalSettingsScreen). The row switches to a column
     // when the chips expand, so the label stays put and they drop below it.
+    // `flex: 1` on genderHeader — without it the header shrinks to fit and
+    // space-between has nothing to distribute, so the value hugs the label.
     rowColumn: { flexDirection: 'column', alignItems: 'stretch', paddingBottom: spacing(3) },
     genderHeader: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     genderRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing(3) },
