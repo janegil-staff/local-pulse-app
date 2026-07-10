@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View, Text, TextInput, Pressable, FlatList, StyleSheet, KeyboardAvoidingView, Platform,
-  Image, Alert, ActivityIndicator,
+  Image, Alert, ActivityIndicator, Modal,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,7 +26,7 @@ export default function ChatScreen({ route, navigation }) {
   const emitTyping = useChatStore((s) => s.emitTyping);
   const [text, setText] = useState('');
   const listRef = useRef(null);
-
+  const [fullImage, setFullImage] = useState(null);
   useEffect(() => {
     enterConversation(conversationId);
     return () => leaveConversation();
@@ -81,7 +81,9 @@ export default function ChatScreen({ route, navigation }) {
             if (item.imageUrl) {
               return (
                 <View style={[styles.bubbleRow, mine ? styles.rowMine : styles.rowTheirs]}>
-                  <Image source={{ uri: item.imageUrl }} style={styles.imageBubble} resizeMode="cover" />
+                  <Pressable onPress={() => setFullImage(item.imageUrl)}>
+                    <Image source={{ uri: item.imageUrl }} style={styles.imageBubble} resizeMode="cover" />
+                  </Pressable>
                 </View>
               );
             }
@@ -115,12 +117,34 @@ export default function ChatScreen({ route, navigation }) {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+      {/* Fullscreen viewer. `resizeMode="contain"` so a portrait photo isn't
+          cropped — the bubble crops, the viewer must not. */}
+      <Modal
+        visible={!!fullImage}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFullImage(null)}
+      >
+        <Pressable style={styles.viewerBackdrop} onPress={() => setFullImage(null)}>
+          <Image source={{ uri: fullImage }} style={styles.viewerImage} resizeMode="contain" />
+          <View style={[styles.viewerClose, { top: insets.top + 12 }]}>
+            <Text style={styles.viewerCloseText}>×</Text>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
 
 const stylesFactory = (({ colors, spacing, radius }) =>
   StyleSheet.create({
+    viewerBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center' },
+    viewerImage: { width: '100%', height: '100%' },
+    viewerClose: {
+      position: 'absolute', right: 16, width: 40, height: 40, borderRadius: 20,
+      backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center',
+    },
+    viewerCloseText: { color: '#fff', fontSize: 26, fontWeight: '300', marginTop: -3 },
     root: { flex: 1, backgroundColor: colors.bg },
     flex: { flex: 1 },
     bubbleRow: { marginBottom: spacing(2), flexDirection: 'row' },
