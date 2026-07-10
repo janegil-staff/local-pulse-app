@@ -187,7 +187,8 @@ const en = {
   unblockNote: "Unblocking restores any conversation you had. They won’t be notified.",
   noBlockedUsers: "You haven’t blocked anyone.",
   couldntLoadBlocked: "Couldn’t load blocked users.",
-  couldntUnblock: "Couldn’t unblock"
+  couldntUnblock: "Couldn’t unblock",
+  send: "Send"
 };
 const no = {
   appName: 'Nearby',
@@ -367,7 +368,8 @@ const no = {
   unblockNote: "Å fjerne en blokkering gjenoppretter samtalen dere hadde. De blir ikke varslet.",
   noBlockedUsers: "Du har ikke blokkert noen.",
   couldntLoadBlocked: "Kunne ikke laste blokkerte brukere.",
-  couldntUnblock: "Kunne ikke fjerne blokkeringen"
+  couldntUnblock: "Kunne ikke fjerne blokkeringen",
+  send: "Send"
 };
 const de = {
   appName: 'Nearby',
@@ -547,7 +549,8 @@ const de = {
   unblockNote: "Das Aufheben stellt eure frühere Unterhaltung wieder her. Die Person wird nicht benachrichtigt.",
   noBlockedUsers: "Du hast niemanden blockiert.",
   couldntLoadBlocked: "Blockierte Nutzer konnten nicht geladen werden.",
-  couldntUnblock: "Blockierung konnte nicht aufgehoben werden"
+  couldntUnblock: "Blockierung konnte nicht aufgehoben werden",
+  send: "Senden"
 };
 const da = {
   appName: 'Nearby',
@@ -727,7 +730,8 @@ const da = {
   unblockNote: "At fjerne blokeringen gendanner jeres samtale. De får ikke besked.",
   noBlockedUsers: "Du har ikke blokeret nogen.",
   couldntLoadBlocked: "Kunne ikke indlæse blokerede brugere.",
-  couldntUnblock: "Kunne ikke fjerne blokeringen"
+  couldntUnblock: "Kunne ikke fjerne blokeringen",
+  send: "Send"
 };
 const sv = {
   appName: 'Nearby',
@@ -907,7 +911,8 @@ const sv = {
   unblockNote: "Att avblockera återställer konversationen ni hade. De meddelas inte.",
   noBlockedUsers: "Du har inte blockerat någon.",
   couldntLoadBlocked: "Kunde inte ladda blockerade användare.",
-  couldntUnblock: "Kunde inte avblockera"
+  couldntUnblock: "Kunde inte avblockera",
+  send: "Skicka"
 };
 const fi = {
   appName: 'Nearby',
@@ -1087,7 +1092,8 @@ const fi = {
   unblockNote: "Eston poistaminen palauttaa aiemman keskustelunne. Käyttäjälle ei ilmoiteta.",
   noBlockedUsers: "Et ole estänyt ketään.",
   couldntLoadBlocked: "Estettyjä käyttäjiä ei voitu ladata.",
-  couldntUnblock: "Eston poistaminen epäonnistui"
+  couldntUnblock: "Eston poistaminen epäonnistui",
+  send: "Lähetä"
 };
 const fr = {
   appName: 'Nearby',
@@ -1267,7 +1273,8 @@ const fr = {
   unblockNote: "Débloquer restaure la conversation que vous aviez. La personne n’en sera pas informée.",
   noBlockedUsers: "Vous n’avez bloqué personne.",
   couldntLoadBlocked: "Impossible de charger les utilisateurs bloqués.",
-  couldntUnblock: "Impossible de débloquer"
+  couldntUnblock: "Impossible de débloquer",
+  send: "Envoyer"
 };
 const es = {
   appName: 'Nearby',
@@ -1447,7 +1454,8 @@ const es = {
   unblockNote: "Desbloquear restaura la conversación que tenían. No se le notificará.",
   noBlockedUsers: "No has bloqueado a nadie.",
   couldntLoadBlocked: "No se pudieron cargar los usuarios bloqueados.",
-  couldntUnblock: "No se pudo desbloquear"
+  couldntUnblock: "No se pudo desbloquear",
+  send: "Enviar"
 };
 const it = {
   appName: 'Nearby',
@@ -1627,7 +1635,8 @@ const it = {
   unblockNote: "Sbloccando ripristini la conversazione che avevate. La persona non verrà avvisata.",
   noBlockedUsers: "Non hai bloccato nessuno.",
   couldntLoadBlocked: "Impossibile caricare gli utenti bloccati.",
-  couldntUnblock: "Impossibile sbloccare"
+  couldntUnblock: "Impossibile sbloccare",
+  send: "Invia"
 };
 const nl = {
   appName: 'Nearby',
@@ -1807,7 +1816,8 @@ const nl = {
   unblockNote: "Deblokkeren herstelt het gesprek dat je had. Zij krijgen hiervan geen melding.",
   noBlockedUsers: "Je hebt niemand geblokkeerd.",
   couldntLoadBlocked: "Kan geblokkeerde gebruikers niet laden.",
-  couldntUnblock: "Kan niet deblokkeren"
+  couldntUnblock: "Kan niet deblokkeren",
+  send: "Versturen"
 };
 const pl = {
   appName: 'Nearby',
@@ -1987,7 +1997,8 @@ const pl = {
   unblockNote: "Odblokowanie przywraca waszą rozmowę. Ta osoba nie zostanie powiadomiona.",
   noBlockedUsers: "Nikogo nie zablokowałeś.",
   couldntLoadBlocked: "Nie udało się załadować zablokowanych użytkowników.",
-  couldntUnblock: "Nie udało się odblokować"
+  couldntUnblock: "Nie udało się odblokować",
+  send: "Wyślij"
 };
 const pt = {
   appName: 'Nearby',
@@ -2167,7 +2178,8 @@ const pt = {
   unblockNote: "Desbloquear restaura a conversa que tinham. A pessoa não será notificada.",
   noBlockedUsers: "Não bloqueaste ninguém.",
   couldntLoadBlocked: "Não foi possível carregar os utilizadores bloqueados.",
-  couldntUnblock: "Não foi possível desbloquear"
+  couldntUnblock: "Não foi possível desbloquear",
+  send: "Enviar"
 };
 const TRANSLATIONS = {
   no,
