@@ -139,7 +139,8 @@ export default function OnboardingScreen({ navigation, route }) {
   const [picked, setPicked] = useState(null); // { lat, lng, name, fullName } | { gps: true, lat, lng }
   const { results: placeResults, searching: placeSearching } = usePlaceSearch(placeQuery);
 
-  // Step 4
+  // Step 4. Photos are { url, publicId } objects — the server needs the
+  // publicId to destroy the Cloudinary asset when a photo is removed.
   const [photos, setPhotos] = useState([]);
   const [bio, setBio] = useState('');
 
@@ -200,8 +201,8 @@ export default function OnboardingScreen({ navigation, route }) {
         },
         { deferUser: true }, // don't publish the user yet — profile isn't complete
       );
-      if (savePin) { try { await savePin(pin); } catch { } }
-      try { await api.updateMyProfile({ language: lang }); } catch { }
+      if (savePin) { try { await savePin(pin); } catch {} }
+      try { await api.updateMyProfile({ language: lang }); } catch {}
       setAccountCreated(true);
       setStep(2);
     } catch (e) {
@@ -235,7 +236,7 @@ export default function OnboardingScreen({ navigation, route }) {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('', t.locationPermissionDenied);
+        Alert.alert('', t.locationDenied);
         return;
       }
       const pos = await Location.getCurrentPositionAsync({});
@@ -268,8 +269,8 @@ export default function OnboardingScreen({ navigation, route }) {
     }
   };
 
-  // Add a photo: pick, upload immediately (account exists from step 1), and
-  // save the returned URL to the profile so it persists per-step.
+  // Add a photo: pick, upload immediately (the account exists from step 1), and
+  // save the { url, publicId } pair to the profile so it persists per-step.
   const addPhoto = async () => {
     if (photos.length >= MAX_PHOTOS) { Alert.alert('', t.maxPhotos); return; }
     try {
@@ -283,10 +284,9 @@ export default function OnboardingScreen({ navigation, route }) {
       });
       if (result.canceled) return;
       setUploadingPhoto?.(true);
-      const res = await api.uploadImage(result.assets[0].uri);
-      const url = typeof res === 'string' ? res : res?.url;
-      if (!url) return;
-      const next = [...photos, url];
+      const photo = await api.uploadImage(result.assets[0].uri); // { url, publicId }
+      if (!photo?.url) return;
+      const next = [...photos, photo];
       setPhotos(next);
       await api.updateMyProfile({ photos: next });
     } catch (e) {
@@ -296,10 +296,12 @@ export default function OnboardingScreen({ navigation, route }) {
     }
   };
 
+  // Dropping a photo from the array is enough — updateProfile diffs the old and
+  // new lists server-side and destroys whatever fell out of Cloudinary.
   const removePhoto = async (index) => {
     const next = photos.filter((_, i) => i !== index);
     setPhotos(next);
-    try { await api.updateMyProfile({ photos: next }); } catch { }
+    try { await api.updateMyProfile({ photos: next }); } catch {}
   };
 
   // Make a photo the profile picture by moving it to the front (photos[0]).
@@ -309,7 +311,7 @@ export default function OnboardingScreen({ navigation, route }) {
     const [moved] = next.splice(index, 1);
     next.unshift(moved);
     setPhotos(next);
-    try { await api.updateMyProfile({ photos: next }); } catch { }
+    try { await api.updateMyProfile({ photos: next }); } catch {}
   };
 
   // Finish: account, location, and photos already saved per-step. Just save
@@ -344,16 +346,16 @@ export default function OnboardingScreen({ navigation, route }) {
 
   const dobOptions =
     dobPicker === 'year' ? DOB_YEARS
-      : dobPicker === 'month' ? MONTHS.map((_, i) => String(i + 1).padStart(2, '0'))
-        : dobPicker === 'day'
-          ? Array.from({ length: dobYear && dobMonth ? daysInMonth(dobYear, Number(dobMonth) - 1) : 31 }, (_, i) => String(i + 1).padStart(2, '0'))
-          : [];
+    : dobPicker === 'month' ? MONTHS.map((_, i) => String(i + 1).padStart(2, '0'))
+    : dobPicker === 'day'
+      ? Array.from({ length: dobYear && dobMonth ? daysInMonth(dobYear, Number(dobMonth) - 1) : 31 }, (_, i) => String(i + 1).padStart(2, '0'))
+      : [];
 
   const headerTitle =
     step === 1 ? t.stepAccount
-      : step === 2 ? t.stepDetails
-        : step === 3 ? t.stepLocation
-          : t.stepPhotos;
+    : step === 2 ? t.stepDetails
+    : step === 3 ? t.stepLocation
+    : t.stepPhotos;
 
   return (
     <View style={s.bg}>
@@ -499,12 +501,12 @@ export default function OnboardingScreen({ navigation, route }) {
             <>
               {/* No sectionLabel here — the header already says "Location", and
                   a second "Set your location" directly under it just repeats. */}
-              <Text style={s.locExplain}>{t.locationExplainer}</Text>
+              <Text style={s.locExplain}>{t.locationPrivacy}</Text>
 
               <View style={s.searchWrap}>
                 <TextInput
                   style={s.searchInput}
-                  placeholder={t.searchCityOrArea}
+                  placeholder={t.searchCityPlaceholder}
                   placeholderTextColor={C.textDim}
                   value={placeQuery}
                   onChangeText={setPlaceQuery}
@@ -527,11 +529,9 @@ export default function OnboardingScreen({ navigation, route }) {
                 <View style={s.pickedRow}>
                   <View style={{ flex: 1 }}>
                     <Text style={s.pickedName}>
-                      {picked.gps ? (picked.name || t.usingCurrentLocation) : picked.name}
+                      {picked.gps ? t.usingCurrentLocation : picked.name}
                     </Text>
-                    {picked.gps && picked.name ? (
-                      <Text style={s.pickedFull}>{t.usingCurrentLocation}</Text>
-                    ) : !picked.gps && picked.fullName ? (
+                    {!picked.gps && picked.fullName ? (
                       <Text style={s.pickedFull} numberOfLines={1}>{picked.fullName}</Text>
                     ) : null}
                   </View>
@@ -580,14 +580,14 @@ export default function OnboardingScreen({ navigation, route }) {
               <Text style={s.sectionLabel}>{t.photosOptional}</Text>
               {photos.length > 0 && <Text style={s.photoHint}>{t.tapToSetProfile}</Text>}
               <View style={s.photoGrid}>
-                {photos.map((uri, i) => (
+                {photos.map((photo, i) => (
                   <TouchableOpacity
-                    key={`${uri}-${i}`}
+                    key={`${photo.url}-${i}`}
                     style={[s.photoCell, i === 0 && s.photoCellPrimary]}
                     onPress={() => setPrimary(i)}
                     activeOpacity={0.8}
                   >
-                    <Image source={{ uri }} style={s.photoImg} />
+                    <Image source={{ uri: photo.url }} style={s.photoImg} />
                     {i === 0 && (
                       <View style={s.photoBadge}>
                         <Text style={s.photoBadgeText}>{t.profilePhoto}</Text>

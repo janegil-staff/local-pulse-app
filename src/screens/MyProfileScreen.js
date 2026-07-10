@@ -67,6 +67,8 @@ export default function MyProfileScreen({ navigation }) {
     } finally { setSaving(false); }
   }
 
+  // Photos are now { url, publicId } objects, not bare URL strings. The server
+  // needs the publicId to destroy the asset when a photo is removed.
   async function addPhoto() {
     console.log('[MyProfile] addPhoto tapped');
     try {
@@ -86,10 +88,9 @@ export default function MyProfileScreen({ navigation }) {
       if (result.canceled) return;
       const asset = result.assets[0];
       setUploadingPhoto(true);
-      const res = await api.uploadImage(asset.uri);
-      const url = typeof res === 'string' ? res : res?.url;
-      console.log('[MyProfile] uploaded url:', url);
-      const nextPhotos = [...photos, url];
+      const photo = await api.uploadImage(asset.uri); // { url, publicId }
+      if (!photo?.url) throw new Error('Upload returned no URL.');
+      const nextPhotos = [...photos, photo];
       await api.updateMyProfile({ photos: nextPhotos });
       await hydrate?.();
     } catch (e) {
@@ -105,7 +106,7 @@ export default function MyProfileScreen({ navigation }) {
     const next = [...photos];
     const [pick] = next.splice(index, 1);
     next.unshift(pick);
-    api.updateMyProfile({ photos: next }).then(() => hydrate?.()).catch(() => {});
+    api.updateMyProfile({ photos: next }).then(() => hydrate?.()).catch(() => { });
   }
 
   function removePhoto(index) {
@@ -182,10 +183,10 @@ export default function MyProfileScreen({ navigation }) {
         <View style={styles.card}>
           <Text style={styles.cardLabel}>Photos</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -4 }}>
-            {photos.map((uri, i) => (
-              <View key={`${uri}-${i}`} style={[styles.thumbWrap, i === 0 && styles.thumbPrimary]}>
+            {photos.map((photo, i) => (
+              <View key={`${photo.url}-${i}`} style={[styles.thumbWrap, i === 0 && styles.thumbPrimary]}>
                 <TouchableOpacity onPress={() => makePrimary(i)} activeOpacity={0.8} style={styles.thumbTouch}>
-                  <Image source={{ uri }} style={styles.thumb} />
+                  <Image source={{ uri: photo.url }} style={styles.thumb} />
                   {i === 0 && (
                     <View style={styles.primaryTag}><Text style={styles.primaryTagText}>Main</Text></View>
                   )}

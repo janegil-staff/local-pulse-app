@@ -106,7 +106,10 @@ export default function ProfileScreen({ route, navigation }) {
     );
   }
 
-  const photos = profile.photos || [];
+  // Photos are { url, publicId } objects. Guard against a bare string anyway:
+  // this screen can be handed a `user` object via route params from Discover,
+  // and an older cached one may still hold the flat form.
+  const photos = (profile.photos || []).map((p) => (typeof p === 'string' ? { url: p } : p));
   const name = profile.displayName || profile.username || 'Someone';
 
   function onPhotoScroll(e) {
@@ -126,8 +129,8 @@ export default function ProfileScreen({ route, navigation }) {
               horizontal pagingEnabled showsHorizontalScrollIndicator={false}
               onScroll={onPhotoScroll} scrollEventThrottle={16}
             >
-              {photos.map((uri, i) => (
-                <Image key={`${uri}-${i}`} source={{ uri }} style={styles.heroImg} />
+              {photos.map((photo, i) => (
+                <Image key={`${photo.url}-${i}`} source={{ uri: photo.url }} style={styles.heroImg} />
               ))}
             </ScrollView>
           ) : (
