@@ -1,16 +1,20 @@
-// localpulse/app/src/screens/SettingsScreen.js
+// src/screens/SettingsScreen.js
+//
+// NOTE: `t` from useLang() is a plain object of strings, not a function.
+// Access keys as t.someKey — never t('someKey').
 import React from 'react';
 import { View, Text, Pressable, Alert, ScrollView, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.js';
+import { useLang } from '../context/LangContext.js';
 import { useThemeMode } from '../theme/ThemeContext.js';
 import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 import { Row, ToggleRow, Section, settingsStyles } from '../components/SettingsRows.js';
 import Svg, { Path, Polyline, Line } from 'react-native-svg';
 
-// Standard "log out" icon (door with arrow out), matching the screenshot.
+// Standard "log out" icon (door with arrow out).
 function LogOutIcon() {
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -24,33 +28,34 @@ function LogOutIcon() {
 export default function SettingsScreen({ navigation }) {
   const styles = useStyles(settingsStyles);
   const insets = useSafeAreaInsets();
+  const { t } = useLang();
   const { logout } = useAuth();
   const { pref, setPref } = useThemeMode();
 
   const isDark = pref === 'dark' || (pref === 'system' && theme.mode === 'dark');
 
   function confirmLogout() {
-    Alert.alert('Log out?', 'You\u2019ll need your email and PIN to sign back in.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: () => logout() },
+    Alert.alert(t.logoutConfirmTitle, t.logoutConfirmBody, [
+      { text: t.cancel, style: 'cancel' },
+      { text: t.logout, style: 'destructive', onPress: () => logout() },
     ]);
   }
 
   function confirmDelete() {
     Alert.alert(
-      'Delete account',
-      'This permanently deletes your profile, matches, and messages. This cannot be undone.',
+      t.deleteAccountTitle,
+      t.deleteAccountBody,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: 'Delete',
+          text: t.delete,
           style: 'destructive',
           onPress: async () => {
             try {
               await api.deleteAccount();
               await logout();
             } catch (e) {
-              Alert.alert('Error', e.message);
+              Alert.alert(t.error, e.message);
             }
           },
         },
@@ -62,7 +67,7 @@ export default function SettingsScreen({ navigation }) {
     <View style={styles.screen}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <ScreenHeader
-        title="Settings"
+        title={t.settingsTitle}
         onBack={() => navigation.goBack()}
         right={
           <Pressable onPress={confirmLogout} hitSlop={12}>
@@ -75,41 +80,47 @@ export default function SettingsScreen({ navigation }) {
         style={styles.root}
         contentContainerStyle={{ padding: theme.spacing(4), paddingBottom: insets.bottom + theme.spacing(10) }}
       >
+
         {/* Account + Discovery moved here — this screen was getting long. */}
         <Section>
           <Row
-            label="Personal settings"
+            label={t.personalSettings}
             onPress={() => navigation.navigate('PersonalSettings')}
             last
           />
         </Section>
 
         {/* Appearance */}
-        <Section title="APPEARANCE">
+        <Section title={t.appearanceSection}>
           <ToggleRow
-            label="Dark mode"
+            label={t.darkMode}
             value={isDark}
             onValueChange={(v) => setPref(v ? 'dark' : 'light')}
             last={false}
           />
           <Row
-            label="Use system setting"
-            value={pref === 'system' ? 'On' : 'Off'}
+            label={t.useSystemSetting}
+            value={pref === 'system' ? t.on : t.off}
             onPress={() => setPref(pref === 'system' ? (isDark ? 'dark' : 'light') : 'system')}
             last
           />
         </Section>
 
+        {/* Privacy & safety */}
+        <Section title={t.privacySection}>
+          <Row label={t.blockedUsersTitle} onPress={() => navigation.navigate('BlockedUsers')} last />
+        </Section>
+
         {/* Legal */}
-        <Section title="LEGAL">
-          <Row label="Terms of Service" onPress={() => navigation.navigate('Terms')} last={false} />
-          <Row label="Privacy Policy" onPress={() => navigation.navigate('Privacy')} last />
+        <Section title={t.legalSection}>
+          <Row label={t.termsOfService} onPress={() => navigation.navigate('Terms')} last={false} />
+          <Row label={t.privacyPolicy} onPress={() => navigation.navigate('Privacy')} last />
         </Section>
 
         {/* Danger zone */}
         <Section>
-          <Row label="Log out" onPress={confirmLogout} last={false} />
-          <Row label="Delete account" onPress={confirmDelete} danger last />
+          <Row label={t.logout} onPress={confirmLogout} last={false} />
+          <Row label={t.deleteAccount} onPress={confirmDelete} danger last />
         </Section>
 
         <Text style={styles.version}>LocalPulse</Text>

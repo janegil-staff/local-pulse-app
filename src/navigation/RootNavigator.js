@@ -27,6 +27,7 @@ import { theme } from '../theme/theme.js';
 import PersonalSettingsScreen from '../screens/PersonalSettingsScreen.js';
 import ForgotPinScreen from '../screens/ForgotPinScreen.js';
 import ChangePinScreen from '../screens/ChangePinScreen.js';
+import BlockedUsersScreen from '../screens/BlockedUsersScreen.js';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -104,6 +105,7 @@ export default function RootNavigator() {
       ) : (
         <>
           <Stack.Screen name="Tabs" component={Tabs} options={{ headerShown: false }} />
+          <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Messages" component={ConversationsScreen} options={{ headerShown: false }} />
           <Stack.Screen

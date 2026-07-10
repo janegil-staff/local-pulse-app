@@ -174,7 +174,20 @@ const en = {
   tryAgain: "Try again.",
   somethingWrong: "Something went wrong. Try again.",
   alreadyConfirmed: "Your email is already confirmed.",
-  confirmationSent: "Confirmation email sent. Check your inbox."
+  confirmationSent: "Confirmation email sent. Check your inbox.",
+  settingsTitle: "Settings",
+  appearanceSection: "APPEARANCE",
+  privacySection: "PRIVACY & SAFETY",
+  legalSection: "LEGAL",
+  deleteAccountTitle: "Delete account",
+  blockedUsersTitle: "Blocked users",
+  unblock: "Unblock",
+  unblockTitle: "Unblock",
+  unblockBody: "Unblock",
+  unblockNote: "Unblocking restores any conversation you had. They won’t be notified.",
+  noBlockedUsers: "You haven’t blocked anyone.",
+  couldntLoadBlocked: "Couldn’t load blocked users.",
+  couldntUnblock: "Couldn’t unblock"
 };
 const no = {
   appName: 'Nearby',
@@ -341,7 +354,20 @@ const no = {
   tryAgain: "Prøv igjen.",
   somethingWrong: "Noe gikk galt. Prøv igjen.",
   alreadyConfirmed: "E-postadressen din er allerede bekreftet.",
-  confirmationSent: "Bekreftelse sendt. Sjekk innboksen."
+  confirmationSent: "Bekreftelse sendt. Sjekk innboksen.",
+  settingsTitle: "Innstillinger",
+  appearanceSection: "UTSEENDE",
+  privacySection: "PERSONVERN OG SIKKERHET",
+  legalSection: "JURIDISK",
+  deleteAccountTitle: "Slette konto",
+  blockedUsersTitle: "Blokkerte brukere",
+  unblock: "Fjern blokkering",
+  unblockTitle: "Fjerne blokkering",
+  unblockBody: "Fjerne blokkeringen av",
+  unblockNote: "Å fjerne en blokkering gjenoppretter samtalen dere hadde. De blir ikke varslet.",
+  noBlockedUsers: "Du har ikke blokkert noen.",
+  couldntLoadBlocked: "Kunne ikke laste blokkerte brukere.",
+  couldntUnblock: "Kunne ikke fjerne blokkeringen"
 };
 const de = {
   appName: 'Nearby',
@@ -508,7 +534,20 @@ const de = {
   tryAgain: "Versuche es erneut.",
   somethingWrong: "Etwas ist schiefgelaufen. Versuche es erneut.",
   alreadyConfirmed: "Deine E-Mail-Adresse ist bereits bestätigt.",
-  confirmationSent: "Bestätigungs-E-Mail gesendet. Sieh in deinem Posteingang nach."
+  confirmationSent: "Bestätigungs-E-Mail gesendet. Sieh in deinem Posteingang nach.",
+  settingsTitle: "Einstellungen",
+  appearanceSection: "DARSTELLUNG",
+  privacySection: "PRIVATSPHÄRE UND SICHERHEIT",
+  legalSection: "RECHTLICHES",
+  deleteAccountTitle: "Konto löschen",
+  blockedUsersTitle: "Blockierte Nutzer",
+  unblock: "Blockierung aufheben",
+  unblockTitle: "Blockierung aufheben",
+  unblockBody: "Blockierung aufheben für",
+  unblockNote: "Das Aufheben stellt eure frühere Unterhaltung wieder her. Die Person wird nicht benachrichtigt.",
+  noBlockedUsers: "Du hast niemanden blockiert.",
+  couldntLoadBlocked: "Blockierte Nutzer konnten nicht geladen werden.",
+  couldntUnblock: "Blockierung konnte nicht aufgehoben werden"
 };
 const da = {
   appName: 'Nearby',
@@ -675,7 +714,20 @@ const da = {
   tryAgain: "Prøv igen.",
   somethingWrong: "Noget gik galt. Prøv igen.",
   alreadyConfirmed: "Din e-mail er allerede bekræftet.",
-  confirmationSent: "Bekræftelsesmail sendt. Tjek din indbakke."
+  confirmationSent: "Bekræftelsesmail sendt. Tjek din indbakke.",
+  settingsTitle: "Indstillinger",
+  appearanceSection: "UDSEENDE",
+  privacySection: "PRIVATLIV OG SIKKERHED",
+  legalSection: "JURIDISK",
+  deleteAccountTitle: "Slet konto",
+  blockedUsersTitle: "Blokerede brugere",
+  unblock: "Fjern blokering",
+  unblockTitle: "Fjern blokering",
+  unblockBody: "Fjern blokering af",
+  unblockNote: "At fjerne blokeringen gendanner jeres samtale. De får ikke besked.",
+  noBlockedUsers: "Du har ikke blokeret nogen.",
+  couldntLoadBlocked: "Kunne ikke indlæse blokerede brugere.",
+  couldntUnblock: "Kunne ikke fjerne blokeringen"
 };
 const sv = {
   appName: 'Nearby',
@@ -842,7 +894,20 @@ const sv = {
   tryAgain: "Försök igen.",
   somethingWrong: "Något gick fel. Försök igen.",
   alreadyConfirmed: "Din e-post är redan bekräftad.",
-  confirmationSent: "Bekräftelsemejl skickat. Kolla din inkorg."
+  confirmationSent: "Bekräftelsemejl skickat. Kolla din inkorg.",
+  settingsTitle: "Inställningar",
+  appearanceSection: "UTSEENDE",
+  privacySection: "INTEGRITET OCH SÄKERHET",
+  legalSection: "JURIDIK",
+  deleteAccountTitle: "Radera konto",
+  blockedUsersTitle: "Blockerade användare",
+  unblock: "Avblockera",
+  unblockTitle: "Avblockera",
+  unblockBody: "Avblockera",
+  unblockNote: "Att avblockera återställer konversationen ni hade. De meddelas inte.",
+  noBlockedUsers: "Du har inte blockerat någon.",
+  couldntLoadBlocked: "Kunde inte ladda blockerade användare.",
+  couldntUnblock: "Kunde inte avblockera"
 };
 const fi = {
   appName: 'Nearby',
@@ -1009,7 +1074,20 @@ const fi = {
   tryAgain: "Yritä uudelleen.",
   somethingWrong: "Jotain meni pieleen. Yritä uudelleen.",
   alreadyConfirmed: "Sähköpostisi on jo vahvistettu.",
-  confirmationSent: "Vahvistusviesti lähetetty. Tarkista sähköpostisi."
+  confirmationSent: "Vahvistusviesti lähetetty. Tarkista sähköpostisi.",
+  settingsTitle: "Asetukset",
+  appearanceSection: "ULKOASU",
+  privacySection: "YKSITYISYYS JA TURVALLISUUS",
+  legalSection: "OIKEUDELLISET TIEDOT",
+  deleteAccountTitle: "Poista tili",
+  blockedUsersTitle: "Estetyt käyttäjät",
+  unblock: "Poista esto",
+  unblockTitle: "Poista esto",
+  unblockBody: "Poista käyttäjän esto:",
+  unblockNote: "Eston poistaminen palauttaa aiemman keskustelunne. Käyttäjälle ei ilmoiteta.",
+  noBlockedUsers: "Et ole estänyt ketään.",
+  couldntLoadBlocked: "Estettyjä käyttäjiä ei voitu ladata.",
+  couldntUnblock: "Eston poistaminen epäonnistui"
 };
 const fr = {
   appName: 'Nearby',
@@ -1176,7 +1254,20 @@ const fr = {
   tryAgain: "Réessayez.",
   somethingWrong: "Une erreur est survenue. Réessayez.",
   alreadyConfirmed: "Votre e-mail est déjà confirmé.",
-  confirmationSent: "E-mail de confirmation envoyé. Vérifiez votre boîte de réception."
+  confirmationSent: "E-mail de confirmation envoyé. Vérifiez votre boîte de réception.",
+  settingsTitle: "Réglages",
+  appearanceSection: "APPARENCE",
+  privacySection: "CONFIDENTIALITÉ ET SÉCURITÉ",
+  legalSection: "MENTIONS LÉGALES",
+  deleteAccountTitle: "Supprimer le compte",
+  blockedUsersTitle: "Utilisateurs bloqués",
+  unblock: "Débloquer",
+  unblockTitle: "Débloquer",
+  unblockBody: "Débloquer",
+  unblockNote: "Débloquer restaure la conversation que vous aviez. La personne n’en sera pas informée.",
+  noBlockedUsers: "Vous n’avez bloqué personne.",
+  couldntLoadBlocked: "Impossible de charger les utilisateurs bloqués.",
+  couldntUnblock: "Impossible de débloquer"
 };
 const es = {
   appName: 'Nearby',
@@ -1343,7 +1434,20 @@ const es = {
   tryAgain: "Inténtalo de nuevo.",
   somethingWrong: "Algo salió mal. Inténtalo de nuevo.",
   alreadyConfirmed: "Tu correo ya está confirmado.",
-  confirmationSent: "Correo de confirmación enviado. Revisa tu bandeja."
+  confirmationSent: "Correo de confirmación enviado. Revisa tu bandeja.",
+  settingsTitle: "Ajustes",
+  appearanceSection: "APARIENCIA",
+  privacySection: "PRIVACIDAD Y SEGURIDAD",
+  legalSection: "LEGAL",
+  deleteAccountTitle: "Eliminar cuenta",
+  blockedUsersTitle: "Usuarios bloqueados",
+  unblock: "Desbloquear",
+  unblockTitle: "Desbloquear",
+  unblockBody: "Desbloquear a",
+  unblockNote: "Desbloquear restaura la conversación que tenían. No se le notificará.",
+  noBlockedUsers: "No has bloqueado a nadie.",
+  couldntLoadBlocked: "No se pudieron cargar los usuarios bloqueados.",
+  couldntUnblock: "No se pudo desbloquear"
 };
 const it = {
   appName: 'Nearby',
@@ -1510,7 +1614,20 @@ const it = {
   tryAgain: "Riprova.",
   somethingWrong: "Qualcosa è andato storto. Riprova.",
   alreadyConfirmed: "La tua email è già confermata.",
-  confirmationSent: "Email di conferma inviata. Controlla la posta."
+  confirmationSent: "Email di conferma inviata. Controlla la posta.",
+  settingsTitle: "Impostazioni",
+  appearanceSection: "ASPETTO",
+  privacySection: "PRIVACY E SICUREZZA",
+  legalSection: "NOTE LEGALI",
+  deleteAccountTitle: "Elimina account",
+  blockedUsersTitle: "Utenti bloccati",
+  unblock: "Sblocca",
+  unblockTitle: "Sblocca",
+  unblockBody: "Sbloccare",
+  unblockNote: "Sbloccando ripristini la conversazione che avevate. La persona non verrà avvisata.",
+  noBlockedUsers: "Non hai bloccato nessuno.",
+  couldntLoadBlocked: "Impossibile caricare gli utenti bloccati.",
+  couldntUnblock: "Impossibile sbloccare"
 };
 const nl = {
   appName: 'Nearby',
@@ -1677,7 +1794,20 @@ const nl = {
   tryAgain: "Probeer opnieuw.",
   somethingWrong: "Er ging iets mis. Probeer opnieuw.",
   alreadyConfirmed: "Je e-mailadres is al bevestigd.",
-  confirmationSent: "Bevestigingsmail verzonden. Controleer je inbox."
+  confirmationSent: "Bevestigingsmail verzonden. Controleer je inbox.",
+  settingsTitle: "Instellingen",
+  appearanceSection: "WEERGAVE",
+  privacySection: "PRIVACY EN VEILIGHEID",
+  legalSection: "JURIDISCH",
+  deleteAccountTitle: "Account verwijderen",
+  blockedUsersTitle: "Geblokkeerde gebruikers",
+  unblock: "Deblokkeren",
+  unblockTitle: "Deblokkeren",
+  unblockBody: "Deblokkeer",
+  unblockNote: "Deblokkeren herstelt het gesprek dat je had. Zij krijgen hiervan geen melding.",
+  noBlockedUsers: "Je hebt niemand geblokkeerd.",
+  couldntLoadBlocked: "Kan geblokkeerde gebruikers niet laden.",
+  couldntUnblock: "Kan niet deblokkeren"
 };
 const pl = {
   appName: 'Nearby',
@@ -1844,7 +1974,20 @@ const pl = {
   tryAgain: "Spróbuj ponownie.",
   somethingWrong: "Coś poszło nie tak. Spróbuj ponownie.",
   alreadyConfirmed: "Twój e-mail jest już potwierdzony.",
-  confirmationSent: "Wysłano e-mail potwierdzający. Sprawdź skrzynkę."
+  confirmationSent: "Wysłano e-mail potwierdzający. Sprawdź skrzynkę.",
+  settingsTitle: "Ustawienia",
+  appearanceSection: "WYGLĄD",
+  privacySection: "PRYWATNOŚĆ I BEZPIECZEŃSTWO",
+  legalSection: "INFORMACJE PRAWNE",
+  deleteAccountTitle: "Usuń konto",
+  blockedUsersTitle: "Zablokowani użytkownicy",
+  unblock: "Odblokuj",
+  unblockTitle: "Odblokuj",
+  unblockBody: "Odblokować",
+  unblockNote: "Odblokowanie przywraca waszą rozmowę. Ta osoba nie zostanie powiadomiona.",
+  noBlockedUsers: "Nikogo nie zablokowałeś.",
+  couldntLoadBlocked: "Nie udało się załadować zablokowanych użytkowników.",
+  couldntUnblock: "Nie udało się odblokować"
 };
 const pt = {
   appName: 'Nearby',
@@ -2011,7 +2154,20 @@ const pt = {
   tryAgain: "Tente novamente.",
   somethingWrong: "Algo correu mal. Tente novamente.",
   alreadyConfirmed: "O seu e-mail já está confirmado.",
-  confirmationSent: "E-mail de confirmação enviado. Verifique a caixa de entrada."
+  confirmationSent: "E-mail de confirmação enviado. Verifique a caixa de entrada.",
+  settingsTitle: "Definições",
+  appearanceSection: "APARÊNCIA",
+  privacySection: "PRIVACIDADE E SEGURANÇA",
+  legalSection: "LEGAL",
+  deleteAccountTitle: "Eliminar conta",
+  blockedUsersTitle: "Utilizadores bloqueados",
+  unblock: "Desbloquear",
+  unblockTitle: "Desbloquear",
+  unblockBody: "Desbloquear",
+  unblockNote: "Desbloquear restaura a conversa que tinham. A pessoa não será notificada.",
+  noBlockedUsers: "Não bloqueaste ninguém.",
+  couldntLoadBlocked: "Não foi possível carregar os utilizadores bloqueados.",
+  couldntUnblock: "Não foi possível desbloquear"
 };
 const TRANSLATIONS = {
   no,

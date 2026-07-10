@@ -1,13 +1,14 @@
-// localpulse/app/scripts/add-myprofile-i18n.cjs
+// localpulse/app/scripts/add-settings-blocked-i18n.cjs
 //
-// Adds every user-facing string in MyProfileScreen to all 12 language objects
-// in src/i18n/translations.js, and REPLACES verifyBody, which was written with
-// a {{email}} placeholder that LangContext's t() does not interpolate.
+// Adds every user-facing string for SettingsScreen and BlockedUsersScreen to
+// all 12 language objects in src/i18n/translations.js. Idempotent: a locale
+// that already has a key is skipped, so re-running after a partial edit is safe.
 //
-//   node scripts/add-myprofile-i18n.cjs
+//   node scripts/add-settings-blocked-i18n.cjs
 //
-// Idempotent for additions (existing keys are skipped). verifyBody is
-// overwritten unconditionally — re-running is safe.
+// Keys already added by earlier scripts (cancel, logout, delete,
+// logoutConfirmTitle, logoutConfirmBody, tryAgain) are intentionally omitted
+// here and will show as skipped if present.
 const fs = require('fs');
 const path = require('path');
 const parser = require('@babel/parser');
@@ -17,165 +18,162 @@ const t = require('@babel/types');
 
 const FILE = path.join(__dirname, '..', 'src', 'i18n', 'translations.js');
 
-// Overwritten, not skipped: the old value holds an uninterpolated {{email}}.
-const OVERWRITE = new Set(['verifyBody']);
-
 const STRINGS = {
   no: {
-    verifyBody: 'Vi sendte deg en bekreftelseslenke. Sjekk innboksen din.',
-    myProfileTitle: 'Min profil', photosLabel: 'Bilder', mainPhoto: 'Hoved',
-    photoHint: 'Trykk på et bilde for å gjøre det til hovedbildet',
-    bioLabel: 'Om meg', bioPlaceholder: 'Fortell litt om deg selv…',
-    edit: 'Rediger', save: 'Lagre', cancel: 'Avbryt', logout: 'Logg ut',
-    logoutConfirmTitle: 'Logge ut?', logoutConfirmBody: 'Du trenger e-post og PIN for å logge inn igjen.',
-    removePhotoTitle: 'Fjerne bildet?', removePhotoBody: 'Bildet fjernes fra profilen din.', remove: 'Fjern',
-    permissionTitle: 'Tilgang kreves', permissionBody: 'Gi tilgang til bilder i Innstillinger.',
-    uploadFailed: 'Opplasting mislyktes', couldntSave: 'Kunne ikke lagre', couldntRemove: 'Kunne ikke fjerne',
-    couldntSend: 'Kunne ikke sende', tryAgain: 'Prøv igjen.', somethingWrong: 'Noe gikk galt. Prøv igjen.',
-    alreadyConfirmed: 'E-postadressen din er allerede bekreftet.', confirmationSent: 'Bekreftelse sendt. Sjekk innboksen.',
+    settingsTitle: 'Innstillinger', personalSettings: 'Personlige innstillinger',
+    appearanceSection: 'UTSEENDE', darkMode: 'Mørk modus', useSystemSetting: 'Bruk systeminnstilling',
+    on: 'På', off: 'Av', privacySection: 'PERSONVERN OG SIKKERHET', legalSection: 'JURIDISK',
+    termsOfService: 'Vilkår for bruk', privacyPolicy: 'Personvern', deleteAccount: 'Slett konto',
+    deleteAccountTitle: 'Slette konto', deleteAccountBody: 'Dette sletter profilen, bildene og meldingene dine permanent. Dette kan ikke angres.',
+    error: 'Feil',
+    blockedUsersTitle: 'Blokkerte brukere', unblock: 'Fjern blokkering',
+    unblockTitle: 'Fjerne blokkering', unblockBody: 'Fjerne blokkeringen av',
+    unblockNote: 'Å fjerne en blokkering gjenoppretter samtalen dere hadde. De blir ikke varslet.',
+    noBlockedUsers: 'Du har ikke blokkert noen.', couldntLoadBlocked: 'Kunne ikke laste blokkerte brukere.',
+    couldntUnblock: 'Kunne ikke fjerne blokkeringen',
   },
   en: {
-    verifyBody: 'We sent you a confirmation link. Check your inbox.',
-    myProfileTitle: 'My Profile', photosLabel: 'Photos', mainPhoto: 'Main',
-    photoHint: 'Tap a photo to make it your main picture',
-    bioLabel: 'Bio', bioPlaceholder: 'Tell people a bit about yourself…',
-    edit: 'Edit', save: 'Save', cancel: 'Cancel', logout: 'Log out',
-    logoutConfirmTitle: 'Log out?', logoutConfirmBody: 'You’ll need your email and PIN to sign back in.',
-    removePhotoTitle: 'Remove photo?', removePhotoBody: 'This photo will be removed from your profile.', remove: 'Remove',
-    permissionTitle: 'Permission needed', permissionBody: 'Allow photo access in Settings to add a picture.',
-    uploadFailed: 'Upload failed', couldntSave: 'Couldn’t save', couldntRemove: 'Couldn’t remove',
-    couldntSend: 'Couldn’t send', tryAgain: 'Try again.', somethingWrong: 'Something went wrong. Try again.',
-    alreadyConfirmed: 'Your email is already confirmed.', confirmationSent: 'Confirmation email sent. Check your inbox.',
+    settingsTitle: 'Settings', personalSettings: 'Personal settings',
+    appearanceSection: 'APPEARANCE', darkMode: 'Dark mode', useSystemSetting: 'Use system setting',
+    on: 'On', off: 'Off', privacySection: 'PRIVACY & SAFETY', legalSection: 'LEGAL',
+    termsOfService: 'Terms of Service', privacyPolicy: 'Privacy Policy', deleteAccount: 'Delete account',
+    deleteAccountTitle: 'Delete account', deleteAccountBody: 'This permanently deletes your profile, photos, and messages. This cannot be undone.',
+    error: 'Error',
+    blockedUsersTitle: 'Blocked users', unblock: 'Unblock',
+    unblockTitle: 'Unblock', unblockBody: 'Unblock',
+    unblockNote: 'Unblocking restores any conversation you had. They won’t be notified.',
+    noBlockedUsers: 'You haven’t blocked anyone.', couldntLoadBlocked: 'Couldn’t load blocked users.',
+    couldntUnblock: 'Couldn’t unblock',
   },
   nl: {
-    verifyBody: 'We hebben je een bevestigingslink gestuurd. Controleer je inbox.',
-    myProfileTitle: 'Mijn profiel', photosLabel: 'Foto’s', mainPhoto: 'Hoofd',
-    photoHint: 'Tik op een foto om deze als hoofdfoto in te stellen',
-    bioLabel: 'Over mij', bioPlaceholder: 'Vertel iets over jezelf…',
-    edit: 'Bewerken', save: 'Opslaan', cancel: 'Annuleren', logout: 'Uitloggen',
-    logoutConfirmTitle: 'Uitloggen?', logoutConfirmBody: 'Je hebt je e-mail en pincode nodig om weer in te loggen.',
-    removePhotoTitle: 'Foto verwijderen?', removePhotoBody: 'Deze foto wordt van je profiel verwijderd.', remove: 'Verwijderen',
-    permissionTitle: 'Toestemming nodig', permissionBody: 'Sta fototoegang toe in Instellingen.',
-    uploadFailed: 'Uploaden mislukt', couldntSave: 'Kan niet opslaan', couldntRemove: 'Kan niet verwijderen',
-    couldntSend: 'Kan niet verzenden', tryAgain: 'Probeer opnieuw.', somethingWrong: 'Er ging iets mis. Probeer opnieuw.',
-    alreadyConfirmed: 'Je e-mailadres is al bevestigd.', confirmationSent: 'Bevestigingsmail verzonden. Controleer je inbox.',
+    settingsTitle: 'Instellingen', personalSettings: 'Persoonlijke instellingen',
+    appearanceSection: 'WEERGAVE', darkMode: 'Donkere modus', useSystemSetting: 'Systeeminstelling gebruiken',
+    on: 'Aan', off: 'Uit', privacySection: 'PRIVACY EN VEILIGHEID', legalSection: 'JURIDISCH',
+    termsOfService: 'Servicevoorwaarden', privacyPolicy: 'Privacybeleid', deleteAccount: 'Account verwijderen',
+    deleteAccountTitle: 'Account verwijderen', deleteAccountBody: 'Hiermee worden je profiel, foto’s en berichten permanent verwijderd. Dit kan niet ongedaan worden gemaakt.',
+    error: 'Fout',
+    blockedUsersTitle: 'Geblokkeerde gebruikers', unblock: 'Deblokkeren',
+    unblockTitle: 'Deblokkeren', unblockBody: 'Deblokkeer',
+    unblockNote: 'Deblokkeren herstelt het gesprek dat je had. Zij krijgen hiervan geen melding.',
+    noBlockedUsers: 'Je hebt niemand geblokkeerd.', couldntLoadBlocked: 'Kan geblokkeerde gebruikers niet laden.',
+    couldntUnblock: 'Kan niet deblokkeren',
   },
   fr: {
-    verifyBody: 'Nous vous avons envoyé un lien de confirmation. Vérifiez votre boîte de réception.',
-    myProfileTitle: 'Mon profil', photosLabel: 'Photos', mainPhoto: 'Principale',
-    photoHint: 'Touchez une photo pour en faire votre photo principale',
-    bioLabel: 'À propos', bioPlaceholder: 'Parlez un peu de vous…',
-    edit: 'Modifier', save: 'Enregistrer', cancel: 'Annuler', logout: 'Déconnexion',
-    logoutConfirmTitle: 'Se déconnecter ?', logoutConfirmBody: 'Vous aurez besoin de votre e-mail et de votre code PIN pour vous reconnecter.',
-    removePhotoTitle: 'Supprimer la photo ?', removePhotoBody: 'Cette photo sera retirée de votre profil.', remove: 'Supprimer',
-    permissionTitle: 'Autorisation requise', permissionBody: 'Autorisez l’accès aux photos dans les Réglages.',
-    uploadFailed: 'Échec de l’envoi', couldntSave: 'Enregistrement impossible', couldntRemove: 'Suppression impossible',
-    couldntSend: 'Envoi impossible', tryAgain: 'Réessayez.', somethingWrong: 'Une erreur est survenue. Réessayez.',
-    alreadyConfirmed: 'Votre e-mail est déjà confirmé.', confirmationSent: 'E-mail de confirmation envoyé. Vérifiez votre boîte de réception.',
+    settingsTitle: 'Réglages', personalSettings: 'Paramètres personnels',
+    appearanceSection: 'APPARENCE', darkMode: 'Mode sombre', useSystemSetting: 'Utiliser le réglage système',
+    on: 'Activé', off: 'Désactivé', privacySection: 'CONFIDENTIALITÉ ET SÉCURITÉ', legalSection: 'MENTIONS LÉGALES',
+    termsOfService: 'Conditions d’utilisation', privacyPolicy: 'Politique de confidentialité', deleteAccount: 'Supprimer le compte',
+    deleteAccountTitle: 'Supprimer le compte', deleteAccountBody: 'Cela supprime définitivement votre profil, vos photos et vos messages. Cette action est irréversible.',
+    error: 'Erreur',
+    blockedUsersTitle: 'Utilisateurs bloqués', unblock: 'Débloquer',
+    unblockTitle: 'Débloquer', unblockBody: 'Débloquer',
+    unblockNote: 'Débloquer restaure la conversation que vous aviez. La personne n’en sera pas informée.',
+    noBlockedUsers: 'Vous n’avez bloqué personne.', couldntLoadBlocked: 'Impossible de charger les utilisateurs bloqués.',
+    couldntUnblock: 'Impossible de débloquer',
   },
   de: {
-    verifyBody: 'Wir haben dir einen Bestätigungslink gesendet. Sieh in deinem Posteingang nach.',
-    myProfileTitle: 'Mein Profil', photosLabel: 'Fotos', mainPhoto: 'Haupt',
-    photoHint: 'Tippe auf ein Foto, um es als Hauptbild festzulegen',
-    bioLabel: 'Über mich', bioPlaceholder: 'Erzähl etwas über dich…',
-    edit: 'Bearbeiten', save: 'Speichern', cancel: 'Abbrechen', logout: 'Abmelden',
-    logoutConfirmTitle: 'Abmelden?', logoutConfirmBody: 'Du brauchst deine E-Mail und PIN, um dich wieder anzumelden.',
-    removePhotoTitle: 'Foto entfernen?', removePhotoBody: 'Dieses Foto wird von deinem Profil entfernt.', remove: 'Entfernen',
-    permissionTitle: 'Berechtigung erforderlich', permissionBody: 'Erlaube den Fotozugriff in den Einstellungen.',
-    uploadFailed: 'Upload fehlgeschlagen', couldntSave: 'Speichern fehlgeschlagen', couldntRemove: 'Entfernen fehlgeschlagen',
-    couldntSend: 'Senden fehlgeschlagen', tryAgain: 'Versuche es erneut.', somethingWrong: 'Etwas ist schiefgelaufen. Versuche es erneut.',
-    alreadyConfirmed: 'Deine E-Mail-Adresse ist bereits bestätigt.', confirmationSent: 'Bestätigungs-E-Mail gesendet. Sieh in deinem Posteingang nach.',
+    settingsTitle: 'Einstellungen', personalSettings: 'Persönliche Einstellungen',
+    appearanceSection: 'DARSTELLUNG', darkMode: 'Dunkelmodus', useSystemSetting: 'Systemeinstellung verwenden',
+    on: 'Ein', off: 'Aus', privacySection: 'PRIVATSPHÄRE UND SICHERHEIT', legalSection: 'RECHTLICHES',
+    termsOfService: 'Nutzungsbedingungen', privacyPolicy: 'Datenschutz', deleteAccount: 'Konto löschen',
+    deleteAccountTitle: 'Konto löschen', deleteAccountBody: 'Dadurch werden dein Profil, deine Fotos und Nachrichten dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.',
+    error: 'Fehler',
+    blockedUsersTitle: 'Blockierte Nutzer', unblock: 'Blockierung aufheben',
+    unblockTitle: 'Blockierung aufheben', unblockBody: 'Blockierung aufheben für',
+    unblockNote: 'Das Aufheben stellt eure frühere Unterhaltung wieder her. Die Person wird nicht benachrichtigt.',
+    noBlockedUsers: 'Du hast niemanden blockiert.', couldntLoadBlocked: 'Blockierte Nutzer konnten nicht geladen werden.',
+    couldntUnblock: 'Blockierung konnte nicht aufgehoben werden',
   },
   it: {
-    verifyBody: 'Ti abbiamo inviato un link di conferma. Controlla la tua casella di posta.',
-    myProfileTitle: 'Il mio profilo', photosLabel: 'Foto', mainPhoto: 'Principale',
-    photoHint: 'Tocca una foto per renderla la tua immagine principale',
-    bioLabel: 'Su di me', bioPlaceholder: 'Racconta qualcosa di te…',
-    edit: 'Modifica', save: 'Salva', cancel: 'Annulla', logout: 'Esci',
-    logoutConfirmTitle: 'Uscire?', logoutConfirmBody: 'Ti serviranno email e PIN per accedere di nuovo.',
-    removePhotoTitle: 'Rimuovere la foto?', removePhotoBody: 'Questa foto verrà rimossa dal tuo profilo.', remove: 'Rimuovi',
-    permissionTitle: 'Autorizzazione necessaria', permissionBody: 'Consenti l’accesso alle foto in Impostazioni.',
-    uploadFailed: 'Caricamento non riuscito', couldntSave: 'Impossibile salvare', couldntRemove: 'Impossibile rimuovere',
-    couldntSend: 'Impossibile inviare', tryAgain: 'Riprova.', somethingWrong: 'Qualcosa è andato storto. Riprova.',
-    alreadyConfirmed: 'La tua email è già confermata.', confirmationSent: 'Email di conferma inviata. Controlla la posta.',
+    settingsTitle: 'Impostazioni', personalSettings: 'Impostazioni personali',
+    appearanceSection: 'ASPETTO', darkMode: 'Modalità scura', useSystemSetting: 'Usa impostazione di sistema',
+    on: 'Attivo', off: 'Disattivo', privacySection: 'PRIVACY E SICUREZZA', legalSection: 'NOTE LEGALI',
+    termsOfService: 'Termini di servizio', privacyPolicy: 'Informativa sulla privacy', deleteAccount: 'Elimina account',
+    deleteAccountTitle: 'Elimina account', deleteAccountBody: 'Questa operazione elimina definitivamente profilo, foto e messaggi. Non può essere annullata.',
+    error: 'Errore',
+    blockedUsersTitle: 'Utenti bloccati', unblock: 'Sblocca',
+    unblockTitle: 'Sblocca', unblockBody: 'Sbloccare',
+    unblockNote: 'Sbloccando ripristini la conversazione che avevate. La persona non verrà avvisata.',
+    noBlockedUsers: 'Non hai bloccato nessuno.', couldntLoadBlocked: 'Impossibile caricare gli utenti bloccati.',
+    couldntUnblock: 'Impossibile sbloccare',
   },
   sv: {
-    verifyBody: 'Vi har skickat en bekräftelselänk. Kolla din inkorg.',
-    myProfileTitle: 'Min profil', photosLabel: 'Bilder', mainPhoto: 'Huvud',
-    photoHint: 'Tryck på en bild för att göra den till din huvudbild',
-    bioLabel: 'Om mig', bioPlaceholder: 'Berätta lite om dig själv…',
-    edit: 'Redigera', save: 'Spara', cancel: 'Avbryt', logout: 'Logga ut',
-    logoutConfirmTitle: 'Logga ut?', logoutConfirmBody: 'Du behöver din e-post och PIN för att logga in igen.',
-    removePhotoTitle: 'Ta bort bilden?', removePhotoBody: 'Bilden tas bort från din profil.', remove: 'Ta bort',
-    permissionTitle: 'Behörighet krävs', permissionBody: 'Tillåt åtkomst till bilder i Inställningar.',
-    uploadFailed: 'Uppladdning misslyckades', couldntSave: 'Kunde inte spara', couldntRemove: 'Kunde inte ta bort',
-    couldntSend: 'Kunde inte skicka', tryAgain: 'Försök igen.', somethingWrong: 'Något gick fel. Försök igen.',
-    alreadyConfirmed: 'Din e-post är redan bekräftad.', confirmationSent: 'Bekräftelsemejl skickat. Kolla din inkorg.',
+    settingsTitle: 'Inställningar', personalSettings: 'Personliga inställningar',
+    appearanceSection: 'UTSEENDE', darkMode: 'Mörkt läge', useSystemSetting: 'Använd systeminställning',
+    on: 'På', off: 'Av', privacySection: 'INTEGRITET OCH SÄKERHET', legalSection: 'JURIDIK',
+    termsOfService: 'Användarvillkor', privacyPolicy: 'Integritetspolicy', deleteAccount: 'Radera konto',
+    deleteAccountTitle: 'Radera konto', deleteAccountBody: 'Detta raderar permanent din profil, dina bilder och meddelanden. Det kan inte ångras.',
+    error: 'Fel',
+    blockedUsersTitle: 'Blockerade användare', unblock: 'Avblockera',
+    unblockTitle: 'Avblockera', unblockBody: 'Avblockera',
+    unblockNote: 'Att avblockera återställer konversationen ni hade. De meddelas inte.',
+    noBlockedUsers: 'Du har inte blockerat någon.', couldntLoadBlocked: 'Kunde inte ladda blockerade användare.',
+    couldntUnblock: 'Kunde inte avblockera',
   },
   da: {
-    verifyBody: 'Vi har sendt dig et bekræftelseslink. Tjek din indbakke.',
-    myProfileTitle: 'Min profil', photosLabel: 'Billeder', mainPhoto: 'Hoved',
-    photoHint: 'Tryk på et billede for at gøre det til dit hovedbillede',
-    bioLabel: 'Om mig', bioPlaceholder: 'Fortæl lidt om dig selv…',
-    edit: 'Rediger', save: 'Gem', cancel: 'Annuller', logout: 'Log ud',
-    logoutConfirmTitle: 'Log ud?', logoutConfirmBody: 'Du skal bruge din e-mail og PIN for at logge ind igen.',
-    removePhotoTitle: 'Fjern billede?', removePhotoBody: 'Billedet fjernes fra din profil.', remove: 'Fjern',
-    permissionTitle: 'Tilladelse påkrævet', permissionBody: 'Tillad adgang til billeder i Indstillinger.',
-    uploadFailed: 'Upload mislykkedes', couldntSave: 'Kunne ikke gemme', couldntRemove: 'Kunne ikke fjerne',
-    couldntSend: 'Kunne ikke sende', tryAgain: 'Prøv igen.', somethingWrong: 'Noget gik galt. Prøv igen.',
-    alreadyConfirmed: 'Din e-mail er allerede bekræftet.', confirmationSent: 'Bekræftelsesmail sendt. Tjek din indbakke.',
+    settingsTitle: 'Indstillinger', personalSettings: 'Personlige indstillinger',
+    appearanceSection: 'UDSEENDE', darkMode: 'Mørk tilstand', useSystemSetting: 'Brug systemindstilling',
+    on: 'Til', off: 'Fra', privacySection: 'PRIVATLIV OG SIKKERHED', legalSection: 'JURIDISK',
+    termsOfService: 'Servicevilkår', privacyPolicy: 'Privatlivspolitik', deleteAccount: 'Slet konto',
+    deleteAccountTitle: 'Slet konto', deleteAccountBody: 'Dette sletter permanent din profil, dine billeder og beskeder. Det kan ikke fortrydes.',
+    error: 'Fejl',
+    blockedUsersTitle: 'Blokerede brugere', unblock: 'Fjern blokering',
+    unblockTitle: 'Fjern blokering', unblockBody: 'Fjern blokering af',
+    unblockNote: 'At fjerne blokeringen gendanner jeres samtale. De får ikke besked.',
+    noBlockedUsers: 'Du har ikke blokeret nogen.', couldntLoadBlocked: 'Kunne ikke indlæse blokerede brugere.',
+    couldntUnblock: 'Kunne ikke fjerne blokeringen',
   },
   fi: {
-    verifyBody: 'Lähetimme sinulle vahvistuslinkin. Tarkista sähköpostisi.',
-    myProfileTitle: 'Oma profiili', photosLabel: 'Kuvat', mainPhoto: 'Pääkuva',
-    photoHint: 'Napauta kuvaa tehdäksesi siitä pääkuvasi',
-    bioLabel: 'Tietoja', bioPlaceholder: 'Kerro hieman itsestäsi…',
-    edit: 'Muokkaa', save: 'Tallenna', cancel: 'Peruuta', logout: 'Kirjaudu ulos',
-    logoutConfirmTitle: 'Kirjaudutaanko ulos?', logoutConfirmBody: 'Tarvitset sähköpostisi ja PIN-koodisi kirjautuaksesi takaisin.',
-    removePhotoTitle: 'Poistetaanko kuva?', removePhotoBody: 'Kuva poistetaan profiilistasi.', remove: 'Poista',
-    permissionTitle: 'Lupa tarvitaan', permissionBody: 'Salli kuvien käyttö Asetuksissa.',
-    uploadFailed: 'Lataus epäonnistui', couldntSave: 'Tallennus epäonnistui', couldntRemove: 'Poisto epäonnistui',
-    couldntSend: 'Lähetys epäonnistui', tryAgain: 'Yritä uudelleen.', somethingWrong: 'Jotain meni pieleen. Yritä uudelleen.',
-    alreadyConfirmed: 'Sähköpostisi on jo vahvistettu.', confirmationSent: 'Vahvistusviesti lähetetty. Tarkista sähköpostisi.',
+    settingsTitle: 'Asetukset', personalSettings: 'Henkilökohtaiset asetukset',
+    appearanceSection: 'ULKOASU', darkMode: 'Tumma tila', useSystemSetting: 'Käytä järjestelmän asetusta',
+    on: 'Päällä', off: 'Pois', privacySection: 'YKSITYISYYS JA TURVALLISUUS', legalSection: 'OIKEUDELLISET TIEDOT',
+    termsOfService: 'Käyttöehdot', privacyPolicy: 'Tietosuojakäytäntö', deleteAccount: 'Poista tili',
+    deleteAccountTitle: 'Poista tili', deleteAccountBody: 'Tämä poistaa pysyvästi profiilisi, kuvasi ja viestisi. Tätä ei voi peruuttaa.',
+    error: 'Virhe',
+    blockedUsersTitle: 'Estetyt käyttäjät', unblock: 'Poista esto',
+    unblockTitle: 'Poista esto', unblockBody: 'Poista käyttäjän esto:',
+    unblockNote: 'Eston poistaminen palauttaa aiemman keskustelunne. Käyttäjälle ei ilmoiteta.',
+    noBlockedUsers: 'Et ole estänyt ketään.', couldntLoadBlocked: 'Estettyjä käyttäjiä ei voitu ladata.',
+    couldntUnblock: 'Eston poistaminen epäonnistui',
   },
   es: {
-    verifyBody: 'Te enviamos un enlace de confirmación. Revisa tu bandeja de entrada.',
-    myProfileTitle: 'Mi perfil', photosLabel: 'Fotos', mainPhoto: 'Principal',
-    photoHint: 'Toca una foto para convertirla en tu imagen principal',
-    bioLabel: 'Sobre mí', bioPlaceholder: 'Cuenta algo sobre ti…',
-    edit: 'Editar', save: 'Guardar', cancel: 'Cancelar', logout: 'Cerrar sesión',
-    logoutConfirmTitle: '¿Cerrar sesión?', logoutConfirmBody: 'Necesitarás tu correo y PIN para volver a entrar.',
-    removePhotoTitle: '¿Eliminar la foto?', removePhotoBody: 'Esta foto se eliminará de tu perfil.', remove: 'Eliminar',
-    permissionTitle: 'Permiso necesario', permissionBody: 'Permite el acceso a las fotos en Ajustes.',
-    uploadFailed: 'Error al subir', couldntSave: 'No se pudo guardar', couldntRemove: 'No se pudo eliminar',
-    couldntSend: 'No se pudo enviar', tryAgain: 'Inténtalo de nuevo.', somethingWrong: 'Algo salió mal. Inténtalo de nuevo.',
-    alreadyConfirmed: 'Tu correo ya está confirmado.', confirmationSent: 'Correo de confirmación enviado. Revisa tu bandeja.',
+    settingsTitle: 'Ajustes', personalSettings: 'Ajustes personales',
+    appearanceSection: 'APARIENCIA', darkMode: 'Modo oscuro', useSystemSetting: 'Usar ajuste del sistema',
+    on: 'Activado', off: 'Desactivado', privacySection: 'PRIVACIDAD Y SEGURIDAD', legalSection: 'LEGAL',
+    termsOfService: 'Términos del servicio', privacyPolicy: 'Política de privacidad', deleteAccount: 'Eliminar cuenta',
+    deleteAccountTitle: 'Eliminar cuenta', deleteAccountBody: 'Esto elimina permanentemente tu perfil, tus fotos y mensajes. No se puede deshacer.',
+    error: 'Error',
+    blockedUsersTitle: 'Usuarios bloqueados', unblock: 'Desbloquear',
+    unblockTitle: 'Desbloquear', unblockBody: 'Desbloquear a',
+    unblockNote: 'Desbloquear restaura la conversación que tenían. No se le notificará.',
+    noBlockedUsers: 'No has bloqueado a nadie.', couldntLoadBlocked: 'No se pudieron cargar los usuarios bloqueados.',
+    couldntUnblock: 'No se pudo desbloquear',
   },
   pl: {
-    verifyBody: 'Wysłaliśmy Ci link potwierdzający. Sprawdź swoją skrzynkę.',
-    myProfileTitle: 'Mój profil', photosLabel: 'Zdjęcia', mainPhoto: 'Główne',
-    photoHint: 'Dotknij zdjęcia, aby ustawić je jako główne',
-    bioLabel: 'O mnie', bioPlaceholder: 'Napisz coś o sobie…',
-    edit: 'Edytuj', save: 'Zapisz', cancel: 'Anuluj', logout: 'Wyloguj się',
-    logoutConfirmTitle: 'Wylogować?', logoutConfirmBody: 'Aby zalogować się ponownie, potrzebujesz e-maila i PIN-u.',
-    removePhotoTitle: 'Usunąć zdjęcie?', removePhotoBody: 'To zdjęcie zostanie usunięte z Twojego profilu.', remove: 'Usuń',
-    permissionTitle: 'Wymagane uprawnienie', permissionBody: 'Zezwól na dostęp do zdjęć w Ustawieniach.',
-    uploadFailed: 'Przesyłanie nie powiodło się', couldntSave: 'Nie udało się zapisać', couldntRemove: 'Nie udało się usunąć',
-    couldntSend: 'Nie udało się wysłać', tryAgain: 'Spróbuj ponownie.', somethingWrong: 'Coś poszło nie tak. Spróbuj ponownie.',
-    alreadyConfirmed: 'Twój e-mail jest już potwierdzony.', confirmationSent: 'Wysłano e-mail potwierdzający. Sprawdź skrzynkę.',
+    settingsTitle: 'Ustawienia', personalSettings: 'Ustawienia osobiste',
+    appearanceSection: 'WYGLĄD', darkMode: 'Tryb ciemny', useSystemSetting: 'Użyj ustawienia systemu',
+    on: 'Wł.', off: 'Wył.', privacySection: 'PRYWATNOŚĆ I BEZPIECZEŃSTWO', legalSection: 'INFORMACJE PRAWNE',
+    termsOfService: 'Warunki korzystania', privacyPolicy: 'Polityka prywatności', deleteAccount: 'Usuń konto',
+    deleteAccountTitle: 'Usuń konto', deleteAccountBody: 'To trwale usunie Twój profil, zdjęcia i wiadomości. Tej operacji nie można cofnąć.',
+    error: 'Błąd',
+    blockedUsersTitle: 'Zablokowani użytkownicy', unblock: 'Odblokuj',
+    unblockTitle: 'Odblokuj', unblockBody: 'Odblokować',
+    unblockNote: 'Odblokowanie przywraca waszą rozmowę. Ta osoba nie zostanie powiadomiona.',
+    noBlockedUsers: 'Nikogo nie zablokowałeś.', couldntLoadBlocked: 'Nie udało się załadować zablokowanych użytkowników.',
+    couldntUnblock: 'Nie udało się odblokować',
   },
   pt: {
-    verifyBody: 'Enviámos-lhe um link de confirmação. Verifique a sua caixa de entrada.',
-    myProfileTitle: 'O meu perfil', photosLabel: 'Fotos', mainPhoto: 'Principal',
-    photoHint: 'Toque numa foto para a tornar a sua imagem principal',
-    bioLabel: 'Sobre mim', bioPlaceholder: 'Conte um pouco sobre si…',
-    edit: 'Editar', save: 'Guardar', cancel: 'Cancelar', logout: 'Terminar sessão',
-    logoutConfirmTitle: 'Terminar sessão?', logoutConfirmBody: 'Vai precisar do seu e-mail e PIN para voltar a entrar.',
-    removePhotoTitle: 'Remover a foto?', removePhotoBody: 'Esta foto será removida do seu perfil.', remove: 'Remover',
-    permissionTitle: 'Permissão necessária', permissionBody: 'Permita o acesso às fotos nas Definições.',
-    uploadFailed: 'Falha no carregamento', couldntSave: 'Não foi possível guardar', couldntRemove: 'Não foi possível remover',
-    couldntSend: 'Não foi possível enviar', tryAgain: 'Tente novamente.', somethingWrong: 'Algo correu mal. Tente novamente.',
-    alreadyConfirmed: 'O seu e-mail já está confirmado.', confirmationSent: 'E-mail de confirmação enviado. Verifique a caixa de entrada.',
+    settingsTitle: 'Definições', personalSettings: 'Definições pessoais',
+    appearanceSection: 'APARÊNCIA', darkMode: 'Modo escuro', useSystemSetting: 'Usar definição do sistema',
+    on: 'Ligado', off: 'Desligado', privacySection: 'PRIVACIDADE E SEGURANÇA', legalSection: 'LEGAL',
+    termsOfService: 'Termos de Serviço', privacyPolicy: 'Política de Privacidade', deleteAccount: 'Eliminar conta',
+    deleteAccountTitle: 'Eliminar conta', deleteAccountBody: 'Isto elimina permanentemente o seu perfil, fotos e mensagens. Não pode ser anulado.',
+    error: 'Erro',
+    blockedUsersTitle: 'Utilizadores bloqueados', unblock: 'Desbloquear',
+    unblockTitle: 'Desbloquear', unblockBody: 'Desbloquear',
+    unblockNote: 'Desbloquear restaura a conversa que tinham. A pessoa não será notificada.',
+    noBlockedUsers: 'Não bloqueaste ninguém.', couldntLoadBlocked: 'Não foi possível carregar os utilizadores bloqueados.',
+    couldntUnblock: 'Não foi possível desbloquear',
   },
 };
 
@@ -183,7 +181,6 @@ const src = fs.readFileSync(FILE, 'utf8');
 const ast = parser.parse(src, { sourceType: 'module' });
 
 let added = 0;
-let replaced = 0;
 const skipped = [];
 const missing = new Set(Object.keys(STRINGS));
 
@@ -193,23 +190,16 @@ traverse(ast, {
     if (!STRINGS[lang] || !t.isObjectExpression(p.node.init)) return;
     missing.delete(lang);
 
-    const props = p.node.init.properties;
-    const byName = new Map();
-    props.filter((x) => t.isObjectProperty(x)).forEach((x) => {
-      byName.set(t.isIdentifier(x.key) ? x.key.name : x.key.value, x);
-    });
+    const existing = new Set(
+      p.node.init.properties
+        .filter((prop) => t.isObjectProperty(prop))
+        .map((prop) => (t.isIdentifier(prop.key) ? prop.key.name : prop.key.value))
+    );
 
     for (const [key, value] of Object.entries(STRINGS[lang])) {
-      const existing = byName.get(key);
-      if (existing && OVERWRITE.has(key)) {
-        existing.value = t.stringLiteral(value);
-        replaced += 1;
-      } else if (existing) {
-        skipped.push(`${lang}.${key}`);
-      } else {
-        props.push(t.objectProperty(t.identifier(key), t.stringLiteral(value)));
-        added += 1;
-      }
+      if (existing.has(key)) { skipped.push(`${lang}.${key}`); continue; }
+      p.node.init.properties.push(t.objectProperty(t.identifier(key), t.stringLiteral(value)));
+      added += 1;
     }
   },
 });
@@ -222,4 +212,4 @@ if (missing.size) {
 const out = generate(ast, { jsescOption: { minimal: true } }, src).code;
 fs.writeFileSync(FILE, out + '\n', 'utf8');
 
-console.log(`Added ${added}, replaced ${replaced}, skipped ${skipped.length}.`);
+console.log(`Added ${added}, skipped ${skipped.length}${skipped.length ? ': ' + skipped.join(', ') : ''}.`);
