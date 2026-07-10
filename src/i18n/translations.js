@@ -135,7 +135,15 @@ const en = {
   hapticFeedbackSub: "Vibrate on taps and confirmations",
   couldNotSave: "Could not save. Please try again.",
   usingCurrentLocation: "Using your current location",
-  locationRequired: "Choose a location to continue."
+  locationRequired: "Choose a location to continue.",
+  forgotPinExplain: "Enter your email and we'll send you a 4-digit code to reset your PIN.",
+  sendCode: "Send code",
+  resetCodeSent: "If that email is registered, a code is on its way. Enter it below with your new PIN.",
+  resetCode: "Reset code",
+  resetCodeFourDigits: "The code is 4 digits.",
+  newPin: "New PIN",
+  resetPin: "Reset PIN",
+  resendCode: "Send a new code"
 };
 const no = {
   appName: 'Nearby',
@@ -263,7 +271,15 @@ const no = {
   hapticFeedbackSub: "Vibrer ved trykk og bekreftelser",
   couldNotSave: "Kunne ikke lagre. Prøv igjen.",
   usingCurrentLocation: "Bruker din posisjon",
-  locationRequired: "Velg et sted for å fortsette."
+  locationRequired: "Velg et sted for å fortsette.",
+  forgotPinExplain: "Skriv inn e-posten din, så sender vi en 4-sifret kode for å tilbakestille PIN-koden.",
+  sendCode: "Send kode",
+  resetCodeSent: "Hvis e-posten er registrert, er en kode på vei. Skriv den inn under sammen med ny PIN.",
+  resetCode: "Tilbakestillingskode",
+  resetCodeFourDigits: "Koden er 4 siffer.",
+  newPin: "Ny PIN",
+  resetPin: "Tilbakestill PIN",
+  resendCode: "Send ny kode"
 };
 const de = {
   appName: 'Nearby',
@@ -391,7 +407,15 @@ const de = {
   hapticFeedbackSub: "Bei Tippen und Bestätigungen vibrieren",
   couldNotSave: "Konnte nicht gespeichert werden. Bitte erneut versuchen.",
   usingCurrentLocation: "Dein aktueller Standort wird verwendet",
-  locationRequired: "Wähle einen Ort, um fortzufahren."
+  locationRequired: "Wähle einen Ort, um fortzufahren.",
+  forgotPinExplain: "Gib deine E-Mail ein, und wir senden dir einen 4-stelligen Code, um deine PIN zurückzusetzen.",
+  sendCode: "Code senden",
+  resetCodeSent: "Wenn diese E-Mail registriert ist, ist ein Code unterwegs. Gib ihn unten mit deiner neuen PIN ein.",
+  resetCode: "Zurücksetzungscode",
+  resetCodeFourDigits: "Der Code hat 4 Ziffern.",
+  newPin: "Neue PIN",
+  resetPin: "PIN zurücksetzen",
+  resendCode: "Neuen Code senden"
 };
 const da = {
   appName: 'Nearby',
@@ -519,7 +543,15 @@ const da = {
   hapticFeedbackSub: "Vibrer ved tryk og bekræftelser",
   couldNotSave: "Kunne ikke gemme. Prøv igen.",
   usingCurrentLocation: "Bruger din nuværende placering",
-  locationRequired: "Vælg en placering for at fortsætte."
+  locationRequired: "Vælg en placering for at fortsætte.",
+  forgotPinExplain: "Indtast din e-mail, så sender vi en 4-cifret kode til at nulstille din PIN.",
+  sendCode: "Send kode",
+  resetCodeSent: "Hvis e-mailen er registreret, er en kode på vej. Indtast den nedenfor sammen med din nye PIN.",
+  resetCode: "Nulstillingskode",
+  resetCodeFourDigits: "Koden er 4 cifre.",
+  newPin: "Ny PIN",
+  resetPin: "Nulstil PIN",
+  resendCode: "Send en ny kode"
 };
 const sv = {
   appName: 'Nearby',
@@ -647,7 +679,15 @@ const sv = {
   hapticFeedbackSub: "Vibrera vid tryck och bekräftelser",
   couldNotSave: "Kunde inte spara. Försök igen.",
   usingCurrentLocation: "Använder din nuvarande plats",
-  locationRequired: "Välj en plats för att fortsätta."
+  locationRequired: "Välj en plats för att fortsätta.",
+  forgotPinExplain: "Ange din e-post, så skickar vi en 4-siffrig kod för att återställa din PIN.",
+  sendCode: "Skicka kod",
+  resetCodeSent: "Om e-postadressen är registrerad är en kod på väg. Ange den nedan tillsammans med din nya PIN.",
+  resetCode: "Återställningskod",
+  resetCodeFourDigits: "Koden är 4 siffror.",
+  newPin: "Ny PIN",
+  resetPin: "Återställ PIN",
+  resendCode: "Skicka en ny kod"
 };
 const fi = {
   appName: 'Nearby',
@@ -775,7 +815,15 @@ const fi = {
   hapticFeedbackSub: "Värise napautuksissa ja vahvistuksissa",
   couldNotSave: "Tallennus epäonnistui. Yritä uudelleen.",
   usingCurrentLocation: "Käytetään nykyistä sijaintiasi",
-  locationRequired: "Valitse sijainti jatkaaksesi."
+  locationRequired: "Valitse sijainti jatkaaksesi.",
+  forgotPinExplain: "Anna sähköpostisi, niin lähetämme 4-numeroisen koodin PIN-koodin nollaamiseen.",
+  sendCode: "Lähetä koodi",
+  resetCodeSent: "Jos sähköposti on rekisteröity, koodi on matkalla. Syötä se alle uuden PIN-koodin kanssa.",
+  resetCode: "Nollauskoodi",
+  resetCodeFourDigits: "Koodi on 4 numeroa.",
+  newPin: "Uusi PIN",
+  resetPin: "Nollaa PIN",
+  resendCode: "Lähetä uusi koodi"
 };
 const fr = {
   appName: 'Nearby',
@@ -903,7 +951,15 @@ const fr = {
   hapticFeedbackSub: "Vibrer lors des appuis et confirmations",
   couldNotSave: "Impossible d'enregistrer. Veuillez réessayer.",
   usingCurrentLocation: "Utilisation de votre position actuelle",
-  locationRequired: "Choisissez une localisation pour continuer."
+  locationRequired: "Choisissez une localisation pour continuer.",
+  forgotPinExplain: "Saisissez votre e-mail et nous vous enverrons un code à 4 chiffres pour réinitialiser votre PIN.",
+  sendCode: "Envoyer le code",
+  resetCodeSent: "Si cet e-mail est enregistré, un code est en route. Saisissez-le ci-dessous avec votre nouveau PIN.",
+  resetCode: "Code de réinitialisation",
+  resetCodeFourDigits: "Le code comporte 4 chiffres.",
+  newPin: "Nouveau PIN",
+  resetPin: "Réinitialiser le PIN",
+  resendCode: "Envoyer un nouveau code"
 };
 const es = {
   appName: 'Nearby',
@@ -1031,7 +1087,15 @@ const es = {
   hapticFeedbackSub: "Vibrar al tocar y confirmar",
   couldNotSave: "No se pudo guardar. Inténtalo de nuevo.",
   usingCurrentLocation: "Usando tu ubicación actual",
-  locationRequired: "Elige una ubicación para continuar."
+  locationRequired: "Elige una ubicación para continuar.",
+  forgotPinExplain: "Introduce tu correo y te enviaremos un código de 4 dígitos para restablecer tu PIN.",
+  sendCode: "Enviar código",
+  resetCodeSent: "Si ese correo está registrado, un código está en camino. Introdúcelo abajo con tu nuevo PIN.",
+  resetCode: "Código de restablecimiento",
+  resetCodeFourDigits: "El código tiene 4 dígitos.",
+  newPin: "Nuevo PIN",
+  resetPin: "Restablecer PIN",
+  resendCode: "Enviar un código nuevo"
 };
 const it = {
   appName: 'Nearby',
@@ -1159,7 +1223,15 @@ const it = {
   hapticFeedbackSub: "Vibra ai tocchi e alle conferme",
   couldNotSave: "Impossibile salvare. Riprova.",
   usingCurrentLocation: "Uso della tua posizione attuale",
-  locationRequired: "Scegli una posizione per continuare."
+  locationRequired: "Scegli una posizione per continuare.",
+  forgotPinExplain: "Inserisci la tua email e ti invieremo un codice a 4 cifre per reimpostare il PIN.",
+  sendCode: "Invia codice",
+  resetCodeSent: "Se l'email è registrata, un codice è in arrivo. Inseriscilo qui sotto insieme al nuovo PIN.",
+  resetCode: "Codice di reimpostazione",
+  resetCodeFourDigits: "Il codice ha 4 cifre.",
+  newPin: "Nuovo PIN",
+  resetPin: "Reimposta PIN",
+  resendCode: "Invia un nuovo codice"
 };
 const nl = {
   appName: 'Nearby',
@@ -1287,7 +1359,15 @@ const nl = {
   hapticFeedbackSub: "Tril bij tikken en bevestigingen",
   couldNotSave: "Kon niet opslaan. Probeer opnieuw.",
   usingCurrentLocation: "Je huidige locatie wordt gebruikt",
-  locationRequired: "Kies een locatie om door te gaan."
+  locationRequired: "Kies een locatie om door te gaan.",
+  forgotPinExplain: "Voer je e-mail in en we sturen je een 4-cijferige code om je pincode te resetten.",
+  sendCode: "Code versturen",
+  resetCodeSent: "Als dat e-mailadres bekend is, is een code onderweg. Voer die hieronder in met je nieuwe pincode.",
+  resetCode: "Resetcode",
+  resetCodeFourDigits: "De code is 4 cijfers.",
+  newPin: "Nieuwe pincode",
+  resetPin: "Pincode resetten",
+  resendCode: "Nieuwe code versturen"
 };
 const pl = {
   appName: 'Nearby',
@@ -1415,7 +1495,15 @@ const pl = {
   hapticFeedbackSub: "Wibruj przy dotknięciach i potwierdzeniach",
   couldNotSave: "Nie udało się zapisać. Spróbuj ponownie.",
   usingCurrentLocation: "Używana jest Twoja obecna lokalizacja",
-  locationRequired: "Wybierz lokalizację, aby kontynuować."
+  locationRequired: "Wybierz lokalizację, aby kontynuować.",
+  forgotPinExplain: "Podaj swój e-mail, a wyślemy 4-cyfrowy kod do zresetowania PIN-u.",
+  sendCode: "Wyślij kod",
+  resetCodeSent: "Jeśli ten e-mail jest zarejestrowany, kod jest w drodze. Wpisz go poniżej wraz z nowym PIN-em.",
+  resetCode: "Kod resetujący",
+  resetCodeFourDigits: "Kod ma 4 cyfry.",
+  newPin: "Nowy PIN",
+  resetPin: "Zresetuj PIN",
+  resendCode: "Wyślij nowy kod"
 };
 const pt = {
   appName: 'Nearby',
@@ -1543,7 +1631,15 @@ const pt = {
   hapticFeedbackSub: "Vibrar ao tocar e confirmar",
   couldNotSave: "Não foi possível guardar. Tenta novamente.",
   usingCurrentLocation: "A usar a tua localização atual",
-  locationRequired: "Escolhe uma localização para continuar."
+  locationRequired: "Escolhe uma localização para continuar.",
+  forgotPinExplain: "Introduz o teu e-mail e enviamos-te um código de 4 dígitos para repor o PIN.",
+  sendCode: "Enviar código",
+  resetCodeSent: "Se esse e-mail estiver registado, um código está a caminho. Introduz-o abaixo com o teu novo PIN.",
+  resetCode: "Código de reposição",
+  resetCodeFourDigits: "O código tem 4 dígitos.",
+  newPin: "Novo PIN",
+  resetPin: "Repor PIN",
+  resendCode: "Enviar um novo código"
 };
 const TRANSLATIONS = {
   no,

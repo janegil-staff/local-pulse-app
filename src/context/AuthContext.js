@@ -125,6 +125,20 @@ export function AuthProvider({ children }) {
     return profile;
   };
 
+  // Adopt a session the server handed us without a login round-trip. Used by
+  // the PIN reset flow: resetPin() returns a token because the user just
+  // proved control of their inbox and set a fresh credential. Mirrors login()
+  // minus the api.login() call.
+  const adoptSession = async (token, email, pin) => {
+    const cleanEmail = String(email).trim().toLowerCase();
+    await persist(token, cleanEmail);
+    if (pin) await secureSet('userPin', pin);
+    setPinVerified(true);
+    const { profile } = await api.getMyProfile();
+    setUser(profile);
+    return profile;
+  };
+
   const savePin = async (pin) => {
     await secureSet('userPin', pin);
     const email = user?.email ?? (await secureGet('userEmail'));
@@ -169,6 +183,7 @@ export function AuthProvider({ children }) {
         setIsNewUser,
         updateUser,
         login,
+        adoptSession,
         register,
         logout,
         logoutAndClearPin,

@@ -128,4 +128,7 @@ export const api = {
     form.append('image', { uri, name, type }); // ⚠️ 'image' must match the route's .single('image')
     return request('/upload', { method: 'POST', body: form, isForm: true });
   },
+  resendVerification: () => request('/auth/resend-verification', { method: 'POST' }),
+  requestPinReset: (email) => request('/auth/forgot-pin', { method: 'POST', body: { email }, auth: false }),
+  resetPin: (email, code, pin) => request('/auth/reset-pin', { method: 'POST', body: { email, code, pin }, auth: false }),
 };
