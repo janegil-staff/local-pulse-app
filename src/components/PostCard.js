@@ -1,6 +1,6 @@
 // localpulse/app/src/components/PostCard.js
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { theme, makeStyles, useStyles, POST_TYPE_META } from '../theme/theme.js';
 
 function timeAgo(iso) {
@@ -30,6 +30,14 @@ export default function PostCard({ post, onLike, onPress, onAuthorPress, onSave,
         <Text style={styles.author}>{post.author?.displayName || post.author?.username}</Text>
       </Pressable>
       <Text style={styles.text}>{post.text}</Text>
+
+      {/* The model defaults imageUrl to '', not null — so this is a truthiness
+          check, not a null check. Fixed 4:3 with `cover`: without stored
+          dimensions there's nothing to size from, and a variable-height image
+          would break FlatList's row measurement. */}
+      {post.imageUrl ? (
+        <Image source={{ uri: post.imageUrl }} style={styles.image} resizeMode="cover" />
+      ) : null}
 
       {post.placeName ? <Text style={styles.place}>📍 {post.placeName}</Text> : null}
 
@@ -73,6 +81,7 @@ const stylesFactory = (({ colors, spacing, radius }) =>
     time: { color: colors.textDim, fontSize: 12 },
     author: { color: colors.accent, fontSize: 14, fontWeight: '700', marginBottom: spacing(1) },
     text: { color: colors.text, fontSize: 15, lineHeight: 21 },
+    image: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.sm, marginTop: spacing(3), backgroundColor: colors.surfaceAlt },
     place: { color: colors.textDim, fontSize: 13, marginTop: spacing(2) },
     footer: { flexDirection: 'row', marginTop: spacing(3), alignItems: 'center', justifyContent: 'space-between' },
     footerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing(4) },
