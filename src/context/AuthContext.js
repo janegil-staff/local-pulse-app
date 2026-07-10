@@ -169,7 +169,13 @@ export function AuthProvider({ children }) {
     setPinVerified(false);
     setUser(null);
   };
-
+  // Change the PIN. The server verifies the current one; on success we must
+  // overwrite the SecureStore copy, or the local app-lock screen keeps
+  // accepting the old value.
+  const changePin = async (currentPin, newPin) => {
+    await api.changePin(currentPin, newPin);
+    await secureSet('userPin', newPin);
+  };
   return (
     <AuthContext.Provider
       value={{
@@ -187,6 +193,7 @@ export function AuthProvider({ children }) {
         register,
         logout,
         logoutAndClearPin,
+        changePin,
         savePin,
         hydrate,
       }}

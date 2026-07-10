@@ -143,7 +143,12 @@ const en = {
   resetCodeFourDigits: "The code is 4 digits.",
   newPin: "New PIN",
   resetPin: "Reset PIN",
-  resendCode: "Send a new code"
+  resendCode: "Send a new code",
+  changePin: "Change PIN",
+  currentPin: "Current PIN",
+  pinChanged: "Your PIN has been changed.",
+  pinMustDiffer: "The new PIN must differ from the current one.",
+  success: "Success"
 };
 const no = {
   appName: 'Nearby',
@@ -279,7 +284,12 @@ const no = {
   resetCodeFourDigits: "Koden er 4 siffer.",
   newPin: "Ny PIN",
   resetPin: "Tilbakestill PIN",
-  resendCode: "Send ny kode"
+  resendCode: "Send ny kode",
+  changePin: "Endre PIN",
+  currentPin: "Nåværende PIN",
+  pinChanged: "PIN-koden er endret.",
+  pinMustDiffer: "Ny PIN må være forskjellig fra den nåværende.",
+  success: "Fullført"
 };
 const de = {
   appName: 'Nearby',
@@ -415,7 +425,12 @@ const de = {
   resetCodeFourDigits: "Der Code hat 4 Ziffern.",
   newPin: "Neue PIN",
   resetPin: "PIN zurücksetzen",
-  resendCode: "Neuen Code senden"
+  resendCode: "Neuen Code senden",
+  changePin: "PIN ändern",
+  currentPin: "Aktuelle PIN",
+  pinChanged: "Deine PIN wurde geändert.",
+  pinMustDiffer: "Die neue PIN muss sich von der aktuellen unterscheiden.",
+  success: "Erfolg"
 };
 const da = {
   appName: 'Nearby',
@@ -551,7 +566,12 @@ const da = {
   resetCodeFourDigits: "Koden er 4 cifre.",
   newPin: "Ny PIN",
   resetPin: "Nulstil PIN",
-  resendCode: "Send en ny kode"
+  resendCode: "Send en ny kode",
+  changePin: "Skift PIN",
+  currentPin: "Nuværende PIN",
+  pinChanged: "Din PIN er blevet ændret.",
+  pinMustDiffer: "Den nye PIN skal være forskellig fra den nuværende.",
+  success: "Fuldført"
 };
 const sv = {
   appName: 'Nearby',
@@ -687,7 +707,12 @@ const sv = {
   resetCodeFourDigits: "Koden är 4 siffror.",
   newPin: "Ny PIN",
   resetPin: "Återställ PIN",
-  resendCode: "Skicka en ny kod"
+  resendCode: "Skicka en ny kod",
+  changePin: "Ändra PIN",
+  currentPin: "Nuvarande PIN",
+  pinChanged: "Din PIN har ändrats.",
+  pinMustDiffer: "Den nya PIN-koden måste skilja sig från den nuvarande.",
+  success: "Klart"
 };
 const fi = {
   appName: 'Nearby',
@@ -823,7 +848,12 @@ const fi = {
   resetCodeFourDigits: "Koodi on 4 numeroa.",
   newPin: "Uusi PIN",
   resetPin: "Nollaa PIN",
-  resendCode: "Lähetä uusi koodi"
+  resendCode: "Lähetä uusi koodi",
+  changePin: "Vaihda PIN",
+  currentPin: "Nykyinen PIN",
+  pinChanged: "PIN-koodisi on vaihdettu.",
+  pinMustDiffer: "Uuden PIN-koodin on oltava eri kuin nykyisen.",
+  success: "Valmis"
 };
 const fr = {
   appName: 'Nearby',
@@ -959,7 +989,12 @@ const fr = {
   resetCodeFourDigits: "Le code comporte 4 chiffres.",
   newPin: "Nouveau PIN",
   resetPin: "Réinitialiser le PIN",
-  resendCode: "Envoyer un nouveau code"
+  resendCode: "Envoyer un nouveau code",
+  changePin: "Modifier le PIN",
+  currentPin: "PIN actuel",
+  pinChanged: "Votre PIN a été modifié.",
+  pinMustDiffer: "Le nouveau PIN doit être différent de l'actuel.",
+  success: "Réussi"
 };
 const es = {
   appName: 'Nearby',
@@ -1095,7 +1130,12 @@ const es = {
   resetCodeFourDigits: "El código tiene 4 dígitos.",
   newPin: "Nuevo PIN",
   resetPin: "Restablecer PIN",
-  resendCode: "Enviar un código nuevo"
+  resendCode: "Enviar un código nuevo",
+  changePin: "Cambiar PIN",
+  currentPin: "PIN actual",
+  pinChanged: "Tu PIN ha sido cambiado.",
+  pinMustDiffer: "El nuevo PIN debe ser distinto del actual.",
+  success: "Listo"
 };
 const it = {
   appName: 'Nearby',
@@ -1231,7 +1271,12 @@ const it = {
   resetCodeFourDigits: "Il codice ha 4 cifre.",
   newPin: "Nuovo PIN",
   resetPin: "Reimposta PIN",
-  resendCode: "Invia un nuovo codice"
+  resendCode: "Invia un nuovo codice",
+  changePin: "Cambia PIN",
+  currentPin: "PIN attuale",
+  pinChanged: "Il tuo PIN è stato cambiato.",
+  pinMustDiffer: "Il nuovo PIN deve essere diverso da quello attuale.",
+  success: "Fatto"
 };
 const nl = {
   appName: 'Nearby',
@@ -1367,7 +1412,12 @@ const nl = {
   resetCodeFourDigits: "De code is 4 cijfers.",
   newPin: "Nieuwe pincode",
   resetPin: "Pincode resetten",
-  resendCode: "Nieuwe code versturen"
+  resendCode: "Nieuwe code versturen",
+  changePin: "Pincode wijzigen",
+  currentPin: "Huidige pincode",
+  pinChanged: "Je pincode is gewijzigd.",
+  pinMustDiffer: "De nieuwe pincode moet verschillen van de huidige.",
+  success: "Gelukt"
 };
 const pl = {
   appName: 'Nearby',
@@ -1503,7 +1553,12 @@ const pl = {
   resetCodeFourDigits: "Kod ma 4 cyfry.",
   newPin: "Nowy PIN",
   resetPin: "Zresetuj PIN",
-  resendCode: "Wyślij nowy kod"
+  resendCode: "Wyślij nowy kod",
+  changePin: "Zmień PIN",
+  currentPin: "Obecny PIN",
+  pinChanged: "Twój PIN został zmieniony.",
+  pinMustDiffer: "Nowy PIN musi różnić się od obecnego.",
+  success: "Gotowe"
 };
 const pt = {
   appName: 'Nearby',
@@ -1639,7 +1694,12 @@ const pt = {
   resetCodeFourDigits: "O código tem 4 dígitos.",
   newPin: "Novo PIN",
   resetPin: "Repor PIN",
-  resendCode: "Enviar um novo código"
+  resendCode: "Enviar um novo código",
+  changePin: "Alterar PIN",
+  currentPin: "PIN atual",
+  pinChanged: "O teu PIN foi alterado.",
+  pinMustDiffer: "O novo PIN tem de ser diferente do atual.",
+  success: "Concluído"
 };
 const TRANSLATIONS = {
   no,

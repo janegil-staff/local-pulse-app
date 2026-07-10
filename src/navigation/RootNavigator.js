@@ -26,6 +26,7 @@ import { registerForPush } from '../lib/push.js';
 import { theme } from '../theme/theme.js';
 import PersonalSettingsScreen from '../screens/PersonalSettingsScreen.js';
 import ForgotPinScreen from '../screens/ForgotPinScreen.js';
+import ChangePinScreen from '../screens/ChangePinScreen.js';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -87,7 +88,7 @@ export default function RootNavigator() {
           <Stack.Screen name="PinSetup" component={PinSetupScreen} options={{ headerShown: false }} />
           <Stack.Screen name="PinConfirm" component={PinConfirmScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
-           <Stack.Screen name="ForgotPin" component={ForgotPinScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="ForgotPin" component={ForgotPinScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Terms" component={LegalScreen} initialParams={{ doc: 'terms' }} options={{ headerShown: false }} />
           <Stack.Screen name="Privacy" component={LegalScreen} initialParams={{ doc: 'privacy' }} options={{ headerShown: false }} />
         </>
@@ -98,7 +99,7 @@ export default function RootNavigator() {
           <Stack.Screen name="PinConfirm" component={PinConfirmScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Terms" component={LegalScreen} initialParams={{ doc: 'terms' }} options={{ headerShown: false }} />
           <Stack.Screen name="Privacy" component={LegalScreen} initialParams={{ doc: 'privacy' }} options={{ headerShown: false }} />
-         
+
         </>
       ) : (
         <>
@@ -106,12 +107,13 @@ export default function RootNavigator() {
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Messages" component={ConversationsScreen} options={{ headerShown: false }} />
           <Stack.Screen
-            name="Personal Settings"
+            name="PersonalSettings"
             component={PersonalSettingsScreen}
             options={{ headerShown: false }}
           />
 
           <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="ChangePin" component={ChangePinScreen} options={{ headerShown: false }} />
           <Stack.Screen name="LocationPicker" component={LocationPickerScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Compose" component={ComposeScreen} options={{ headerShown: false, presentation: 'modal' }} />
