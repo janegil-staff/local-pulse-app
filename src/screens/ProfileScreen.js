@@ -1,4 +1,4 @@
-// localpulse/app/src/screens/ProfileScreen.js
+// src/screens/ProfileScreen.js
 // Public profile — view another user. Hero photo gallery, info sections,
 // online status, and Message / Report / Block actions.
 import React, { useEffect, useState, useCallback, useRef } from 'react';
@@ -11,6 +11,8 @@ import { api } from '../api/client.js';
 import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 import { avatarSource } from '../lib/avatar.js';
+import VerifiedBadge from '../components/VerifiedBadge.js';
+import { useLang } from '../context/LangContext.js';
 
 const { width } = Dimensions.get('window');
 const HERO_H = Math.round(width * 1.1);
@@ -19,7 +21,7 @@ const REPORT_REASONS = ['Inappropriate photos', 'Harassment', 'Spam or scam', 'F
 export default function ProfileScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
   const username = route?.params?.username;
-
+  const { t, lang, setLang } = useLang();
   const [profile, setProfile] = useState(route?.params?.user ?? null);
   const [loading, setLoading] = useState(!route?.params?.user);
   const [error, setError] = useState('');
@@ -148,12 +150,16 @@ export default function ProfileScreen({ route, navigation }) {
             </View>
           )}
 
-          {/* name + online */}
+          {/* name + email badge + online */}
           <View style={styles.heroContent}>
             <View style={styles.nameRow}>
+
               <Text style={styles.heroName}>
                 {name}{profile.age ? <Text style={styles.heroAge}>  {profile.age}</Text> : null}
               </Text>
+              {/* VERIFIED_BADGE_V1 — envelope, not a checkmark. Confirming an
+                  inbox proves control of an email address, not identity. */}
+              {profile.emailVerified ? <VerifiedBadge size={22} /> : null}
               {profile.online ? (
                 <View style={styles.onlinePill}>
                   <View style={styles.onlineDot} />

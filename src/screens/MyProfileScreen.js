@@ -1,9 +1,12 @@
-// localpulse/app/src/screens/MyProfileScreen.js
+// src/screens/MyProfileScreen.js
 //
 // "My Profile" tab — the logged-in user's own profile with inline editing.
-// Hero-photo layout (Tinder/Hinge style): large photo up top with name overlaid,
-// detail cards below. Photos and bio are edited here; username, email, and
-// gender live in Settings → Personal settings.
+// Hero-photo layout: large photo up top with name overlaid, detail cards below.
+// Photos and bio are edited here; username, email, and gender live in
+// Settings → Personal settings.
+//
+// NOTE: `t` from useLang() is a plain object of strings, not a function.
+// Access keys as t.someKey — never t('someKey').
 
 import React, { useState, useCallback } from 'react';
 import {
@@ -23,16 +26,19 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAuth } from '../context/AuthContext.js';
+import { useLang } from '../context/LangContext.js';
 import { api } from '../api/client.js';
 import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 import { avatarSource } from '../lib/avatar.js';
+import VerifiedBadge from '../components/VerifiedBadge.js';
 
 const { width } = Dimensions.get('window');
 const HERO_H = Math.round(width * 1.15);
 
 export default function MyProfileScreen({ navigation }) {
   const styles = useStyles(stylesFactory);
+  const { t } = useLang();
   const { user, hydrate, logout } = useAuth();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -66,7 +72,7 @@ export default function MyProfileScreen({ navigation }) {
       setEditing(null);
       setDraft('');
     } catch (e) {
-      Alert.alert('Couldn\u2019t save', e?.message || 'Something went wrong. Try again.');
+      Alert.alert(t.couldntSave, e?.message || t.somethingWrong);
     } finally { setSaving(false); }
   }
 
@@ -79,24 +85,22 @@ export default function MyProfileScreen({ navigation }) {
       const { alreadyVerified } = await api.resendVerification();
       if (alreadyVerified) {
         await hydrate?.();
-        Alert.alert('', 'Your email is already confirmed.');
+        Alert.alert('', t.alreadyConfirmed);
       } else {
-        Alert.alert('', 'Confirmation email sent. Check your inbox.');
+        Alert.alert('', t.confirmationSent);
       }
     } catch (e) {
-      Alert.alert('Couldn\u2019t send', e?.message || 'Try again.');
+      Alert.alert(t.couldntSend, e?.message || t.tryAgain);
     } finally {
       setResending(false);
     }
   }
 
   async function addPhoto() {
-    console.log('[MyProfile] addPhoto tapped');
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      console.log('[MyProfile] permission:', perm.status, perm.granted);
       if (!perm.granted) {
-        Alert.alert('Permission needed', 'Allow photo access in Settings to add a picture.');
+        Alert.alert(t.permissionTitle, t.permissionBody);
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -105,21 +109,18 @@ export default function MyProfileScreen({ navigation }) {
         aspect: [1, 1],
         quality: 0.8,
       });
-      console.log('[MyProfile] picker canceled?', result.canceled);
       if (result.canceled) return;
       const asset = result.assets[0];
       setUploadingPhoto(true);
       // { url, publicId } — the publicId is what lets the server destroy the
       // Cloudinary asset when this photo is later removed.
       const photo = await api.uploadImage(asset.uri);
-      console.log('[MyProfile] uploaded:', photo?.url);
       if (!photo?.url) throw new Error('Upload returned no URL.');
       const nextPhotos = [...photos, photo];
       await api.updateMyProfile({ photos: nextPhotos });
       await hydrate?.();
     } catch (e) {
-      console.log('[MyProfile] addPhoto error:', e?.message);
-      Alert.alert('Upload failed', e?.message || 'Couldn\u2019t add that photo. Try again.');
+      Alert.alert(t.uploadFailed, e?.message || t.tryAgain);
     } finally {
       setUploadingPhoto(false);
     }
@@ -136,10 +137,10 @@ export default function MyProfileScreen({ navigation }) {
   // Dropping the photo from the array is enough — updateProfile diffs the old
   // and new lists server-side and destroys whatever fell out of Cloudinary.
   function removePhoto(index) {
-    Alert.alert('Remove photo?', 'This photo will be removed from your profile.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t.removePhotoTitle, t.removePhotoBody, [
+      { text: t.cancel, style: 'cancel' },
       {
-        text: 'Remove',
+        text: t.remove,
         style: 'destructive',
         onPress: async () => {
           const nextPhotos = photos.filter((_, i) => i !== index);
@@ -148,7 +149,7 @@ export default function MyProfileScreen({ navigation }) {
             await api.updateMyProfile({ photos: nextPhotos });
             await hydrate?.();
           } catch (e) {
-            Alert.alert('Couldn\u2019t remove', e?.message || 'Try again.');
+            Alert.alert(t.couldntRemove, e?.message || t.tryAgain);
           } finally { setSaving(false); }
         },
       },
@@ -156,9 +157,9 @@ export default function MyProfileScreen({ navigation }) {
   }
 
   function confirmLogout() {
-    Alert.alert('Log out?', 'You\u2019ll need your email and PIN to sign back in.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: () => logout?.() },
+    Alert.alert(t.logoutConfirmTitle, t.logoutConfirmBody, [
+      { text: t.cancel, style: 'cancel' },
+      { text: t.logout, style: 'destructive', onPress: () => logout?.() },
     ]);
   }
 
@@ -174,7 +175,7 @@ export default function MyProfileScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="My Profile" navigation={navigation} />
+      <ScreenHeader title={t.myProfileTitle} navigation={navigation} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -197,6 +198,13 @@ export default function MyProfileScreen({ navigation }) {
               {displayName}
               {user.age ? <Text style={styles.heroAge}>  {user.age}</Text> : null}
             </Text>
+            {/* Confirmed inbox, not confirmed identity — see VerifiedBadge. */}
+            {user.emailVerified ? (
+              <View style={styles.confirmedPill}>
+                <VerifiedBadge size={13} />
+                <Text style={styles.confirmedText}>{t.badgeEmailConfirmed}</Text>
+              </View>
+            ) : null}
             {/* Display only — edited in Settings → Personal settings. */}
             {user.gender ? <Text style={styles.heroMeta}>{user.gender}</Text> : null}
           </View>
@@ -206,18 +214,13 @@ export default function MyProfileScreen({ navigation }) {
         </View>
 
         {/* ── Email confirmation ───────────────── */}
-        {/* Only while unconfirmed. Once confirmed the banner disappears rather
-            than becoming a "Verified ✓" badge — confirming an inbox proves
-            control of an email address, not identity, and labelling it
-            "verified" on a profile in a location app oversells what it means. */}
+        {/* Only while unconfirmed. Deliberately loud: this is the one place we
+            ask, and an unconfirmed account is the one we most want to convert.
+            Once confirmed it becomes the pill in the hero above. */}
         {!user.emailVerified && (
           <View style={styles.verifyCard}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <Text style={styles.verifyTitle}>Confirm your email</Text>
-              <Text style={styles.verifyBody}>
-                We sent a link to {user.email}. Didn&rsquo;t get it?
-              </Text>
-            </View>
+            <Text style={styles.verifyTitle}>{t.verifyTitle}</Text>
+            <Text style={styles.verifyBody}>{t.verifyBody}</Text>
             <TouchableOpacity
               style={styles.verifyBtn}
               onPress={!resending ? resendVerification : undefined}
@@ -225,22 +228,22 @@ export default function MyProfileScreen({ navigation }) {
               activeOpacity={0.85}
             >
               {resending
-                ? <ActivityIndicator size="small" color="#fff" />
-                : <Text style={styles.verifyBtnText}>Resend</Text>}
+                ? <ActivityIndicator size="small" color={theme.colors.accent} />
+                : <Text style={styles.verifyBtnText}>{t.verifyResend}</Text>}
             </TouchableOpacity>
           </View>
         )}
 
         {/* ── Photo gallery ────────────────────── */}
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>Photos</Text>
+          <Text style={styles.cardLabel}>{t.photosLabel}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -4 }}>
             {photos.map((photo, i) => (
               <View key={`${photo.url}-${i}`} style={[styles.thumbWrap, i === 0 && styles.thumbPrimary]}>
                 <TouchableOpacity onPress={() => makePrimary(i)} activeOpacity={0.8} style={styles.thumbTouch}>
                   <Image source={{ uri: photo.url }} style={styles.thumb} />
                   {i === 0 && (
-                    <View style={styles.primaryTag}><Text style={styles.primaryTagText}>Main</Text></View>
+                    <View style={styles.primaryTag}><Text style={styles.primaryTagText}>{t.mainPhoto}</Text></View>
                   )}
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.thumbRemove} onPress={() => removePhoto(i)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -254,25 +257,25 @@ export default function MyProfileScreen({ navigation }) {
               </TouchableOpacity>
             )}
           </ScrollView>
-          {photos.length > 1 && <Text style={styles.hint}>Tap a photo to make it your main picture</Text>}
+          {photos.length > 1 && <Text style={styles.hint}>{t.photoHint}</Text>}
         </View>
 
         {/* ── About ────────────────────────────── */}
         {/* Username, email, and gender are edited in Settings. */}
         <View style={styles.card}>
           <EditableRow
-            label="Bio"
+            label={t.bioLabel}
             value={user.bio}
             editing={editing === 'bio'}
             draft={draft} setDraft={setDraft} saving={saving}
             onStart={() => startEdit('bio', user.bio)}
             onCancel={cancelEdit} onSave={() => saveField('bio')}
-            multiline placeholder="Tell people a bit about yourself…"
+            multiline placeholder={t.bioPlaceholder}
           />
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={confirmLogout} activeOpacity={0.85}>
-          <Text style={styles.logoutText}>Log out</Text>
+          <Text style={styles.logoutText}>{t.logout}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -285,13 +288,14 @@ function EditableRow({
   autoCapitalize = 'sentences', keyboardType = 'default',
 }) {
   const styles = useStyles(stylesFactory);
+  const { t } = useLang();
   return (
     <View>
       <View style={styles.rowHeader}>
         <Text style={styles.cardLabel}>{label}</Text>
         {!editing && (
           <TouchableOpacity onPress={onStart}>
-            <Text style={styles.editLink}>Edit</Text>
+            <Text style={styles.editLink}>{t.edit}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -311,10 +315,10 @@ function EditableRow({
           />
           <View style={styles.editActions}>
             <TouchableOpacity onPress={onCancel} disabled={saving}>
-              <Text style={styles.cancelLink}>Cancel</Text>
+              <Text style={styles.cancelLink}>{t.cancel}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.saveButton} onPress={onSave} disabled={saving}>
-              {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.saveButtonText}>Save</Text>}
+              {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.saveButtonText}>{t.save}</Text>}
             </TouchableOpacity>
           </View>
         </View>
@@ -340,6 +344,14 @@ const stylesFactory = ({ colors }) => StyleSheet.create({
   heroName: { color: '#fff', fontSize: 30, fontWeight: '800', textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 6, textShadowOffset: { width: 0, height: 1 } },
   heroAge: { color: '#fff', fontSize: 26, fontWeight: '400' },
   heroMeta: { color: 'rgba(255,255,255,0.9)', fontSize: 15, marginTop: 2, textTransform: 'capitalize', textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 6 },
+
+  confirmedPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
+    backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 12,
+    paddingHorizontal: 10, paddingVertical: 4, marginTop: 8,
+  },
+  confirmedText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+
   heroCam: {
     position: 'absolute', right: 18, bottom: 18, width: 52, height: 52, borderRadius: 26,
     backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center',
@@ -349,17 +361,16 @@ const stylesFactory = ({ colors }) => StyleSheet.create({
 
   // Email confirmation banner
   verifyCard: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.surface, marginHorizontal: 16, marginTop: 16,
-    borderRadius: 18, padding: 18, borderWidth: 1, borderColor: colors.accent,
+    backgroundColor: colors.accent, marginHorizontal: 16, marginTop: 16,
+    borderRadius: 18, paddingHorizontal: 20, paddingVertical: 22,
   },
-  verifyTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
-  verifyBody: { color: colors.textDim, fontSize: 13, marginTop: 3, lineHeight: 18 },
+  verifyTitle: { color: '#fff', fontSize: 22, fontWeight: '800' },
+  verifyBody: { color: 'rgba(255,255,255,0.9)', fontSize: 14, marginTop: 6, lineHeight: 20 },
   verifyBtn: {
-    backgroundColor: colors.accent, borderRadius: 10,
-    paddingHorizontal: 18, paddingVertical: 10, minWidth: 84, alignItems: 'center',
+    backgroundColor: '#fff', borderRadius: 12, marginTop: 18,
+    paddingVertical: 15, alignItems: 'center', justifyContent: 'center', minHeight: 52,
   },
-  verifyBtnText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  verifyBtnText: { color: colors.accent, fontSize: 16, fontWeight: '800' },
 
   // Cards
   card: {

@@ -1,28 +1,32 @@
-// localpulse/app/src/screens/LegalScreen.js
+// src/screens/LegalScreen.js
 import React from 'react';
-import { ScrollView, Text, StyleSheet } from 'react-native';
+import { View, ScrollView, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { LEGAL } from '../lib/legalContent.js';
-import { theme, makeStyles, useStyles } from '../theme/theme.js';
+import { theme, useStyles } from '../theme/theme.js';
+import ScreenHeader from '../components/ScreenHeader.js';
 
-export default function LegalScreen({ route }) {
+export default function LegalScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
+  const { t } = useTranslation();
   const which = route?.params?.doc === 'privacy' ? 'privacy' : 'terms';
   const doc = LEGAL[which];
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={{ padding: theme.spacing(5) }}>
-      <Text style={styles.title}>{doc.title}</Text>
-      <Text style={styles.updated}>Last updated: 2026</Text>
-      {doc.body.map(([h, p]) => (
-        <React.Fragment key={h}>
-          <Text style={styles.h}>{h}</Text>
-          <Text style={styles.p}>{p}</Text>
-        </React.Fragment>
-      ))}
-      <Text style={styles.note}>
-        This is placeholder text. Replace with your reviewed legal documents before release.
-      </Text>
-    </ScrollView>
+    <View style={styles.root}>
+      <ScreenHeader title={doc.title} onBack={() => navigation.goBack()} />
+      <ScrollView contentContainerStyle={{ padding: theme.spacing(5) }}>
+        <Text style={styles.title}>{doc.title}</Text>
+        <Text style={styles.updated}>{t('legal.lastUpdated', { year: 2026 })}</Text>
+        {doc.body.map(([h, p]) => (
+          <React.Fragment key={h}>
+            <Text style={styles.h}>{h}</Text>
+            <Text style={styles.p}>{p}</Text>
+          </React.Fragment>
+        ))}
+        <Text style={styles.note}>{t('legal.placeholder')}</Text>
+      </ScrollView>
+    </View>
   );
 }
 
