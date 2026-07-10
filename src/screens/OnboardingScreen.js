@@ -7,6 +7,11 @@
 // Location has no Skip: getDeck() throws without coordinates, so a skipped
 // location means the first Discover load is an error screen. Photos and bio
 // are genuinely optional; location is not.
+//
+// Styles go through useStyles(stylesFactory), NOT a module-scope
+// `const C = theme.colors`. That snapshot is taken at import time, before
+// ThemeContext resolves, so every colour freezes at its light-mode value —
+// which is why the DOB modal rendered dark text on a dark sheet.
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
@@ -21,9 +26,7 @@ import { useAuth } from '../context/AuthContext.js';
 import { useLang } from '../context/LangContext.js';
 import { usePlaceSearch } from '../hooks/usePlaceSearch.js';
 import { api } from '../api/client.js';
-import { theme } from '../theme/theme.js';
-
-const C = theme.colors;
+import { theme, useStyles } from '../theme/theme.js';
 
 const MAX_PHOTOS = 6;
 const TOTAL_STEPS = 4;
@@ -78,6 +81,7 @@ function GenderIcon({ type, active, color, size = 44 }) {
 }
 
 function Field({ label, value, onChangeText, keyboardType, autoCapitalize = 'none' }) {
+  const s = useStyles(stylesFactory);
   return (
     <View style={{ width: '100%', marginBottom: 22 }}>
       <Text style={s.fieldLabel}>{label}</Text>
@@ -87,8 +91,8 @@ function Field({ label, value, onChangeText, keyboardType, autoCapitalize = 'non
         onChangeText={onChangeText}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
-        placeholderTextColor={C.textDim}
-        selectionColor={C.accent}
+        placeholderTextColor={theme.colors.textDim}
+        selectionColor={theme.colors.accent}
       />
       <View style={s.fieldLine} />
     </View>
@@ -96,6 +100,8 @@ function Field({ label, value, onChangeText, keyboardType, autoCapitalize = 'non
 }
 
 function StepIndicator({ step }) {
+  const s = useStyles(stylesFactory);
+  const C = theme.colors;
   const steps = Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1);
   return (
     <View style={s.stepRow}>
@@ -112,6 +118,8 @@ function StepIndicator({ step }) {
 }
 
 export default function OnboardingScreen({ navigation, route }) {
+  const s = useStyles(stylesFactory);
+  const C = theme.colors; // read at render, not at import — see the file header
   const { register, savePin, hydrate } = useAuth();
   const { t, lang, setLang } = useLang();
   const insets = useSafeAreaInsets();
@@ -657,7 +665,7 @@ export default function OnboardingScreen({ navigation, route }) {
                   }}
                   activeOpacity={0.7}
                 >
-                  <Text style={{ color: C.text, fontSize: 16, fontWeight: '500' }}>
+                  <Text style={s.modalItemText}>
                     {dobPicker === 'month' ? MONTHS[Number(item) - 1] : dobPicker === 'day' ? String(Number(item)) : item}
                   </Text>
                 </TouchableOpacity>
@@ -670,7 +678,7 @@ export default function OnboardingScreen({ navigation, route }) {
   );
 }
 
-const s = StyleSheet.create({
+const stylesFactory = ({ colors: C }) => StyleSheet.create({
   bg: { flex: 1, backgroundColor: C.bg },
   scroll: { flexGrow: 1, paddingHorizontal: 30, paddingTop: 20, paddingBottom: 50 },
   header: {
@@ -758,6 +766,9 @@ const s = StyleSheet.create({
   modalSheet: { width: '100%', borderRadius: 18, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface, overflow: 'hidden' },
   modalTitle: { color: C.text, fontSize: 16, fontWeight: '700', padding: 14, borderBottomWidth: 1, borderBottomColor: C.border },
   modalItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 12, height: 44 },
+  // Was an inline `{ color: C.text }` reading the frozen module-scope snapshot —
+  // the reason the day numbers rendered near-black on the dark sheet.
+  modalItemText: { color: C.text, fontSize: 16, fontWeight: '500' },
   btn: { width: '100%', height: 56, backgroundColor: C.accent, borderRadius: 10, justifyContent: 'center', alignItems: 'center', shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
   btnDisabled: { opacity: 0.4 },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 2 },

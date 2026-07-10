@@ -40,8 +40,11 @@ export default function MyProfileScreen({ navigation }) {
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [resending, setResending] = useState(false);
 
-  const photos = user?.photos || [];
+  // Photos are { url, publicId } objects. Coerce once — a stale cached user
+  // may still hold bare strings.
+  const photos = (user?.photos || []).map((p) => (typeof p === 'string' ? { url: p, publicId: null } : p));
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -67,8 +70,26 @@ export default function MyProfileScreen({ navigation }) {
     } finally { setSaving(false); }
   }
 
-  // Photos are now { url, publicId } objects, not bare URL strings. The server
-  // needs the publicId to destroy the asset when a photo is removed.
+  // Resend the confirmation email. The server throttles it; the button stays
+  // enabled either way, since a silently-swallowed tap is worse than a stale
+  // "sent" message.
+  async function resendVerification() {
+    setResending(true);
+    try {
+      const { alreadyVerified } = await api.resendVerification();
+      if (alreadyVerified) {
+        await hydrate?.();
+        Alert.alert('', 'Your email is already confirmed.');
+      } else {
+        Alert.alert('', 'Confirmation email sent. Check your inbox.');
+      }
+    } catch (e) {
+      Alert.alert('Couldn\u2019t send', e?.message || 'Try again.');
+    } finally {
+      setResending(false);
+    }
+  }
+
   async function addPhoto() {
     console.log('[MyProfile] addPhoto tapped');
     try {
@@ -88,7 +109,10 @@ export default function MyProfileScreen({ navigation }) {
       if (result.canceled) return;
       const asset = result.assets[0];
       setUploadingPhoto(true);
-      const photo = await api.uploadImage(asset.uri); // { url, publicId }
+      // { url, publicId } — the publicId is what lets the server destroy the
+      // Cloudinary asset when this photo is later removed.
+      const photo = await api.uploadImage(asset.uri);
+      console.log('[MyProfile] uploaded:', photo?.url);
       if (!photo?.url) throw new Error('Upload returned no URL.');
       const nextPhotos = [...photos, photo];
       await api.updateMyProfile({ photos: nextPhotos });
@@ -106,9 +130,11 @@ export default function MyProfileScreen({ navigation }) {
     const next = [...photos];
     const [pick] = next.splice(index, 1);
     next.unshift(pick);
-    api.updateMyProfile({ photos: next }).then(() => hydrate?.()).catch(() => { });
+    api.updateMyProfile({ photos: next }).then(() => hydrate?.()).catch(() => {});
   }
 
+  // Dropping the photo from the array is enough — updateProfile diffs the old
+  // and new lists server-side and destroys whatever fell out of Cloudinary.
   function removePhoto(index) {
     Alert.alert('Remove photo?', 'This photo will be removed from your profile.', [
       { text: 'Cancel', style: 'cancel' },
@@ -178,6 +204,32 @@ export default function MyProfileScreen({ navigation }) {
             {uploadingPhoto ? <ActivityIndicator color="#fff" /> : <Text style={styles.heroCamText}>＋</Text>}
           </TouchableOpacity>
         </View>
+
+        {/* ── Email confirmation ───────────────── */}
+        {/* Only while unconfirmed. Once confirmed the banner disappears rather
+            than becoming a "Verified ✓" badge — confirming an inbox proves
+            control of an email address, not identity, and labelling it
+            "verified" on a profile in a location app oversells what it means. */}
+        {!user.emailVerified && (
+          <View style={styles.verifyCard}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <Text style={styles.verifyTitle}>Confirm your email</Text>
+              <Text style={styles.verifyBody}>
+                We sent a link to {user.email}. Didn&rsquo;t get it?
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.verifyBtn}
+              onPress={!resending ? resendVerification : undefined}
+              disabled={resending}
+              activeOpacity={0.85}
+            >
+              {resending
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Text style={styles.verifyBtnText}>Resend</Text>}
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* ── Photo gallery ────────────────────── */}
         <View style={styles.card}>
@@ -280,12 +332,9 @@ const stylesFactory = ({ colors }) => StyleSheet.create({
   // Hero
   hero: { width: '100%', height: HERO_H, position: 'relative', backgroundColor: colors.surface },
   heroImg: { width: '100%', height: '100%' },
-  heroEmpty: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceAlt },
-  heroEmptyText: { color: colors.textDim, fontSize: 96, fontWeight: '800' },
   heroScrim: {
     position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%',
     backgroundColor: 'transparent',
-    // simple bottom shade via layered translucent view
   },
   heroContent: { position: 'absolute', left: 20, bottom: 18, right: 80 },
   heroName: { color: '#fff', fontSize: 30, fontWeight: '800', textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 6, textShadowOffset: { width: 0, height: 1 } },
@@ -297,6 +346,20 @@ const stylesFactory = ({ colors }) => StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 5,
   },
   heroCamText: { color: '#fff', fontSize: 30, fontWeight: '300', marginTop: -2 },
+
+  // Email confirmation banner
+  verifyCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.surface, marginHorizontal: 16, marginTop: 16,
+    borderRadius: 18, padding: 18, borderWidth: 1, borderColor: colors.accent,
+  },
+  verifyTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  verifyBody: { color: colors.textDim, fontSize: 13, marginTop: 3, lineHeight: 18 },
+  verifyBtn: {
+    backgroundColor: colors.accent, borderRadius: 10,
+    paddingHorizontal: 18, paddingVertical: 10, minWidth: 84, alignItems: 'center',
+  },
+  verifyBtnText: { color: '#fff', fontSize: 14, fontWeight: '800' },
 
   // Cards
   card: {
