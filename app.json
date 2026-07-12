@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Local Pulse",
-    "slug": "local-pulse-app",
+    "name": "Qup Pulse",
+    "slug": "qup-pulse",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
@@ -24,7 +24,7 @@
       "edgeToEdgeEnabled": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.ico"
     },
     "plugins": [
       "expo-secure-store"
