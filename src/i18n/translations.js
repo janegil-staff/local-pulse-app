@@ -198,7 +198,12 @@ const en = {
   postUnsaved: "Removed from saved",
   consentPre: "I consent to the storage and use of my data in accordance with the",
   consentPost: "",
-  governingVersion: "This is a translation for convenience. The Norwegian version is legally binding."
+  governingVersion: "This is a translation for convenience. The Norwegian version is legally binding.",
+  allFeeds: "All feeds",
+  feedFollowing: "Following",
+  feedTitle: "Feed",
+  feedEmptyNearby: "No posts yet. Be the first — tap +",
+  feedEmptyFollowing: "Follow people to see their posts here."
 };
 const no = {
   appName: 'Nearby',
@@ -389,7 +394,12 @@ const no = {
   postUnsaved: "Fjernet fra lagrede",
   consentPre: "Jeg samtykker til lagring og bruk av mine data i samsvar med",
   consentPost: "",
-  governingVersion: "Den norske versjonen er den juridisk bindende."
+  governingVersion: "Den norske versjonen er den juridisk bindende.",
+  allFeeds: "Alle innlegg",
+  feedFollowing: "Følger",
+  feedTitle: "Innlegg",
+  feedEmptyNearby: "Ingen innlegg ennå. Bli den første — trykk +",
+  feedEmptyFollowing: "Følg folk for å se innleggene deres her."
 };
 const de = {
   appName: 'Nearby',
@@ -580,7 +590,12 @@ const de = {
   postUnsaved: "Aus Gespeichertem entfernt",
   consentPre: "Ich willige in die Speicherung und Nutzung meiner Daten gemäß der",
   consentPost: "ein",
-  governingVersion: "Dies ist eine Übersetzung zur Vereinfachung. Rechtlich verbindlich ist die norwegische Fassung."
+  governingVersion: "Dies ist eine Übersetzung zur Vereinfachung. Rechtlich verbindlich ist die norwegische Fassung.",
+  allFeeds: "Alle Beiträge",
+  feedFollowing: "Folge ich",
+  feedTitle: "Feed",
+  feedEmptyNearby: "Noch keine Beiträge. Sei der Erste — tippe auf +",
+  feedEmptyFollowing: "Folge Leuten, um ihre Beiträge hier zu sehen."
 };
 const da = {
   appName: 'Nearby',
@@ -771,7 +786,12 @@ const da = {
   postUnsaved: "Fjernet fra gemte",
   consentPre: "Jeg samtykker til opbevaring og brug af mine data i overensstemmelse med",
   consentPost: "",
-  governingVersion: "Dette er en oversættelse af praktiske hensyn. Den norske version er juridisk bindende."
+  governingVersion: "Dette er en oversættelse af praktiske hensyn. Den norske version er juridisk bindende.",
+  allFeeds: "Alle opslag",
+  feedFollowing: "Følger",
+  feedTitle: "Feed",
+  feedEmptyNearby: "Ingen opslag endnu. Vær den første — tryk på +",
+  feedEmptyFollowing: "Følg folk for at se deres opslag her."
 };
 const sv = {
   appName: 'Nearby',
@@ -962,7 +982,12 @@ const sv = {
   postUnsaved: "Borttagen från sparade",
   consentPre: "Jag samtycker till lagring och användning av mina uppgifter i enlighet med",
   consentPost: "",
-  governingVersion: "Detta är en översättning för bekvämlighets skull. Den norska versionen är juridiskt bindande."
+  governingVersion: "Detta är en översättning för bekvämlighets skull. Den norska versionen är juridiskt bindande.",
+  allFeeds: "Alla inlägg",
+  feedFollowing: "Följer",
+  feedTitle: "Flöde",
+  feedEmptyNearby: "Inga inlägg än. Var först — tryck på +",
+  feedEmptyFollowing: "Följ personer för att se deras inlägg här."
 };
 const fi = {
   appName: 'Nearby',
@@ -1153,7 +1178,12 @@ const fi = {
   postUnsaved: "Poistettu tallennetuista",
   consentPre: "Suostun tietojeni tallentamiseen ja käyttöön",
   consentPost: "mukaisesti",
-  governingVersion: "Tämä on käännös vain tiedoksi. Norjankielinen versio on oikeudellisesti sitova."
+  governingVersion: "Tämä on käännös vain tiedoksi. Norjankielinen versio on oikeudellisesti sitova.",
+  allFeeds: "Kaikki julkaisut",
+  feedFollowing: "Seuraat",
+  feedTitle: "Syöte",
+  feedEmptyNearby: "Ei vielä julkaisuja. Ole ensimmäinen — napauta +",
+  feedEmptyFollowing: "Seuraa ihmisiä nähdäksesi heidän julkaisunsa täällä."
 };
 const fr = {
   appName: 'Nearby',
@@ -1344,7 +1374,12 @@ const fr = {
   postUnsaved: "Retiré des enregistrements",
   consentPre: "Je consens au stockage et à l’utilisation de mes données conformément à la",
   consentPost: "",
-  governingVersion: "Ceci est une traduction fournie à titre indicatif. La version norvégienne fait juridiquement foi."
+  governingVersion: "Ceci est une traduction fournie à titre indicatif. La version norvégienne fait juridiquement foi.",
+  allFeeds: "Tous les fils",
+  feedFollowing: "Abonnements",
+  feedTitle: "Fil",
+  feedEmptyNearby: "Pas encore de publications. Soyez le premier — appuyez sur +",
+  feedEmptyFollowing: "Abonnez-vous à des personnes pour voir leurs publications ici."
 };
 const es = {
   appName: 'Nearby',
@@ -1535,7 +1570,12 @@ const es = {
   postUnsaved: "Eliminado de guardados",
   consentPre: "Doy mi consentimiento para el almacenamiento y uso de mis datos de acuerdo con la",
   consentPost: "",
-  governingVersion: "Esta es una traducción a título informativo. La versión noruega es la jurídicamente vinculante."
+  governingVersion: "Esta es una traducción a título informativo. La versión noruega es la jurídicamente vinculante.",
+  allFeeds: "Todas las publicaciones",
+  feedFollowing: "Siguiendo",
+  feedTitle: "Feed",
+  feedEmptyNearby: "Aún no hay publicaciones. Sé el primero — toca +",
+  feedEmptyFollowing: "Sigue a personas para ver sus publicaciones aquí."
 };
 const it = {
   appName: 'Nearby',
@@ -1726,7 +1766,12 @@ const it = {
   postUnsaved: "Rimosso dai salvati",
   consentPre: "Acconsento alla conservazione e all’uso dei miei dati in conformità con l’",
   consentPost: "",
-  governingVersion: "Questa è una traduzione fornita per comodità. La versione norvegese è quella giuridicamente vincolante."
+  governingVersion: "Questa è una traduzione fornita per comodità. La versione norvegese è quella giuridicamente vincolante.",
+  allFeeds: "Tutti i post",
+  feedFollowing: "Seguiti",
+  feedTitle: "Feed",
+  feedEmptyNearby: "Ancora nessun post. Sii il primo — tocca +",
+  feedEmptyFollowing: "Segui delle persone per vedere qui i loro post."
 };
 const nl = {
   appName: 'Nearby',
@@ -1917,7 +1962,12 @@ const nl = {
   postUnsaved: "Verwijderd uit opgeslagen",
   consentPre: "Ik geef toestemming voor de opslag en het gebruik van mijn gegevens volgens het",
   consentPost: "",
-  governingVersion: "Dit is een vertaling voor het gemak. De Noorse versie is juridisch bindend."
+  governingVersion: "Dit is een vertaling voor het gemak. De Noorse versie is juridisch bindend.",
+  allFeeds: "Alle berichten",
+  feedFollowing: "Volgend",
+  feedTitle: "Feed",
+  feedEmptyNearby: "Nog geen berichten. Wees de eerste — tik op +",
+  feedEmptyFollowing: "Volg mensen om hun berichten hier te zien."
 };
 const pl = {
   appName: 'Nearby',
@@ -2108,7 +2158,12 @@ const pl = {
   postUnsaved: "Usunięto z zapisanych",
   consentPre: "Wyrażam zgodę na przechowywanie i wykorzystywanie moich danych zgodnie z",
   consentPost: "",
-  governingVersion: "To jest tłumaczenie pomocnicze. Wersja norweska jest prawnie wiążąca."
+  governingVersion: "To jest tłumaczenie pomocnicze. Wersja norweska jest prawnie wiążąca.",
+  allFeeds: "Wszystkie posty",
+  feedFollowing: "Obserwowani",
+  feedTitle: "Aktualności",
+  feedEmptyNearby: "Brak postów. Bądź pierwszy — dotknij +",
+  feedEmptyFollowing: "Obserwuj ludzi, aby zobaczyć tutaj ich posty."
 };
 const pt = {
   appName: 'Nearby',
@@ -2299,7 +2354,12 @@ const pt = {
   postUnsaved: "Removido dos guardados",
   consentPre: "Consinto o armazenamento e a utilização dos meus dados de acordo com a",
   consentPost: "",
-  governingVersion: "Esta é uma tradução de cortesia. A versão norueguesa é a juridicamente vinculativa."
+  governingVersion: "Esta é uma tradução de cortesia. A versão norueguesa é a juridicamente vinculativa.",
+  allFeeds: "Todas as publicações",
+  feedFollowing: "A seguir",
+  feedTitle: "Feed",
+  feedEmptyNearby: "Ainda sem publicações. Seja o primeiro — toque em +",
+  feedEmptyFollowing: "Segue pessoas para ver as publicações delas aqui."
 };
 const TRANSLATIONS = {
   no,

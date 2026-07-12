@@ -1,6 +1,6 @@
 // src/screens/ProfileScreen.js
 // Public profile — view another user. Hero photo gallery, info sections,
-// online status, and Message / Report / Block actions.
+// online status, and Follow / Message / Report / Block actions.
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View, Text, ScrollView, Image, StyleSheet, Pressable, Alert,
@@ -44,6 +44,32 @@ export default function ProfileScreen({ route, navigation }) {
   useEffect(() => { if (!profile || !profile.photos) load(); }, [load, profile]);
 
   const userId = profile?.id ?? profile?._id;
+
+  // ── Follow state ──────────────────────────────────────────
+  // getProfile returns `followedByMe`; seed the button from it once the
+  // profile loads, then toggle optimistically against the follow endpoints.
+  const [following, setFollowing] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
+
+  useEffect(() => {
+    if (profile) setFollowing(Boolean(profile.followedByMe));
+  }, [profile]);
+
+  async function toggleFollow() {
+    if (followBusy || !userId) return;
+    setFollowBusy(true);
+    const next = !following;
+    setFollowing(next); // optimistic
+    try {
+      if (next) await api.follow(userId);
+      else await api.unfollow(userId);
+    } catch (e) {
+      setFollowing(!next); // revert on failure
+      Alert.alert(t.error || 'Error', e?.message || t.tryAgain || 'Try again.');
+    } finally {
+      setFollowBusy(false);
+    }
+  }
 
   async function message() {
     try {
@@ -177,6 +203,21 @@ export default function ProfileScreen({ route, navigation }) {
           </View>
         </View>
 
+        {/* Follower / following counts */}
+        {(profile.followerCount != null || profile.followingCount != null) ? (
+          <View style={styles.stats}>
+            <View style={styles.stat}>
+              <Text style={styles.statNum}>{profile.followerCount ?? 0}</Text>
+              <Text style={styles.statLabel}>{t.followers || 'Followers'}</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.stat}>
+              <Text style={styles.statNum}>{profile.followingCount ?? 0}</Text>
+              <Text style={styles.statLabel}>{t.following || 'Following'}</Text>
+            </View>
+          </View>
+        ) : null}
+
         {/* About */}
         {profile.bio ? (
           <View style={styles.card}>
@@ -201,6 +242,15 @@ export default function ProfileScreen({ route, navigation }) {
         <View style={styles.actions}>
           <Pressable style={styles.messageBtn} onPress={message}>
             <Text style={styles.messageText}>Message</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.followBtn, following && styles.followingBtn]}
+            onPress={toggleFollow}
+            disabled={followBusy}
+          >
+            <Text style={[styles.followText, following && styles.followingText]}>
+              {following ? (t.following || 'Following') : (t.follow || 'Follow')}
+            </Text>
           </Pressable>
           <Pressable style={styles.moreBtn} onPress={moreActions}>
             <Text style={styles.moreText}>•••</Text>
@@ -236,6 +286,12 @@ const stylesFactory = (({ colors, spacing, radius }) =>
     onlineDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#3BD16F' },
     onlineText: { color: '#fff', fontSize: 12, fontWeight: '600' },
 
+    stats: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 16, marginTop: 16, paddingVertical: 14, backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.border },
+    stat: { flex: 1, alignItems: 'center' },
+    statNum: { color: colors.text, fontSize: 20, fontWeight: '800' },
+    statLabel: { color: colors.textDim, fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 2 },
+    statDivider: { width: 1, height: 32, backgroundColor: colors.border },
+
     card: { backgroundColor: colors.surface, marginHorizontal: 16, marginTop: 16, borderRadius: 18, padding: 18, borderWidth: 1, borderColor: colors.border },
     cardLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 },
     bio: { color: colors.text, fontSize: 16, lineHeight: 23 },
@@ -247,6 +303,10 @@ const stylesFactory = (({ colors, spacing, radius }) =>
     actions: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginTop: 24 },
     messageBtn: { flex: 1, height: 54, borderRadius: radius.md, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
     messageText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+    followBtn: { paddingHorizontal: 18, height: 54, borderRadius: radius.md, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+    followingBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border },
+    followText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+    followingText: { color: colors.text },
     moreBtn: { width: 54, height: 54, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
     moreText: { color: colors.textDim, fontSize: 20, fontWeight: '700' },
   })

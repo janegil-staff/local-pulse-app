@@ -20,10 +20,10 @@ export default function FeedScreen({ navigation }) {
   const toggleLike = useFeedStore((s) => s.toggleLike);
   const toggleSave = useFeedStore((s) => s.toggleSave);
   const setCoords = useFeedStore((s) => s.setCoords);
-  const [tab, setTab] = useState('nearby'); // 'nearby' | 'following'
+  const [tab, setTab] = useState('nearby'); // 'nearby' (All feeds) | 'following'
   const [followingPosts, setFollowingPosts] = useState([]);
   const [followLoading, setFollowLoading] = useState(false);
- const { t } = useLang();
+  const { t } = useLang();
 
   useEffect(() => {
     (async () => {
@@ -69,14 +69,14 @@ export default function FeedScreen({ navigation }) {
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title="Feed" navigation={navigation} />
+      <ScreenHeader title={t.feedTitle || 'Feed'} navigation={navigation} />
 
       <View style={styles.tabs}>
         <Pressable style={[styles.tab, tab === 'nearby' && styles.tabActive]} onPress={() => setTab('nearby')}>
-          <Text style={[styles.tabText, tab === 'nearby' && styles.tabTextActive]}>Nearby</Text>
+          <Text style={[styles.tabText, tab === 'nearby' && styles.tabTextActive]}>{t.allFeeds || 'All feeds'}</Text>
         </Pressable>
         <Pressable style={[styles.tab, tab === 'following' && styles.tabActive]} onPress={() => setTab('following')}>
-          <Text style={[styles.tabText, tab === 'following' && styles.tabTextActive]}>Following</Text>
+          <Text style={[styles.tabText, tab === 'following' && styles.tabTextActive]}>{t.feedFollowing || 'Following'}</Text>
         </Pressable>
       </View>
 
@@ -90,7 +90,7 @@ export default function FeedScreen({ navigation }) {
             <PostCard
               post={item}
               onLike={toggleLike}
-                onSave={(id) => toggleSave(id, { saved: t.postSaved, unsaved: t.postUnsaved, failed: t.couldntSave })}
+              onSave={(id) => toggleSave(id, { saved: t.postSaved, unsaved: t.postUnsaved, failed: t.couldntSave })}
               onReport={reportPostFlow}
               onPress={() => openPost(item)}
               onAuthorPress={() => openAuthor(item)}
@@ -105,8 +105,8 @@ export default function FeedScreen({ navigation }) {
           ListEmptyComponent={
             <Text style={styles.empty}>
               {tab === 'nearby'
-                ? (error || 'No posts nearby yet. Be the first — tap +')
-                : 'Follow people to see their posts here.'}
+                ? (error || t.feedEmptyNearby || 'No posts yet. Be the first — tap +')
+                : (t.feedEmptyFollowing || 'Follow people to see their posts here.')}
             </Text>
           }
         />
