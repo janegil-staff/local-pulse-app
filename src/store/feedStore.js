@@ -1,6 +1,7 @@
 // localpulse/app/src/store/feedStore.js
 import { create } from 'zustand';
 import { api } from '../api/client.js';
+import Toast from 'react-native-toast-message';
 
 export const useFeedStore = create((set, get) => ({
   posts: [],
@@ -56,15 +57,31 @@ export const useFeedStore = create((set, get) => ({
     }
   },
 
-  // Optimistic save toggle.
-  toggleSave: async (id) => {
+  // Optimistic save toggle. `labels` carries the localized toast strings from
+  // the calling component (the store can't reach useLang). Toast reflects the
+  // actual server result, so it's honest about save vs un-save.
+  toggleSave: async (id, labels) => {
     const prev = get().posts;
+    const wasSaved = prev.find((p) => p.id === id)?.savedByMe;
     set({ posts: prev.map((p) => (p.id === id ? { ...p, savedByMe: !p.savedByMe } : p)) });
     try {
       const { saved } = await api.toggleSave(id);
       set((s) => ({ posts: s.posts.map((p) => (p.id === id ? { ...p, savedByMe: saved } : p)) }));
+      if (labels) {
+        Toast.show({
+          type: 'success',
+          text1: saved ? labels.saved : labels.unsaved,
+          position: 'bottom',
+          visibilityTime: 1500,
+        });
+      }
+      return { saved };
     } catch {
       set({ posts: prev });
+      if (labels) {
+        Toast.show({ type: 'error', text1: labels.failed, position: 'bottom', visibilityTime: 1500 });
+      }
+      return { saved: wasSaved };
     }
   },
 }));

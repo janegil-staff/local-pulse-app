@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext.js';
 import { ThemeProvider, useThemeMode } from './src/theme/ThemeContext.js';
 import { theme } from './src/theme/theme.js';
 import { LangProvider } from './src/context/LangContext.js';
+import Toast from 'react-native-toast-message';
 
 function AppInner() {
   const { hydrated } = useAuth();
@@ -42,6 +43,9 @@ function AppInner() {
           <RootNavigator />
           <StatusBar style={mode === 'light' ? 'dark' : 'light'} />
         </NavigationContainer>
+        {/* Toast host: outside NavigationContainer so it floats above every
+            screen, inside SafeAreaProvider so it respects the notch/home bar. */}
+        <Toast />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -193,7 +193,9 @@ const en = {
   comments: "Comments",
   loadingComments: "Loading comments…",
   noComments: "No comments yet — start the conversation.",
-  addComment: "Add a comment…"
+  addComment: "Add a comment…",
+  postSaved: "Saved",
+  postUnsaved: "Removed from saved"
 };
 const no = {
   appName: 'Nearby',
@@ -379,7 +381,9 @@ const no = {
   comments: "Kommentarer",
   loadingComments: "Laster kommentarer…",
   noComments: "Ingen kommentarer ennå — start samtalen.",
-  addComment: "Legg til en kommentar…"
+  addComment: "Legg til en kommentar…",
+  postSaved: "Lagret",
+  postUnsaved: "Fjernet fra lagrede"
 };
 const de = {
   appName: 'Nearby',
@@ -565,7 +569,9 @@ const de = {
   comments: "Kommentare",
   loadingComments: "Kommentare werden geladen…",
   noComments: "Noch keine Kommentare — starte das Gespräch.",
-  addComment: "Kommentar hinzufügen…"
+  addComment: "Kommentar hinzufügen…",
+  postSaved: "Gespeichert",
+  postUnsaved: "Aus Gespeichertem entfernt"
 };
 const da = {
   appName: 'Nearby',
@@ -751,7 +757,9 @@ const da = {
   comments: "Kommentarer",
   loadingComments: "Indlæser kommentarer…",
   noComments: "Ingen kommentarer endnu — start samtalen.",
-  addComment: "Tilføj en kommentar…"
+  addComment: "Tilføj en kommentar…",
+  postSaved: "Gemt",
+  postUnsaved: "Fjernet fra gemte"
 };
 const sv = {
   appName: 'Nearby',
@@ -937,7 +945,9 @@ const sv = {
   comments: "Kommentarer",
   loadingComments: "Laddar kommentarer…",
   noComments: "Inga kommentarer än — starta konversationen.",
-  addComment: "Lägg till en kommentar…"
+  addComment: "Lägg till en kommentar…",
+  postSaved: "Sparad",
+  postUnsaved: "Borttagen från sparade"
 };
 const fi = {
   appName: 'Nearby',
@@ -1123,7 +1133,9 @@ const fi = {
   comments: "Kommentit",
   loadingComments: "Ladataan kommentteja…",
   noComments: "Ei vielä kommentteja — aloita keskustelu.",
-  addComment: "Lisää kommentti…"
+  addComment: "Lisää kommentti…",
+  postSaved: "Tallennettu",
+  postUnsaved: "Poistettu tallennetuista"
 };
 const fr = {
   appName: 'Nearby',
@@ -1309,7 +1321,9 @@ const fr = {
   comments: "Commentaires",
   loadingComments: "Chargement des commentaires…",
   noComments: "Pas encore de commentaires — lancez la conversation.",
-  addComment: "Ajouter un commentaire…"
+  addComment: "Ajouter un commentaire…",
+  postSaved: "Enregistré",
+  postUnsaved: "Retiré des enregistrements"
 };
 const es = {
   appName: 'Nearby',
@@ -1495,7 +1509,9 @@ const es = {
   comments: "Comentarios",
   loadingComments: "Cargando comentarios…",
   noComments: "Aún no hay comentarios — inicia la conversación.",
-  addComment: "Añade un comentario…"
+  addComment: "Añade un comentario…",
+  postSaved: "Guardado",
+  postUnsaved: "Eliminado de guardados"
 };
 const it = {
   appName: 'Nearby',
@@ -1681,7 +1697,9 @@ const it = {
   comments: "Commenti",
   loadingComments: "Caricamento commenti…",
   noComments: "Ancora nessun commento — inizia la conversazione.",
-  addComment: "Aggiungi un commento…"
+  addComment: "Aggiungi un commento…",
+  postSaved: "Salvato",
+  postUnsaved: "Rimosso dai salvati"
 };
 const nl = {
   appName: 'Nearby',
@@ -1867,7 +1885,9 @@ const nl = {
   comments: "Reacties",
   loadingComments: "Reacties laden…",
   noComments: "Nog geen reacties — begin het gesprek.",
-  addComment: "Voeg een reactie toe…"
+  addComment: "Voeg een reactie toe…",
+  postSaved: "Opgeslagen",
+  postUnsaved: "Verwijderd uit opgeslagen"
 };
 const pl = {
   appName: 'Nearby',
@@ -2053,7 +2073,9 @@ const pl = {
   comments: "Komentarze",
   loadingComments: "Ładowanie komentarzy…",
   noComments: "Brak komentarzy — rozpocznij rozmowę.",
-  addComment: "Dodaj komentarz…"
+  addComment: "Dodaj komentarz…",
+  postSaved: "Zapisano",
+  postUnsaved: "Usunięto z zapisanych"
 };
 const pt = {
   appName: 'Nearby',
@@ -2239,7 +2261,9 @@ const pt = {
   comments: "Comentários",
   loadingComments: "A carregar comentários…",
   noComments: "Ainda sem comentários — inicie a conversa.",
-  addComment: "Adicione um comentário…"
+  addComment: "Adicione um comentário…",
+  postSaved: "Guardado",
+  postUnsaved: "Removido dos guardados"
 };
 const TRANSLATIONS = {
   no,

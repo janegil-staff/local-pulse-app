@@ -1,4 +1,4 @@
-// localpulse/app/scripts/add-saved-i18n.cjs
+// localpulse/app/scripts/add-savetoast-i18n.cjs
 const fs = require('fs');
 const path = require('path');
 const parser = require('@babel/parser');
@@ -8,12 +8,18 @@ const t = require('@babel/types');
 const FILE = path.join(__dirname, '..', 'src', 'i18n', 'translations.js');
 
 const STRINGS = {
-  no: { savedPosts: 'Lagrede innlegg' }, en: { savedPosts: 'Saved posts' },
-  nl: { savedPosts: 'Opgeslagen berichten' }, fr: { savedPosts: 'Publications enregistrées' },
-  de: { savedPosts: 'Gespeicherte Beiträge' }, it: { savedPosts: 'Post salvati' },
-  sv: { savedPosts: 'Sparade inlägg' }, da: { savedPosts: 'Gemte opslag' },
-  fi: { savedPosts: 'Tallennetut julkaisut' }, es: { savedPosts: 'Publicaciones guardadas' },
-  pl: { savedPosts: 'Zapisane posty' }, pt: { savedPosts: 'Publicações guardadas' },
+  no: { postSaved: 'Lagret', postUnsaved: 'Fjernet fra lagrede' },
+  en: { postSaved: 'Saved', postUnsaved: 'Removed from saved' },
+  nl: { postSaved: 'Opgeslagen', postUnsaved: 'Verwijderd uit opgeslagen' },
+  fr: { postSaved: 'Enregistré', postUnsaved: 'Retiré des enregistrements' },
+  de: { postSaved: 'Gespeichert', postUnsaved: 'Aus Gespeichertem entfernt' },
+  it: { postSaved: 'Salvato', postUnsaved: 'Rimosso dai salvati' },
+  sv: { postSaved: 'Sparad', postUnsaved: 'Borttagen från sparade' },
+  da: { postSaved: 'Gemt', postUnsaved: 'Fjernet fra gemte' },
+  fi: { postSaved: 'Tallennettu', postUnsaved: 'Poistettu tallennetuista' },
+  es: { postSaved: 'Guardado', postUnsaved: 'Eliminado de guardados' },
+  pl: { postSaved: 'Zapisano', postUnsaved: 'Usunięto z zapisanych' },
+  pt: { postSaved: 'Guardado', postUnsaved: 'Removido dos guardados' },
 };
 
 const src = fs.readFileSync(FILE, 'utf8');

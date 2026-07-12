@@ -8,6 +8,7 @@ import { reportPostFlow } from '../lib/moderation.js';
 import PostCard from '../components/PostCard.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 import { theme, makeStyles, useStyles } from '../theme/theme.js';
+import { useLang } from '../context/LangContext.js';
 
 export default function FeedScreen({ navigation }) {
   const styles = useStyles(stylesFactory);
@@ -22,6 +23,7 @@ export default function FeedScreen({ navigation }) {
   const [tab, setTab] = useState('nearby'); // 'nearby' | 'following'
   const [followingPosts, setFollowingPosts] = useState([]);
   const [followLoading, setFollowLoading] = useState(false);
+ const { t } = useLang();
 
   useEffect(() => {
     (async () => {
@@ -88,7 +90,7 @@ export default function FeedScreen({ navigation }) {
             <PostCard
               post={item}
               onLike={toggleLike}
-              onSave={toggleSave}
+                onSave={(id) => toggleSave(id, { saved: t.postSaved, unsaved: t.postUnsaved, failed: t.couldntSave })}
               onReport={reportPostFlow}
               onPress={() => openPost(item)}
               onAuthorPress={() => openAuthor(item)}
