@@ -10,11 +10,19 @@ import { AuthProvider, useAuth } from './src/context/AuthContext.js';
 import { ThemeProvider, useThemeMode } from './src/theme/ThemeContext.js';
 import { theme } from './src/theme/theme.js';
 import { LangProvider } from './src/context/LangContext.js';
+import { usePresence } from './src/lib/usePresence.js';
 import Toast from 'react-native-toast-message';
 
 function AppInner() {
-  const { hydrated } = useAuth();
+  const auth = useAuth();
+  const { hydrated } = auth;
   const { mode } = useThemeMode();
+
+  // Keep presence fresh whenever the user is logged in. Derive auth state from
+  // whatever AuthContext exposes — token or user — so online indicators light
+  // up app-wide, not just during chat.
+  const isAuthed = Boolean(auth.token ?? auth.user ?? auth.isAuthenticated);
+  usePresence(isAuthed);
 
   const navTheme = {
     ...(mode === 'light' ? DefaultTheme : DarkTheme),
