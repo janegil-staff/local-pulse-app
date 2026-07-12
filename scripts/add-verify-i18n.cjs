@@ -1,4 +1,4 @@
-// localpulse/app/scripts/add-savetoast-i18n.cjs
+// localpulse/app/scripts/add-consent-link-i18n.cjs
 const fs = require('fs');
 const path = require('path');
 const parser = require('@babel/parser');
@@ -8,18 +8,18 @@ const t = require('@babel/types');
 const FILE = path.join(__dirname, '..', 'src', 'i18n', 'translations.js');
 
 const STRINGS = {
-  no: { postSaved: 'Lagret', postUnsaved: 'Fjernet fra lagrede' },
-  en: { postSaved: 'Saved', postUnsaved: 'Removed from saved' },
-  nl: { postSaved: 'Opgeslagen', postUnsaved: 'Verwijderd uit opgeslagen' },
-  fr: { postSaved: 'Enregistré', postUnsaved: 'Retiré des enregistrements' },
-  de: { postSaved: 'Gespeichert', postUnsaved: 'Aus Gespeichertem entfernt' },
-  it: { postSaved: 'Salvato', postUnsaved: 'Rimosso dai salvati' },
-  sv: { postSaved: 'Sparad', postUnsaved: 'Borttagen från sparade' },
-  da: { postSaved: 'Gemt', postUnsaved: 'Fjernet fra gemte' },
-  fi: { postSaved: 'Tallennettu', postUnsaved: 'Poistettu tallennetuista' },
-  es: { postSaved: 'Guardado', postUnsaved: 'Eliminado de guardados' },
-  pl: { postSaved: 'Zapisano', postUnsaved: 'Usunięto z zapisanych' },
-  pt: { postSaved: 'Guardado', postUnsaved: 'Removido dos guardados' },
+  no: { consentPre: 'Jeg samtykker til lagring og bruk av mine data i samsvar med', consentPost: '' },
+  en: { consentPre: 'I consent to the storage and use of my data in accordance with the', consentPost: '' },
+  nl: { consentPre: 'Ik geef toestemming voor de opslag en het gebruik van mijn gegevens volgens het', consentPost: '' },
+  fr: { consentPre: 'Je consens au stockage et à l’utilisation de mes données conformément à la', consentPost: '' },
+  de: { consentPre: 'Ich willige in die Speicherung und Nutzung meiner Daten gemäß der', consentPost: 'ein' },
+  it: { consentPre: 'Acconsento alla conservazione e all’uso dei miei dati in conformità con l’', consentPost: '' },
+  sv: { consentPre: 'Jag samtycker till lagring och användning av mina uppgifter i enlighet med', consentPost: '' },
+  da: { consentPre: 'Jeg samtykker til opbevaring og brug af mine data i overensstemmelse med', consentPost: '' },
+  fi: { consentPre: 'Suostun tietojeni tallentamiseen ja käyttöön', consentPost: 'mukaisesti' },
+  es: { consentPre: 'Doy mi consentimiento para el almacenamiento y uso de mis datos de acuerdo con la', consentPost: '' },
+  pl: { consentPre: 'Wyrażam zgodę na przechowywanie i wykorzystywanie moich danych zgodnie z', consentPost: '' },
+  pt: { consentPre: 'Consinto o armazenamento e a utilização dos meus dados de acordo com a', consentPost: '' },
 };
 
 const src = fs.readFileSync(FILE, 'utf8');

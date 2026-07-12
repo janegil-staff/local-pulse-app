@@ -195,7 +195,9 @@ const en = {
   noComments: "No comments yet — start the conversation.",
   addComment: "Add a comment…",
   postSaved: "Saved",
-  postUnsaved: "Removed from saved"
+  postUnsaved: "Removed from saved",
+  consentPre: "I consent to the storage and use of my data in accordance with the",
+  consentPost: ""
 };
 const no = {
   appName: 'Nearby',
@@ -383,7 +385,9 @@ const no = {
   noComments: "Ingen kommentarer ennå — start samtalen.",
   addComment: "Legg til en kommentar…",
   postSaved: "Lagret",
-  postUnsaved: "Fjernet fra lagrede"
+  postUnsaved: "Fjernet fra lagrede",
+  consentPre: "Jeg samtykker til lagring og bruk av mine data i samsvar med",
+  consentPost: ""
 };
 const de = {
   appName: 'Nearby',
@@ -571,7 +575,9 @@ const de = {
   noComments: "Noch keine Kommentare — starte das Gespräch.",
   addComment: "Kommentar hinzufügen…",
   postSaved: "Gespeichert",
-  postUnsaved: "Aus Gespeichertem entfernt"
+  postUnsaved: "Aus Gespeichertem entfernt",
+  consentPre: "Ich willige in die Speicherung und Nutzung meiner Daten gemäß der",
+  consentPost: "ein"
 };
 const da = {
   appName: 'Nearby',
@@ -759,7 +765,9 @@ const da = {
   noComments: "Ingen kommentarer endnu — start samtalen.",
   addComment: "Tilføj en kommentar…",
   postSaved: "Gemt",
-  postUnsaved: "Fjernet fra gemte"
+  postUnsaved: "Fjernet fra gemte",
+  consentPre: "Jeg samtykker til opbevaring og brug af mine data i overensstemmelse med",
+  consentPost: ""
 };
 const sv = {
   appName: 'Nearby',
@@ -947,7 +955,9 @@ const sv = {
   noComments: "Inga kommentarer än — starta konversationen.",
   addComment: "Lägg till en kommentar…",
   postSaved: "Sparad",
-  postUnsaved: "Borttagen från sparade"
+  postUnsaved: "Borttagen från sparade",
+  consentPre: "Jag samtycker till lagring och användning av mina uppgifter i enlighet med",
+  consentPost: ""
 };
 const fi = {
   appName: 'Nearby',
@@ -1135,7 +1145,9 @@ const fi = {
   noComments: "Ei vielä kommentteja — aloita keskustelu.",
   addComment: "Lisää kommentti…",
   postSaved: "Tallennettu",
-  postUnsaved: "Poistettu tallennetuista"
+  postUnsaved: "Poistettu tallennetuista",
+  consentPre: "Suostun tietojeni tallentamiseen ja käyttöön",
+  consentPost: "mukaisesti"
 };
 const fr = {
   appName: 'Nearby',
@@ -1323,7 +1335,9 @@ const fr = {
   noComments: "Pas encore de commentaires — lancez la conversation.",
   addComment: "Ajouter un commentaire…",
   postSaved: "Enregistré",
-  postUnsaved: "Retiré des enregistrements"
+  postUnsaved: "Retiré des enregistrements",
+  consentPre: "Je consens au stockage et à l’utilisation de mes données conformément à la",
+  consentPost: ""
 };
 const es = {
   appName: 'Nearby',
@@ -1511,7 +1525,9 @@ const es = {
   noComments: "Aún no hay comentarios — inicia la conversación.",
   addComment: "Añade un comentario…",
   postSaved: "Guardado",
-  postUnsaved: "Eliminado de guardados"
+  postUnsaved: "Eliminado de guardados",
+  consentPre: "Doy mi consentimiento para el almacenamiento y uso de mis datos de acuerdo con la",
+  consentPost: ""
 };
 const it = {
   appName: 'Nearby',
@@ -1699,7 +1715,9 @@ const it = {
   noComments: "Ancora nessun commento — inizia la conversazione.",
   addComment: "Aggiungi un commento…",
   postSaved: "Salvato",
-  postUnsaved: "Rimosso dai salvati"
+  postUnsaved: "Rimosso dai salvati",
+  consentPre: "Acconsento alla conservazione e all’uso dei miei dati in conformità con l’",
+  consentPost: ""
 };
 const nl = {
   appName: 'Nearby',
@@ -1887,7 +1905,9 @@ const nl = {
   noComments: "Nog geen reacties — begin het gesprek.",
   addComment: "Voeg een reactie toe…",
   postSaved: "Opgeslagen",
-  postUnsaved: "Verwijderd uit opgeslagen"
+  postUnsaved: "Verwijderd uit opgeslagen",
+  consentPre: "Ik geef toestemming voor de opslag en het gebruik van mijn gegevens volgens het",
+  consentPost: ""
 };
 const pl = {
   appName: 'Nearby',
@@ -2075,7 +2095,9 @@ const pl = {
   noComments: "Brak komentarzy — rozpocznij rozmowę.",
   addComment: "Dodaj komentarz…",
   postSaved: "Zapisano",
-  postUnsaved: "Usunięto z zapisanych"
+  postUnsaved: "Usunięto z zapisanych",
+  consentPre: "Wyrażam zgodę na przechowywanie i wykorzystywanie moich danych zgodnie z",
+  consentPost: ""
 };
 const pt = {
   appName: 'Nearby',
@@ -2263,7 +2285,9 @@ const pt = {
   noComments: "Ainda sem comentários — inicie a conversa.",
   addComment: "Adicione um comentário…",
   postSaved: "Guardado",
-  postUnsaved: "Removido dos guardados"
+  postUnsaved: "Removido dos guardados",
+  consentPre: "Consinto o armazenamento e a utilização dos meus dados de acordo com a",
+  consentPost: ""
 };
 const TRANSLATIONS = {
   no,

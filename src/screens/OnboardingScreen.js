@@ -209,8 +209,8 @@ export default function OnboardingScreen({ navigation, route }) {
         },
         { deferUser: true }, // don't publish the user yet — profile isn't complete
       );
-      if (savePin) { try { await savePin(pin); } catch {} }
-      try { await api.updateMyProfile({ language: lang }); } catch {}
+      if (savePin) { try { await savePin(pin); } catch { } }
+      try { await api.updateMyProfile({ language: lang }); } catch { }
       setAccountCreated(true);
       setStep(2);
     } catch (e) {
@@ -309,7 +309,7 @@ export default function OnboardingScreen({ navigation, route }) {
   const removePhoto = async (index) => {
     const next = photos.filter((_, i) => i !== index);
     setPhotos(next);
-    try { await api.updateMyProfile({ photos: next }); } catch {}
+    try { await api.updateMyProfile({ photos: next }); } catch { }
   };
 
   // Make a photo the profile picture by moving it to the front (photos[0]).
@@ -319,7 +319,7 @@ export default function OnboardingScreen({ navigation, route }) {
     const [moved] = next.splice(index, 1);
     next.unshift(moved);
     setPhotos(next);
-    try { await api.updateMyProfile({ photos: next }); } catch {}
+    try { await api.updateMyProfile({ photos: next }); } catch { }
   };
 
   // Finish: account, location, and photos already saved per-step. Just save
@@ -354,16 +354,16 @@ export default function OnboardingScreen({ navigation, route }) {
 
   const dobOptions =
     dobPicker === 'year' ? DOB_YEARS
-    : dobPicker === 'month' ? MONTHS.map((_, i) => String(i + 1).padStart(2, '0'))
-    : dobPicker === 'day'
-      ? Array.from({ length: dobYear && dobMonth ? daysInMonth(dobYear, Number(dobMonth) - 1) : 31 }, (_, i) => String(i + 1).padStart(2, '0'))
-      : [];
+      : dobPicker === 'month' ? MONTHS.map((_, i) => String(i + 1).padStart(2, '0'))
+        : dobPicker === 'day'
+          ? Array.from({ length: dobYear && dobMonth ? daysInMonth(dobYear, Number(dobMonth) - 1) : 31 }, (_, i) => String(i + 1).padStart(2, '0'))
+          : [];
 
   const headerTitle =
     step === 1 ? t.stepAccount
-    : step === 2 ? t.stepDetails
-    : step === 3 ? t.stepLocation
-    : t.stepPhotos;
+      : step === 2 ? t.stepDetails
+        : step === 3 ? t.stepLocation
+          : t.stepPhotos;
 
   return (
     <View style={s.bg}>
@@ -439,7 +439,17 @@ export default function OnboardingScreen({ navigation, route }) {
 
               <TouchableOpacity style={s.checkRow} onPress={() => setInfoAccepted(!infoAccepted)} activeOpacity={0.7}>
                 <View style={[s.checkbox, infoAccepted && s.checkboxOn]}>{infoAccepted && <Text style={s.checkMark}>✓</Text>}</View>
-                <Text style={s.checkText}>{t.consentText}</Text>
+                <Text style={s.checkText}>
+                  {t.consentPre}{' '}
+                  <Text
+                    style={s.checkLink}
+                    onPress={() => navigation.navigate('Privacy')}
+                    suppressHighlighting
+                  >
+                    {t.privacyPolicy}
+                  </Text>
+                  {t.consentPost ? ` ${t.consentPost}` : '.'}
+                </Text>
               </TouchableOpacity>
 
               <View style={{ height: 28 }} />
