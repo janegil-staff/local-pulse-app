@@ -188,7 +188,8 @@ const en = {
   noBlockedUsers: "You haven’t blocked anyone.",
   couldntLoadBlocked: "Couldn’t load blocked users.",
   couldntUnblock: "Couldn’t unblock",
-  send: "Send"
+  send: "Send",
+  savedPosts: "Saved posts"
 };
 const no = {
   appName: 'Nearby',
@@ -369,7 +370,8 @@ const no = {
   noBlockedUsers: "Du har ikke blokkert noen.",
   couldntLoadBlocked: "Kunne ikke laste blokkerte brukere.",
   couldntUnblock: "Kunne ikke fjerne blokkeringen",
-  send: "Send"
+  send: "Send",
+  savedPosts: "Lagrede innlegg"
 };
 const de = {
   appName: 'Nearby',
@@ -550,7 +552,8 @@ const de = {
   noBlockedUsers: "Du hast niemanden blockiert.",
   couldntLoadBlocked: "Blockierte Nutzer konnten nicht geladen werden.",
   couldntUnblock: "Blockierung konnte nicht aufgehoben werden",
-  send: "Senden"
+  send: "Senden",
+  savedPosts: "Gespeicherte Beiträge"
 };
 const da = {
   appName: 'Nearby',
@@ -731,7 +734,8 @@ const da = {
   noBlockedUsers: "Du har ikke blokeret nogen.",
   couldntLoadBlocked: "Kunne ikke indlæse blokerede brugere.",
   couldntUnblock: "Kunne ikke fjerne blokeringen",
-  send: "Send"
+  send: "Send",
+  savedPosts: "Gemte opslag"
 };
 const sv = {
   appName: 'Nearby',
@@ -912,7 +916,8 @@ const sv = {
   noBlockedUsers: "Du har inte blockerat någon.",
   couldntLoadBlocked: "Kunde inte ladda blockerade användare.",
   couldntUnblock: "Kunde inte avblockera",
-  send: "Skicka"
+  send: "Skicka",
+  savedPosts: "Sparade inlägg"
 };
 const fi = {
   appName: 'Nearby',
@@ -1093,7 +1098,8 @@ const fi = {
   noBlockedUsers: "Et ole estänyt ketään.",
   couldntLoadBlocked: "Estettyjä käyttäjiä ei voitu ladata.",
   couldntUnblock: "Eston poistaminen epäonnistui",
-  send: "Lähetä"
+  send: "Lähetä",
+  savedPosts: "Tallennetut julkaisut"
 };
 const fr = {
   appName: 'Nearby',
@@ -1274,7 +1280,8 @@ const fr = {
   noBlockedUsers: "Vous n’avez bloqué personne.",
   couldntLoadBlocked: "Impossible de charger les utilisateurs bloqués.",
   couldntUnblock: "Impossible de débloquer",
-  send: "Envoyer"
+  send: "Envoyer",
+  savedPosts: "Publications enregistrées"
 };
 const es = {
   appName: 'Nearby',
@@ -1455,7 +1462,8 @@ const es = {
   noBlockedUsers: "No has bloqueado a nadie.",
   couldntLoadBlocked: "No se pudieron cargar los usuarios bloqueados.",
   couldntUnblock: "No se pudo desbloquear",
-  send: "Enviar"
+  send: "Enviar",
+  savedPosts: "Publicaciones guardadas"
 };
 const it = {
   appName: 'Nearby',
@@ -1636,7 +1644,8 @@ const it = {
   noBlockedUsers: "Non hai bloccato nessuno.",
   couldntLoadBlocked: "Impossibile caricare gli utenti bloccati.",
   couldntUnblock: "Impossibile sbloccare",
-  send: "Invia"
+  send: "Invia",
+  savedPosts: "Post salvati"
 };
 const nl = {
   appName: 'Nearby',
@@ -1817,7 +1826,8 @@ const nl = {
   noBlockedUsers: "Je hebt niemand geblokkeerd.",
   couldntLoadBlocked: "Kan geblokkeerde gebruikers niet laden.",
   couldntUnblock: "Kan niet deblokkeren",
-  send: "Versturen"
+  send: "Versturen",
+  savedPosts: "Opgeslagen berichten"
 };
 const pl = {
   appName: 'Nearby',
@@ -1998,7 +2008,8 @@ const pl = {
   noBlockedUsers: "Nikogo nie zablokowałeś.",
   couldntLoadBlocked: "Nie udało się załadować zablokowanych użytkowników.",
   couldntUnblock: "Nie udało się odblokować",
-  send: "Wyślij"
+  send: "Wyślij",
+  savedPosts: "Zapisane posty"
 };
 const pt = {
   appName: 'Nearby',
@@ -2179,7 +2190,8 @@ const pt = {
   noBlockedUsers: "Não bloqueaste ninguém.",
   couldntLoadBlocked: "Não foi possível carregar os utilizadores bloqueados.",
   couldntUnblock: "Não foi possível desbloquear",
-  send: "Enviar"
+  send: "Enviar",
+  savedPosts: "Publicações guardadas"
 };
 const TRANSLATIONS = {
   no,

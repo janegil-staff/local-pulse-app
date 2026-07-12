@@ -95,12 +95,15 @@ export default function RootNavigator() {
         </>
       ) : needsOnboarding ? (
         <>
+
           <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
           <Stack.Screen name="PinSetup" component={PinSetupScreen} options={{ headerShown: false }} />
           <Stack.Screen name="PinConfirm" component={PinConfirmScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Terms" component={LegalScreen} initialParams={{ doc: 'terms' }} options={{ headerShown: false }} />
           <Stack.Screen name="Privacy" component={LegalScreen} initialParams={{ doc: 'privacy' }} options={{ headerShown: false }} />
 
+          {/* TODO  */}
+          <Stack.Screen name="Auth" component={AuthScreen} options={{ headerShown: false }} />
         </>
       ) : (
         <>

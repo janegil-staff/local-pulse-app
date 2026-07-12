@@ -1,26 +1,17 @@
 // src/screens/MyProfileScreen.js
 //
-// "My Profile" tab — the logged-in user's own profile with inline editing.
-// Hero-photo layout: large photo up top with name overlaid, detail cards below.
-// Photos and bio are edited here; username, email, and gender live in
-// Settings → Personal settings.
+// "My Profile" — the logged-in user's own profile with inline editing, the
+// email-confirmation banner, and a link into their private Saved posts.
 //
 // NOTE: `t` from useLang() is a plain object of strings, not a function.
 // Access keys as t.someKey — never t('someKey').
-
+//
+// Saved posts are PRIVATE. They live here (your own profile), reached only by
+// you — never shown on the public ProfileScreen that others see.
 import React, { useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Image,
-  Alert,
-  ActivityIndicator,
-  RefreshControl,
-  Dimensions,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image,
+  Alert, ActivityIndicator, RefreshControl, Dimensions,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -48,8 +39,6 @@ export default function MyProfileScreen({ navigation }) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [resending, setResending] = useState(false);
 
-  // Photos are { url, publicId } objects. Coerce once — a stale cached user
-  // may still hold bare strings.
   const photos = (user?.photos || []).map((p) => (typeof p === 'string' ? { url: p, publicId: null } : p));
 
   const onRefresh = useCallback(async () => {
@@ -76,9 +65,6 @@ export default function MyProfileScreen({ navigation }) {
     } finally { setSaving(false); }
   }
 
-  // Resend the confirmation email. The server throttles it; the button stays
-  // enabled either way, since a silently-swallowed tap is worse than a stale
-  // "sent" message.
   async function resendVerification() {
     setResending(true);
     try {
@@ -112,8 +98,6 @@ export default function MyProfileScreen({ navigation }) {
       if (result.canceled) return;
       const asset = result.assets[0];
       setUploadingPhoto(true);
-      // { url, publicId } — the publicId is what lets the server destroy the
-      // Cloudinary asset when this photo is later removed.
       const photo = await api.uploadImage(asset.uri);
       if (!photo?.url) throw new Error('Upload returned no URL.');
       const nextPhotos = [...photos, photo];
@@ -134,8 +118,6 @@ export default function MyProfileScreen({ navigation }) {
     api.updateMyProfile({ photos: next }).then(() => hydrate?.()).catch(() => {});
   }
 
-  // Dropping the photo from the array is enough — updateProfile diffs the old
-  // and new lists server-side and destroys whatever fell out of Cloudinary.
   function removePhoto(index) {
     Alert.alert(t.removePhotoTitle, t.removePhotoBody, [
       { text: t.cancel, style: 'cancel' },
@@ -187,7 +169,6 @@ export default function MyProfileScreen({ navigation }) {
         {/* ── Hero ─────────────────────────────── */}
         <View style={styles.hero}>
           <Image source={avatarSource(user)} style={styles.heroImg} />
-          {/* dark gradient scrim for legible text */}
           <LinearGradient
             colors={['transparent', 'rgba(0,0,0,0.75)']}
             style={styles.heroScrim}
@@ -198,14 +179,12 @@ export default function MyProfileScreen({ navigation }) {
               {displayName}
               {user.age ? <Text style={styles.heroAge}>  {user.age}</Text> : null}
             </Text>
-            {/* Confirmed inbox, not confirmed identity — see VerifiedBadge. */}
             {user.emailVerified ? (
               <View style={styles.confirmedPill}>
                 <VerifiedBadge size={13} />
                 <Text style={styles.confirmedText}>{t.badgeEmailConfirmed}</Text>
               </View>
             ) : null}
-            {/* Display only — edited in Settings → Personal settings. */}
             {user.gender ? <Text style={styles.heroMeta}>{user.gender}</Text> : null}
           </View>
           <TouchableOpacity style={styles.heroCam} onPress={addPhoto} disabled={uploadingPhoto} activeOpacity={0.85}>
@@ -214,9 +193,6 @@ export default function MyProfileScreen({ navigation }) {
         </View>
 
         {/* ── Email confirmation ───────────────── */}
-        {/* Only while unconfirmed. Deliberately loud: this is the one place we
-            ask, and an unconfirmed account is the one we most want to convert.
-            Once confirmed it becomes the pill in the hero above. */}
         {!user.emailVerified && (
           <View style={styles.verifyCard}>
             <Text style={styles.verifyTitle}>{t.verifyTitle}</Text>
@@ -261,7 +237,6 @@ export default function MyProfileScreen({ navigation }) {
         </View>
 
         {/* ── About ────────────────────────────── */}
-        {/* Username, email, and gender are edited in Settings. */}
         <View style={styles.card}>
           <EditableRow
             label={t.bioLabel}
@@ -272,6 +247,17 @@ export default function MyProfileScreen({ navigation }) {
             onCancel={cancelEdit} onSave={() => saveField('bio')}
             multiline placeholder={t.bioPlaceholder}
           />
+        </View>
+
+        {/* ── Saved posts (private, this user only) ── */}
+        <View style={styles.card}>
+          <TouchableOpacity style={styles.savedRow} onPress={() => navigation.navigate('Saved')} activeOpacity={0.7}>
+            <View style={styles.savedRowLeft}>
+              <Text style={styles.savedIcon}>🔖</Text>
+              <Text style={styles.savedRowText}>{t.savedPosts}</Text>
+            </View>
+            <Text style={styles.savedChevron}>›</Text>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={confirmLogout} activeOpacity={0.85}>
@@ -333,58 +319,39 @@ const stylesFactory = ({ colors }) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   centered: { alignItems: 'center', justifyContent: 'center' },
 
-  // Hero
   hero: { width: '100%', height: HERO_H, position: 'relative', backgroundColor: colors.surface },
   heroImg: { width: '100%', height: '100%' },
-  heroScrim: {
-    position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%',
-    backgroundColor: 'transparent',
-  },
+  heroScrim: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '55%', backgroundColor: 'transparent' },
   heroContent: { position: 'absolute', left: 20, bottom: 18, right: 80 },
   heroName: { color: '#fff', fontSize: 30, fontWeight: '800', textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 6, textShadowOffset: { width: 0, height: 1 } },
   heroAge: { color: '#fff', fontSize: 26, fontWeight: '400' },
   heroMeta: { color: 'rgba(255,255,255,0.9)', fontSize: 15, marginTop: 2, textTransform: 'capitalize', textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 6 },
 
-  confirmedPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 12,
-    paddingHorizontal: 10, paddingVertical: 4, marginTop: 8,
-  },
+  confirmedPill: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, marginTop: 8 },
   confirmedText: { color: '#fff', fontSize: 12, fontWeight: '600' },
 
-  heroCam: {
-    position: 'absolute', right: 18, bottom: 18, width: 52, height: 52, borderRadius: 26,
-    backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 5,
-  },
+  heroCam: { position: 'absolute', right: 18, bottom: 18, width: 52, height: 52, borderRadius: 26, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 5 },
   heroCamText: { color: '#fff', fontSize: 30, fontWeight: '300', marginTop: -2 },
 
-  // Email confirmation banner
-  verifyCard: {
-    backgroundColor: colors.accent, marginHorizontal: 16, marginTop: 16,
-    borderRadius: 18, paddingHorizontal: 20, paddingVertical: 22,
-  },
+  verifyCard: { backgroundColor: colors.accent, marginHorizontal: 16, marginTop: 16, borderRadius: 18, paddingHorizontal: 20, paddingVertical: 22 },
   verifyTitle: { color: '#fff', fontSize: 22, fontWeight: '800' },
   verifyBody: { color: 'rgba(255,255,255,0.9)', fontSize: 14, marginTop: 6, lineHeight: 20 },
-  verifyBtn: {
-    backgroundColor: '#fff', borderRadius: 12, marginTop: 18,
-    paddingVertical: 15, alignItems: 'center', justifyContent: 'center', minHeight: 52,
-  },
+  verifyBtn: { backgroundColor: '#fff', borderRadius: 12, marginTop: 18, paddingVertical: 15, alignItems: 'center', justifyContent: 'center', minHeight: 52 },
   verifyBtnText: { color: colors.accent, fontSize: 16, fontWeight: '800' },
 
-  // Cards
-  card: {
-    backgroundColor: colors.surface, marginHorizontal: 16, marginTop: 16,
-    borderRadius: 18, padding: 18, borderWidth: 1, borderColor: colors.border,
-  },
+  card: { backgroundColor: colors.surface, marginHorizontal: 16, marginTop: 16, borderRadius: 18, padding: 18, borderWidth: 1, borderColor: colors.border },
   cardLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
   rowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   value: { color: colors.text, fontSize: 17, marginTop: 6 },
   editLink: { color: colors.accent, fontSize: 14, fontWeight: '700' },
-  divider: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
   hint: { color: colors.textDim, fontSize: 12, marginTop: 10 },
 
-  // Photo thumbs
+  savedRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  savedRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  savedIcon: { fontSize: 18 },
+  savedRowText: { color: colors.text, fontSize: 16, fontWeight: '600' },
+  savedChevron: { color: colors.textDim, fontSize: 24, fontWeight: '300' },
+
   thumbWrap: { width: 84, height: 84, borderRadius: 14, marginHorizontal: 4, marginTop: 12, position: 'relative' },
   thumbTouch: { width: '100%', height: '100%', borderRadius: 14 },
   thumbPrimary: { borderWidth: 2, borderColor: colors.accent },
@@ -396,19 +363,13 @@ const stylesFactory = ({ colors }) => StyleSheet.create({
   thumbAdd: { width: 84, height: 84, borderRadius: 14, marginHorizontal: 4, marginTop: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
   thumbAddPlus: { color: colors.accent, fontSize: 30, fontWeight: '300' },
 
-  // Inputs
-  input: {
-    borderWidth: 1, borderColor: colors.accent, borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 11, fontSize: 16, color: colors.text,
-    backgroundColor: colors.bg, marginTop: 10,
-  },
+  input: { borderWidth: 1, borderColor: colors.accent, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, fontSize: 16, color: colors.text, backgroundColor: colors.bg, marginTop: 10 },
   inputMultiline: { height: 110, textAlignVertical: 'top' },
   editActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginTop: 12 },
   cancelLink: { color: colors.textDim, fontSize: 14, marginRight: 20 },
   saveButton: { backgroundColor: colors.accent, paddingHorizontal: 22, paddingVertical: 9, borderRadius: 10, minWidth: 78, alignItems: 'center' },
   saveButtonText: { color: '#fff', fontSize: 14, fontWeight: '800' },
 
-  // Logout
   logoutButton: { marginHorizontal: 16, marginTop: 24, paddingVertical: 15, borderRadius: 14, borderWidth: 1, borderColor: colors.danger, alignItems: 'center' },
   logoutText: { color: colors.danger, fontSize: 16, fontWeight: '700' },
 });
