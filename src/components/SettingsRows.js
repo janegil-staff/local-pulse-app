@@ -105,5 +105,29 @@ export const settingsStyles = (({ colors, spacing, radius }) =>
     modalSave: { backgroundColor: colors.accent, borderRadius: radius.sm, paddingHorizontal: spacing(6), paddingVertical: spacing(2.5), minWidth: 72, alignItems: 'center' },
     modalSaveDisabled: { backgroundColor: colors.accentDim },
     modalSaveText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+    // Language picker (PersonalSettingsScreen) — bottom sheet. Backdrop dims
+    // the screen; the sheet slides up from the bottom with a grab handle and a
+    // scrollable list of the 12 supported languages in their native names.
+    langModalRoot: { flex: 1, justifyContent: 'flex-end' },
+    langBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.55)' },
+    langSheet: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 20, borderTopRightRadius: 20,
+      borderTopWidth: 1, borderColor: colors.border,
+      paddingHorizontal: spacing(4), paddingTop: spacing(3),
+      maxHeight: '75%',
+    },
+    langHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: spacing(3) },
+    langTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: spacing(2), marginLeft: spacing(1) },
+    langList: { flexGrow: 0 },
+    langRow: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      paddingVertical: spacing(4), minHeight: 54,
+    },
+    langRowDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
+    langName: { color: colors.text, fontSize: 17 },
+    langNameActive: { color: colors.accent, fontWeight: '700' },
+    langCheck: { color: colors.accent, fontSize: 18, fontWeight: '700' },
   })
 );

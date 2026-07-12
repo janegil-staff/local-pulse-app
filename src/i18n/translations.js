@@ -203,7 +203,10 @@ const en = {
   feedFollowing: "Following",
   feedTitle: "Feed",
   feedEmptyNearby: "No posts yet. Be the first — tap +",
-  feedEmptyFollowing: "Follow people to see their posts here."
+  feedEmptyFollowing: "Follow people to see their posts here.",
+  follow: "Follow",
+  following: "Following",
+  followers: "Followers"
 };
 const no = {
   appName: 'Nearby',
@@ -399,7 +402,10 @@ const no = {
   feedFollowing: "Følger",
   feedTitle: "Innlegg",
   feedEmptyNearby: "Ingen innlegg ennå. Bli den første — trykk +",
-  feedEmptyFollowing: "Følg folk for å se innleggene deres her."
+  feedEmptyFollowing: "Følg folk for å se innleggene deres her.",
+  follow: "Følg",
+  following: "Følger",
+  followers: "Følgere"
 };
 const de = {
   appName: 'Nearby',
@@ -595,7 +601,10 @@ const de = {
   feedFollowing: "Folge ich",
   feedTitle: "Feed",
   feedEmptyNearby: "Noch keine Beiträge. Sei der Erste — tippe auf +",
-  feedEmptyFollowing: "Folge Leuten, um ihre Beiträge hier zu sehen."
+  feedEmptyFollowing: "Folge Leuten, um ihre Beiträge hier zu sehen.",
+  follow: "Folgen",
+  following: "Folge ich",
+  followers: "Follower"
 };
 const da = {
   appName: 'Nearby',
@@ -791,7 +800,10 @@ const da = {
   feedFollowing: "Følger",
   feedTitle: "Feed",
   feedEmptyNearby: "Ingen opslag endnu. Vær den første — tryk på +",
-  feedEmptyFollowing: "Følg folk for at se deres opslag her."
+  feedEmptyFollowing: "Følg folk for at se deres opslag her.",
+  follow: "Følg",
+  following: "Følger",
+  followers: "Følgere"
 };
 const sv = {
   appName: 'Nearby',
@@ -987,7 +999,10 @@ const sv = {
   feedFollowing: "Följer",
   feedTitle: "Flöde",
   feedEmptyNearby: "Inga inlägg än. Var först — tryck på +",
-  feedEmptyFollowing: "Följ personer för att se deras inlägg här."
+  feedEmptyFollowing: "Följ personer för att se deras inlägg här.",
+  follow: "Följ",
+  following: "Följer",
+  followers: "Följare"
 };
 const fi = {
   appName: 'Nearby',
@@ -1183,7 +1198,10 @@ const fi = {
   feedFollowing: "Seuraat",
   feedTitle: "Syöte",
   feedEmptyNearby: "Ei vielä julkaisuja. Ole ensimmäinen — napauta +",
-  feedEmptyFollowing: "Seuraa ihmisiä nähdäksesi heidän julkaisunsa täällä."
+  feedEmptyFollowing: "Seuraa ihmisiä nähdäksesi heidän julkaisunsa täällä.",
+  follow: "Seuraa",
+  following: "Seuraat",
+  followers: "Seuraajat"
 };
 const fr = {
   appName: 'Nearby',
@@ -1379,7 +1397,10 @@ const fr = {
   feedFollowing: "Abonnements",
   feedTitle: "Fil",
   feedEmptyNearby: "Pas encore de publications. Soyez le premier — appuyez sur +",
-  feedEmptyFollowing: "Abonnez-vous à des personnes pour voir leurs publications ici."
+  feedEmptyFollowing: "Abonnez-vous à des personnes pour voir leurs publications ici.",
+  follow: "Suivre",
+  following: "Abonné",
+  followers: "Abonnés"
 };
 const es = {
   appName: 'Nearby',
@@ -1575,7 +1596,10 @@ const es = {
   feedFollowing: "Siguiendo",
   feedTitle: "Feed",
   feedEmptyNearby: "Aún no hay publicaciones. Sé el primero — toca +",
-  feedEmptyFollowing: "Sigue a personas para ver sus publicaciones aquí."
+  feedEmptyFollowing: "Sigue a personas para ver sus publicaciones aquí.",
+  follow: "Seguir",
+  following: "Siguiendo",
+  followers: "Seguidores"
 };
 const it = {
   appName: 'Nearby',
@@ -1771,7 +1795,10 @@ const it = {
   feedFollowing: "Seguiti",
   feedTitle: "Feed",
   feedEmptyNearby: "Ancora nessun post. Sii il primo — tocca +",
-  feedEmptyFollowing: "Segui delle persone per vedere qui i loro post."
+  feedEmptyFollowing: "Segui delle persone per vedere qui i loro post.",
+  follow: "Segui",
+  following: "Segui già",
+  followers: "Follower"
 };
 const nl = {
   appName: 'Nearby',
@@ -1967,7 +1994,10 @@ const nl = {
   feedFollowing: "Volgend",
   feedTitle: "Feed",
   feedEmptyNearby: "Nog geen berichten. Wees de eerste — tik op +",
-  feedEmptyFollowing: "Volg mensen om hun berichten hier te zien."
+  feedEmptyFollowing: "Volg mensen om hun berichten hier te zien.",
+  follow: "Volgen",
+  following: "Volgend",
+  followers: "Volgers"
 };
 const pl = {
   appName: 'Nearby',
@@ -2163,7 +2193,10 @@ const pl = {
   feedFollowing: "Obserwowani",
   feedTitle: "Aktualności",
   feedEmptyNearby: "Brak postów. Bądź pierwszy — dotknij +",
-  feedEmptyFollowing: "Obserwuj ludzi, aby zobaczyć tutaj ich posty."
+  feedEmptyFollowing: "Obserwuj ludzi, aby zobaczyć tutaj ich posty.",
+  follow: "Obserwuj",
+  following: "Obserwujesz",
+  followers: "Obserwujący"
 };
 const pt = {
   appName: 'Nearby',
@@ -2359,7 +2392,10 @@ const pt = {
   feedFollowing: "A seguir",
   feedTitle: "Feed",
   feedEmptyNearby: "Ainda sem publicações. Seja o primeiro — toque em +",
-  feedEmptyFollowing: "Segue pessoas para ver as publicações delas aqui."
+  feedEmptyFollowing: "Segue pessoas para ver as publicações delas aqui.",
+  follow: "Seguir",
+  following: "A seguir",
+  followers: "Seguidores"
 };
 const TRANSLATIONS = {
   no,

@@ -1,7 +1,7 @@
 // localpulse/app/src/screens/PersonalSettingsScreen.js
 //
-// Account identity (username, gender, email, home location) and Discovery
-// preferences. Split out of SettingsScreen, which was getting long.
+// Account identity (username, gender, email, home location, language) and
+// Discovery preferences. Split out of SettingsScreen, which was getting long.
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, Pressable, Alert, ScrollView, TextInput, StatusBar, Modal, ActivityIndicator,
@@ -9,6 +9,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api } from '../api/client.js';
 import { useProfileStore } from '../store/profileStore.js';
+import { useLang } from '../context/LangContext.js';
+import { SUPPORTED_LANGS } from '../i18n/translations.js';
 import { theme, useStyles } from '../theme/theme.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 import { Row, ToggleRow, Section, settingsStyles } from '../components/SettingsRows.js';
@@ -30,9 +32,27 @@ const SHOW = [
   { key: 'everyone', label: 'Everyone' },
 ];
 
+// Native language names, keyed by the SUPPORTED_LANGS codes. Shown in their own
+// language so a user who's landed in the wrong locale can still find theirs.
+const LANG_NAMES = {
+  no: 'Norsk',
+  en: 'English',
+  nl: 'Nederlands',
+  fr: 'Français',
+  de: 'Deutsch',
+  it: 'Italiano',
+  sv: 'Svenska',
+  da: 'Dansk',
+  fi: 'Suomi',
+  es: 'Español',
+  pl: 'Polski',
+  pt: 'Português',
+};
+
 export default function PersonalSettingsScreen({ navigation }) {
   const styles = useStyles(settingsStyles);
   const insets = useSafeAreaInsets();
+  const { t, lang, setLang } = useLang();
   const profile = useProfileStore((s) => s.profile);
   const loadProfile = useProfileStore((s) => s.loadProfile);
   const savePreferences = useProfileStore((s) => s.savePreferences);
@@ -54,6 +74,10 @@ export default function PersonalSettingsScreen({ navigation }) {
   // Inline gender edit
   const [genderEditing, setGenderEditing] = useState(false);
   const [genderSaving, setGenderSaving] = useState(false);
+
+  // Language picker
+  const [langModal, setLangModal] = useState(false);
+  const [langSaving, setLangSaving] = useState(false);
 
   const [resending, setResending] = useState(false);
 
@@ -120,7 +144,7 @@ export default function PersonalSettingsScreen({ navigation }) {
     const uname = usernameDraft.trim();
     setUsernameError('');
     if (uname.length < 3 || uname.length > 24) {
-      setUsernameError('Username must be 3 to 24 characters.');
+      setUsernameError(t.usernameLength || 'Username must be 3 to 24 characters.');
       return;
     }
     if (uname === profile?.username) { setUsernameModal(false); return; }
@@ -130,7 +154,7 @@ export default function PersonalSettingsScreen({ navigation }) {
       await loadProfile();
       setUsernameModal(false);
     } catch (e) {
-      setUsernameError(e?.message ?? 'Could not change username.');
+      setUsernameError(e?.message ?? t.couldNotChangeUsername ?? 'Could not change username.');
     } finally {
       setUsernameSaving(false);
     }
@@ -145,9 +169,25 @@ export default function PersonalSettingsScreen({ navigation }) {
       await loadProfile();
       setGenderEditing(false);
     } catch (e) {
-      Alert.alert('Error', e?.message ?? 'Could not change gender.');
+      Alert.alert(t.error || 'Error', e?.message ?? 'Could not change gender.');
     } finally {
       setGenderSaving(false);
+    }
+  }
+
+  // Language is client-side only — setLang updates context and persists.
+  // We don't round-trip the server: locale is a device preference here, and
+  // the onboarding step writes it at signup for email templates separately.
+  async function selectLang(code) {
+    if (code === lang) { setLangModal(false); return; }
+    setLangSaving(true);
+    try {
+      await setLang(code);
+      setLangModal(false);
+    } catch (e) {
+      Alert.alert(t.error || 'Error', t.couldNotChangeLanguage || 'Could not change language.');
+    } finally {
+      setLangSaving(false);
     }
   }
 
@@ -160,11 +200,11 @@ export default function PersonalSettingsScreen({ navigation }) {
       const { alreadyVerified } = await api.resendVerification();
       Alert.alert(
         '',
-        alreadyVerified ? 'Your email is already confirmed.' : 'Confirmation email sent.',
+        alreadyVerified ? (t.alreadyConfirmed || 'Your email is already confirmed.') : (t.confirmationSent || 'Confirmation email sent.'),
       );
       if (alreadyVerified) loadProfile();
     } catch (e) {
-      Alert.alert('Error', e?.message ?? 'Could not send the email.');
+      Alert.alert(t.error || 'Error', e?.message ?? 'Could not send the email.');
     } finally {
       setResending(false);
     }
@@ -174,7 +214,7 @@ export default function PersonalSettingsScreen({ navigation }) {
     try {
       await savePreferences(patch);
     } catch (e) {
-      Alert.alert('Error', e.message);
+      Alert.alert(t.error || 'Error', e.message);
     }
   }
 
@@ -222,28 +262,32 @@ export default function PersonalSettingsScreen({ navigation }) {
   }
 
   const showLabel = SHOW.find((s) => s.key === show)?.label ?? 'Everyone';
+  const langLabel = LANG_NAMES[lang] || lang?.toUpperCase() || '—';
 
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <ScreenHeader title="Personal settings" onBack={() => navigation.goBack()} />
+      <ScreenHeader title={t.personalSettings || 'Personal settings'} onBack={() => navigation.goBack()} />
 
       <ScrollView
         style={styles.root}
         contentContainerStyle={{ padding: theme.spacing(4), paddingBottom: insets.bottom + theme.spacing(10) }}
       >
         {/* Account */}
-        <Section title="ACCOUNT">
-          <Row label="Username" value={profile?.username || '—'} onPress={openUsernameEdit} last={false} />
+        <Section title={t.sectionAccount || 'ACCOUNT'}>
+          <Row label={t.username || 'Username'} value={profile?.username || '—'} onPress={openUsernameEdit} last={false} />
+
+          {/* Language — client-side device preference, picker modal below. */}
+          <Row label={t.language || 'Language'} value={langLabel} onPress={() => setLangModal(true)} last={false} />
 
           {/* Not a <Row>: the chip picker expands inline, so the row becomes a
               column and the label stays anchored above it. */}
           <View style={[styles.row, styles.rowDivider, genderEditing && styles.rowColumn]}>
             <View style={styles.genderHeader}>
-              <Text style={styles.rowLabel}>Gender</Text>
+              <Text style={styles.rowLabel}>{t.gender || 'Gender'}</Text>
               {genderEditing ? (
                 <Pressable onPress={() => setGenderEditing(false)}>
-                  <Text style={styles.rowValue}>Cancel</Text>
+                  <Text style={styles.rowValue}>{t.cancel || 'Cancel'}</Text>
                 </Pressable>
               ) : (
                 <Pressable onPress={() => setGenderEditing(true)} style={styles.rowRight}>
@@ -272,7 +316,7 @@ export default function PersonalSettingsScreen({ navigation }) {
           </View>
 
           <Row
-            label="Email"
+            label={t.email || 'Email'}
             value={profile?.email || '—'}
             onPress={() => navigation.navigate('ChangeEmail')}
             last={false}
@@ -288,8 +332,8 @@ export default function PersonalSettingsScreen({ navigation }) {
               disabled={resending}
             >
               <View style={{ flex: 1, paddingRight: 12 }}>
-                <Text style={styles.rowLabel}>Confirm your email</Text>
-                <Text style={styles.rowSublabel}>Check your inbox, or tap to resend</Text>
+                <Text style={styles.rowLabel}>{t.verifyTitle || 'Confirm your email'}</Text>
+                <Text style={styles.rowSublabel}>{t.verifyResend || 'Check your inbox, or tap to resend'}</Text>
               </View>
               {resending
                 ? <ActivityIndicator size="small" color={theme.colors.textDim} />
@@ -297,15 +341,15 @@ export default function PersonalSettingsScreen({ navigation }) {
             </Pressable>
           ) : null}
 
-          <Row label="Change PIN" onPress={() => navigation.navigate('ChangePin')} last={false} />
+          <Row label={t.changePin || 'Change PIN'} onPress={() => navigation.navigate('ChangePin')} last={false} />
 
           {/* Where you appear to be. Browsing elsewhere is on the Discover header. */}
           <Row
-            label="Your location"
+            label={t.yourLocation || 'Your location'}
             value={
               profile?.locationMode === 'manual'
-                ? (profile?.locationName || 'Set manually')
-                : 'Using GPS'
+                ? (profile?.locationName || t.setManually || 'Set manually')
+                : (t.usingGps || 'Using GPS')
             }
             onPress={() => navigation.navigate('LocationPicker', { mode: 'home' })}
             last
@@ -313,10 +357,10 @@ export default function PersonalSettingsScreen({ navigation }) {
         </Section>
 
         {/* Discovery */}
-        <Section title="DISCOVERY">
-          <Row label="Show me" value={showLabel} onPress={cycleShow} last={false} />
+        <Section title={t.sectionDiscovery || 'DISCOVERY'}>
+          <Row label={t.showMe || 'Show me'} value={showLabel} onPress={cycleShow} last={false} />
           <View style={[styles.row, styles.rowDivider]}>
-            <Text style={styles.rowLabel}>Age range</Text>
+            <Text style={styles.rowLabel}>{t.ageRange || 'Age range'}</Text>
             <View style={styles.rangeRight}>
               <TextInput
                 style={styles.rangeInput}
@@ -337,8 +381,8 @@ export default function PersonalSettingsScreen({ navigation }) {
           </View>
 
           <ToggleRow
-            label="Anywhere"
-            sublabel="Show people at any distance"
+            label={t.anywhere || 'Anywhere'}
+            sublabel={t.anywhereSub || 'Show people at any distance'}
             value={anywhere}
             onValueChange={toggleAnywhere}
             last={anywhere}
@@ -349,7 +393,7 @@ export default function PersonalSettingsScreen({ navigation }) {
               would just look broken. */}
           {!anywhere && (
             <View style={styles.row}>
-              <Text style={styles.rowLabel}>Max distance (km)</Text>
+              <Text style={styles.rowLabel}>{t.maxDistance || 'Max distance (km)'}</Text>
               <TextInput
                 style={styles.rangeInput}
                 value={distance}
@@ -362,32 +406,71 @@ export default function PersonalSettingsScreen({ navigation }) {
         </Section>
       </ScrollView>
 
+      {/* Username modal */}
       <Modal visible={usernameModal} transparent animationType="fade" onRequestClose={() => setUsernameModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Change username</Text>
+            <Text style={styles.modalTitle}>{t.changeUsername || 'Change username'}</Text>
             <TextInput
               style={styles.modalInput}
               value={usernameDraft}
               onChangeText={setUsernameDraft}
               autoCapitalize="none"
               autoFocus
-              placeholder="Username"
+              placeholder={t.username || 'Username'}
               placeholderTextColor={theme.colors.textDim}
               selectionColor={theme.colors.accent}
             />
             {!!usernameError && <Text style={styles.modalError}>{usernameError}</Text>}
             <View style={styles.modalBtns}>
               <Pressable onPress={() => setUsernameModal(false)}>
-                <Text style={styles.modalCancel}>Cancel</Text>
+                <Text style={styles.modalCancel}>{t.cancel || 'Cancel'}</Text>
               </Pressable>
               <Pressable
                 style={[styles.modalSave, usernameDraft.trim().length < 3 && styles.modalSaveDisabled]}
                 onPress={usernameDraft.trim().length >= 3 && !usernameSaving ? saveUsername : undefined}
               >
-                {usernameSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Save</Text>}
+                {usernameSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>{t.save || 'Save'}</Text>}
               </Pressable>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Language picker — bottom sheet. The backdrop is a Pressable that
+          dismisses; the sheet itself is a plain View so taps inside don't
+          bubble to it (RN Pressables don't propagate to parent Pressables,
+          so no stopPropagation is needed). */}
+      <Modal visible={langModal} transparent animationType="slide" onRequestClose={() => setLangModal(false)}>
+        <View style={styles.langModalRoot}>
+          <Pressable style={styles.langBackdrop} onPress={() => !langSaving && setLangModal(false)} />
+          <View style={[styles.langSheet, { paddingBottom: insets.bottom + theme.spacing(4) }]}>
+            <View style={styles.langHandle} />
+            <Text style={styles.langTitle}>{t.language || 'Language'}</Text>
+            <ScrollView
+              style={styles.langList}
+              contentContainerStyle={{ paddingBottom: theme.spacing(2) }}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              {SUPPORTED_LANGS.map((code, i) => {
+                const selected = code === lang;
+                return (
+                  <Pressable
+                    key={code}
+                    style={[styles.langRow, i < SUPPORTED_LANGS.length - 1 && styles.langRowDivider]}
+                    onPress={() => !langSaving && selectLang(code)}
+                    disabled={langSaving}
+                    android_ripple={{ color: theme.colors.surfaceAlt }}
+                  >
+                    <Text style={[styles.langName, selected && styles.langNameActive]}>
+                      {LANG_NAMES[code] || code.toUpperCase()}
+                    </Text>
+                    {selected ? <Text style={styles.langCheck}>✓</Text> : null}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
           </View>
         </View>
       </Modal>
