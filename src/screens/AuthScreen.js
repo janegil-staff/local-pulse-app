@@ -1,18 +1,26 @@
+// localpulse/app/src/screens/AuthScreen.js
+//
+// NOTE: colors are read reactively via useStyles(factory) — never capture
+// theme.colors at module scope. A static `const C = theme.colors` freezes the
+// palette at import time, so the screen would stay dark even in light/system
+// mode (the palette swap in applyMode() can't reach a baked StyleSheet).
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  KeyboardAvoidingView, Platform, TextInput, Image, Linking, ActivityIndicator,
+  KeyboardAvoidingView, Platform, TextInput, Image, Linking, ActivityIndicator, StatusBar,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext.js';
 import { useLang } from '../context/LangContext.js';
-import { theme } from '../theme/theme.js';
+import { useThemeMode } from '../theme/ThemeContext.js';
+import { theme, useStyles } from '../theme/theme.js';
 
 const APP_VERSION = '1.0.0';
 const COMPANY = 'Qup DA';
 const EMAIL = 'post@qupda.com';
-const C = theme.colors;
 
 export default function AuthScreen({ navigation }) {
+  const s = useStyles(stylesFactory);
+  const { mode } = useThemeMode();
   const { login } = useAuth();
   const { t } = useLang();
   const [email, setEmail] = useState('');
@@ -35,6 +43,13 @@ export default function AuthScreen({ navigation }) {
 
   return (
     <View style={s.bg}>
+      {/* Dark text on light bg, light text on dark bg — otherwise the clock /
+          battery vanish against the surface in one of the two modes. */}
+      <StatusBar
+        barStyle={mode === 'light' ? 'dark-content' : 'light-content'}
+        backgroundColor="transparent"
+        translucent
+      />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
           <View style={s.logoWrap}>
@@ -48,8 +63,8 @@ export default function AuthScreen({ navigation }) {
 
           {!!error && <Text style={s.error}>{error}</Text>}
 
-          <UnderlineField placeholder={t.email} value={email} onChangeText={setEmail} keyboardType="email-address" />
-          <UnderlineField placeholder={t.pinCode} value={pin} onChangeText={(v) => setPin(v.replace(/\D/g, '').slice(0, 4))} keyboardType="number-pad" secureTextEntry maxLength={4} />
+          <UnderlineField s={s} placeholder={t.email} value={email} onChangeText={setEmail} keyboardType="email-address" />
+          <UnderlineField s={s} placeholder={t.pinCode} value={pin} onChangeText={(v) => setPin(v.replace(/\D/g, '').slice(0, 4))} keyboardType="number-pad" secureTextEntry maxLength={4} />
 
           <View style={{ height: 28 }} />
 
@@ -83,41 +98,45 @@ export default function AuthScreen({ navigation }) {
   );
 }
 
-function UnderlineField({ placeholder, value, onChangeText, keyboardType, secureTextEntry, maxLength }) {
+// `s` is passed in so the field reads the same reactive stylesheet as the
+// screen — it must not reach for a module-level palette.
+function UnderlineField({ s, placeholder, value, onChangeText, keyboardType, secureTextEntry, maxLength }) {
   return (
     <View style={{ width: '100%', marginBottom: 24 }}>
       <TextInput
         style={s.input}
         placeholder={placeholder}
-        placeholderTextColor={C.textDim}
+        placeholderTextColor={theme.colors.textDim}
         value={value}
         onChangeText={onChangeText}
         keyboardType={keyboardType}
         secureTextEntry={secureTextEntry}
         maxLength={maxLength}
         autoCapitalize="none"
-        selectionColor={C.accent}
+        selectionColor={theme.colors.accent}
       />
       <View style={s.inputLine} />
     </View>
   );
 }
 
-const s = StyleSheet.create({
-  bg: { flex: 1, backgroundColor: C.bg },
-  scroll: { flexGrow: 1, paddingHorizontal: 32, paddingTop: 72, paddingBottom: 40, alignItems: 'center' },
-  logoWrap: { width: 120, height: 120, borderRadius: 22, overflow: 'hidden', marginBottom: 16 },
-  logo: { width: 120, height: 120 },
-  title: { color: C.text, fontSize: 22, fontWeight: '700', textAlign: 'center', letterSpacing: 0.3 },
-  tagline: { color: C.textDim, fontSize: 12, textAlign: 'center', marginTop: 4, letterSpacing: 1 },
-  error: { color: C.danger, fontSize: 14, marginBottom: 16, width: '100%' },
-  input: { color: C.text, fontSize: 16, fontWeight: '500', paddingVertical: 8, paddingHorizontal: 0 },
-  inputLine: { height: 1.5, backgroundColor: C.border, width: '100%' },
-  btn: { width: '100%', height: 54, backgroundColor: C.accent, borderRadius: 10, justifyContent: 'center', alignItems: 'center', shadowColor: C.accent, shadowOpacity: 0.35, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 2 },
-  linkMuted: { color: C.textDim, fontSize: 14, fontWeight: '500', textAlign: 'center' },
-  linkPrimary: { color: C.accent, fontSize: 14, fontWeight: '700', letterSpacing: 1.5, textAlign: 'center' },
-  footer: { marginTop: 48, alignItems: 'center', gap: 4 },
-  footerText: { color: C.textDim, fontSize: 11, fontWeight: '500', textAlign: 'center' },
-  footerLink: { color: C.accent, fontSize: 11, fontWeight: '500', textAlign: 'center' },
-});
+const stylesFactory = (({ colors }) =>
+  StyleSheet.create({
+    bg: { flex: 1, backgroundColor: colors.bg },
+    scroll: { flexGrow: 1, paddingHorizontal: 32, paddingTop: 72, paddingBottom: 40, alignItems: 'center' },
+    logoWrap: { width: 120, height: 120, borderRadius: 22, overflow: 'hidden', marginBottom: 16 },
+    logo: { width: 120, height: 120 },
+    title: { color: colors.text, fontSize: 22, fontWeight: '700', textAlign: 'center', letterSpacing: 0.3 },
+    tagline: { color: colors.textDim, fontSize: 12, textAlign: 'center', marginTop: 4, letterSpacing: 1 },
+    error: { color: colors.danger, fontSize: 14, marginBottom: 16, width: '100%' },
+    input: { color: colors.text, fontSize: 16, fontWeight: '500', paddingVertical: 8, paddingHorizontal: 0 },
+    inputLine: { height: 1.5, backgroundColor: colors.border, width: '100%' },
+    btn: { width: '100%', height: 54, backgroundColor: colors.accent, borderRadius: 10, justifyContent: 'center', alignItems: 'center', shadowColor: colors.accent, shadowOpacity: 0.35, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+    btnText: { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 2 },
+    linkMuted: { color: colors.textDim, fontSize: 14, fontWeight: '500', textAlign: 'center' },
+    linkPrimary: { color: colors.accent, fontSize: 14, fontWeight: '700', letterSpacing: 1.5, textAlign: 'center' },
+    footer: { marginTop: 48, alignItems: 'center', gap: 4 },
+    footerText: { color: colors.textDim, fontSize: 11, fontWeight: '500', textAlign: 'center' },
+    footerLink: { color: colors.accent, fontSize: 11, fontWeight: '500', textAlign: 'center' },
+  })
+);
