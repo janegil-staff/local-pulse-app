@@ -189,7 +189,11 @@ const en = {
   couldntLoadBlocked: "Couldn’t load blocked users.",
   couldntUnblock: "Couldn’t unblock",
   send: "Send",
-  savedPosts: "Saved posts"
+  savedPosts: "Saved posts",
+  comments: "Comments",
+  loadingComments: "Loading comments…",
+  noComments: "No comments yet — start the conversation.",
+  addComment: "Add a comment…"
 };
 const no = {
   appName: 'Nearby',
@@ -371,7 +375,11 @@ const no = {
   couldntLoadBlocked: "Kunne ikke laste blokkerte brukere.",
   couldntUnblock: "Kunne ikke fjerne blokkeringen",
   send: "Send",
-  savedPosts: "Lagrede innlegg"
+  savedPosts: "Lagrede innlegg",
+  comments: "Kommentarer",
+  loadingComments: "Laster kommentarer…",
+  noComments: "Ingen kommentarer ennå — start samtalen.",
+  addComment: "Legg til en kommentar…"
 };
 const de = {
   appName: 'Nearby',
@@ -553,7 +561,11 @@ const de = {
   couldntLoadBlocked: "Blockierte Nutzer konnten nicht geladen werden.",
   couldntUnblock: "Blockierung konnte nicht aufgehoben werden",
   send: "Senden",
-  savedPosts: "Gespeicherte Beiträge"
+  savedPosts: "Gespeicherte Beiträge",
+  comments: "Kommentare",
+  loadingComments: "Kommentare werden geladen…",
+  noComments: "Noch keine Kommentare — starte das Gespräch.",
+  addComment: "Kommentar hinzufügen…"
 };
 const da = {
   appName: 'Nearby',
@@ -735,7 +747,11 @@ const da = {
   couldntLoadBlocked: "Kunne ikke indlæse blokerede brugere.",
   couldntUnblock: "Kunne ikke fjerne blokeringen",
   send: "Send",
-  savedPosts: "Gemte opslag"
+  savedPosts: "Gemte opslag",
+  comments: "Kommentarer",
+  loadingComments: "Indlæser kommentarer…",
+  noComments: "Ingen kommentarer endnu — start samtalen.",
+  addComment: "Tilføj en kommentar…"
 };
 const sv = {
   appName: 'Nearby',
@@ -917,7 +933,11 @@ const sv = {
   couldntLoadBlocked: "Kunde inte ladda blockerade användare.",
   couldntUnblock: "Kunde inte avblockera",
   send: "Skicka",
-  savedPosts: "Sparade inlägg"
+  savedPosts: "Sparade inlägg",
+  comments: "Kommentarer",
+  loadingComments: "Laddar kommentarer…",
+  noComments: "Inga kommentarer än — starta konversationen.",
+  addComment: "Lägg till en kommentar…"
 };
 const fi = {
   appName: 'Nearby',
@@ -1099,7 +1119,11 @@ const fi = {
   couldntLoadBlocked: "Estettyjä käyttäjiä ei voitu ladata.",
   couldntUnblock: "Eston poistaminen epäonnistui",
   send: "Lähetä",
-  savedPosts: "Tallennetut julkaisut"
+  savedPosts: "Tallennetut julkaisut",
+  comments: "Kommentit",
+  loadingComments: "Ladataan kommentteja…",
+  noComments: "Ei vielä kommentteja — aloita keskustelu.",
+  addComment: "Lisää kommentti…"
 };
 const fr = {
   appName: 'Nearby',
@@ -1281,7 +1305,11 @@ const fr = {
   couldntLoadBlocked: "Impossible de charger les utilisateurs bloqués.",
   couldntUnblock: "Impossible de débloquer",
   send: "Envoyer",
-  savedPosts: "Publications enregistrées"
+  savedPosts: "Publications enregistrées",
+  comments: "Commentaires",
+  loadingComments: "Chargement des commentaires…",
+  noComments: "Pas encore de commentaires — lancez la conversation.",
+  addComment: "Ajouter un commentaire…"
 };
 const es = {
   appName: 'Nearby',
@@ -1463,7 +1491,11 @@ const es = {
   couldntLoadBlocked: "No se pudieron cargar los usuarios bloqueados.",
   couldntUnblock: "No se pudo desbloquear",
   send: "Enviar",
-  savedPosts: "Publicaciones guardadas"
+  savedPosts: "Publicaciones guardadas",
+  comments: "Comentarios",
+  loadingComments: "Cargando comentarios…",
+  noComments: "Aún no hay comentarios — inicia la conversación.",
+  addComment: "Añade un comentario…"
 };
 const it = {
   appName: 'Nearby',
@@ -1645,7 +1677,11 @@ const it = {
   couldntLoadBlocked: "Impossibile caricare gli utenti bloccati.",
   couldntUnblock: "Impossibile sbloccare",
   send: "Invia",
-  savedPosts: "Post salvati"
+  savedPosts: "Post salvati",
+  comments: "Commenti",
+  loadingComments: "Caricamento commenti…",
+  noComments: "Ancora nessun commento — inizia la conversazione.",
+  addComment: "Aggiungi un commento…"
 };
 const nl = {
   appName: 'Nearby',
@@ -1827,7 +1863,11 @@ const nl = {
   couldntLoadBlocked: "Kan geblokkeerde gebruikers niet laden.",
   couldntUnblock: "Kan niet deblokkeren",
   send: "Versturen",
-  savedPosts: "Opgeslagen berichten"
+  savedPosts: "Opgeslagen berichten",
+  comments: "Reacties",
+  loadingComments: "Reacties laden…",
+  noComments: "Nog geen reacties — begin het gesprek.",
+  addComment: "Voeg een reactie toe…"
 };
 const pl = {
   appName: 'Nearby',
@@ -2009,7 +2049,11 @@ const pl = {
   couldntLoadBlocked: "Nie udało się załadować zablokowanych użytkowników.",
   couldntUnblock: "Nie udało się odblokować",
   send: "Wyślij",
-  savedPosts: "Zapisane posty"
+  savedPosts: "Zapisane posty",
+  comments: "Komentarze",
+  loadingComments: "Ładowanie komentarzy…",
+  noComments: "Brak komentarzy — rozpocznij rozmowę.",
+  addComment: "Dodaj komentarz…"
 };
 const pt = {
   appName: 'Nearby',
@@ -2191,7 +2235,11 @@ const pt = {
   couldntLoadBlocked: "Não foi possível carregar os utilizadores bloqueados.",
   couldntUnblock: "Não foi possível desbloquear",
   send: "Enviar",
-  savedPosts: "Publicações guardadas"
+  savedPosts: "Publicações guardadas",
+  comments: "Comentários",
+  loadingComments: "A carregar comentários…",
+  noComments: "Ainda sem comentários — inicie a conversa.",
+  addComment: "Adicione um comentário…"
 };
 const TRANSLATIONS = {
   no,
