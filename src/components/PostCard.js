@@ -16,30 +16,35 @@ function timeAgo(iso) {
 export default function PostCard({ post, onLike, onPress, onAuthorPress, onSave, onReport }) {
   const styles = useStyles(stylesFactory);
   const meta = POST_TYPE_META[post.type] || POST_TYPE_META.update;
-  const Container = onPress ? Pressable : View;
+  // Only the content area opens the post. The footer (like/save/report) lives
+  // OUTSIDE the pressable so its buttons receive their own taps — wrapping the
+  // whole card in a Pressable let the card's onPress swallow the like tap.
+  const Body = onPress ? Pressable : View;
   return (
-    <Container style={styles.card} onPress={onPress}>
-      <View style={styles.header}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{meta.emoji} {meta.label}</Text>
+    <View style={styles.card}>
+      <Body style={styles.body} onPress={onPress}>
+        <View style={styles.header}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{meta.emoji} {meta.label}</Text>
+          </View>
+          <Text style={styles.time}>{timeAgo(post.createdAt)}</Text>
         </View>
-        <Text style={styles.time}>{timeAgo(post.createdAt)}</Text>
-      </View>
 
-      <Pressable onPress={onAuthorPress} hitSlop={4}>
-        <Text style={styles.author}>{post.author?.displayName || post.author?.username}</Text>
-      </Pressable>
-      <Text style={styles.text}>{post.text}</Text>
+        <Pressable onPress={onAuthorPress} hitSlop={4}>
+          <Text style={styles.author}>{post.author?.displayName || post.author?.username}</Text>
+        </Pressable>
+        <Text style={styles.text}>{post.text}</Text>
 
-      {/* The model defaults imageUrl to '', not null — so this is a truthiness
-          check, not a null check. Fixed 4:3 with `cover`: without stored
-          dimensions there's nothing to size from, and a variable-height image
-          would break FlatList's row measurement. */}
-      {post.imageUrl ? (
-        <Image source={{ uri: post.imageUrl }} style={styles.image} resizeMode="cover" />
-      ) : null}
+        {/* The model defaults imageUrl to '', not null — so this is a truthiness
+            check, not a null check. Fixed 4:3 with `cover`: without stored
+            dimensions there's nothing to size from, and a variable-height image
+            would break FlatList's row measurement. */}
+        {post.imageUrl ? (
+          <Image source={{ uri: post.imageUrl }} style={styles.image} resizeMode="cover" />
+        ) : null}
 
-      {post.placeName ? <Text style={styles.place}>📍 {post.placeName}</Text> : null}
+        {post.placeName ? <Text style={styles.place}>📍 {post.placeName}</Text> : null}
+      </Body>
 
       <View style={styles.footer}>
         <Pressable style={styles.likeBtn} onPress={() => onLike(post.id)} hitSlop={8}>
@@ -64,7 +69,7 @@ export default function PostCard({ post, onLike, onPress, onAuthorPress, onSave,
           ) : null}
         </View>
       </View>
-    </Container>
+    </View>
   );
 }
 
@@ -75,6 +80,7 @@ const stylesFactory = (({ colors, spacing, radius }) =>
       marginHorizontal: spacing(4), marginBottom: spacing(3),
       borderWidth: 1, borderColor: colors.border,
     },
+    body: {},
     header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing(2) },
     badge: { backgroundColor: colors.surfaceAlt, borderRadius: radius.sm, paddingHorizontal: spacing(2.5), paddingVertical: spacing(1) },
     badgeText: { color: colors.text, fontSize: 12, fontWeight: '600' },
