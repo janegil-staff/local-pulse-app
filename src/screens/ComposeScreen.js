@@ -1,6 +1,6 @@
 // localpulse/app/src/screens/ComposeScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Image, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useFeedStore } from '../store/feedStore.js';
 import { api } from '../api/client.js';
@@ -60,71 +60,81 @@ export default function ComposeScreen({ navigation }) {
     <View style={styles.root}>
       <ScreenHeader title="New Post" onBack={() => navigation.goBack()} />
 
-      <ScrollView contentContainerStyle={{ padding: theme.spacing(4) }} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>Type</Text>
-        <View style={styles.typeRow}>
-          {TYPES.map((t) => {
-            const meta = POST_TYPE_META[t];
-            const active = t === type;
-            return (
-              <Pressable
-                key={t}
-                onPress={() => setType(t)}
-                style={[styles.chip, active && styles.chipActive]}
-              >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                  {meta.emoji} {meta.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Text style={styles.label}>What's happening?</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="Share something with your neighborhood…"
-          placeholderTextColor={theme.colors.textDim}
-          value={text}
-          onChangeText={setText}
-          multiline
-          maxLength={1000}
-          autoFocus
-        />
-
-        <Text style={styles.label}>Photo (optional)</Text>
-        {imageUrl ? (
-          <View style={styles.previewWrap}>
-            <Image source={{ uri: imageUrl }} style={styles.preview} resizeMode="cover" />
-            <Pressable style={styles.previewRemove} onPress={() => setImageUrl('')} hitSlop={10}>
-              <Text style={styles.previewRemoveText}>×</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable style={styles.imageAdd} onPress={pickImage} disabled={uploading}>
-            {uploading
-              ? <ActivityIndicator color={theme.colors.accent} />
-              : <Text style={styles.imageAddPlus}>＋</Text>}
-          </Pressable>
-        )}
-
-        <Text style={styles.label}>Place (optional)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Bergen sentrum"
-          placeholderTextColor={theme.colors.textDim}
-          value={placeName}
-          onChangeText={setPlaceName}
-        />
-
-        <Pressable
-          style={[styles.btn, (!text.trim() || posting || uploading) && styles.btnDisabled]}
-          onPress={submit}
-          disabled={!text.trim() || posting || uploading}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={{ padding: theme.spacing(4), paddingBottom: theme.spacing(10) }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.btnText}>{posting ? 'Posting…' : 'Post'}</Text>
-        </Pressable>
-      </ScrollView>
+          <Text style={styles.label}>Type</Text>
+          <View style={styles.typeRow}>
+            {TYPES.map((t) => {
+              const meta = POST_TYPE_META[t];
+              const active = t === type;
+              return (
+                <Pressable
+                  key={t}
+                  onPress={() => setType(t)}
+                  style={[styles.chip, active && styles.chipActive]}
+                >
+                  <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                    {meta.emoji} {meta.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={styles.label}>What's happening?</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Share something with your neighborhood…"
+            placeholderTextColor={theme.colors.textDim}
+            value={text}
+            onChangeText={setText}
+            multiline
+            maxLength={1000}
+            autoFocus
+          />
+
+          <Text style={styles.label}>Photo (optional)</Text>
+          {imageUrl ? (
+            <View style={styles.previewWrap}>
+              <Image source={{ uri: imageUrl }} style={styles.preview} resizeMode="cover" />
+              <Pressable style={styles.previewRemove} onPress={() => setImageUrl('')} hitSlop={10}>
+                <Text style={styles.previewRemoveText}>×</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable style={styles.imageAdd} onPress={pickImage} disabled={uploading}>
+              {uploading
+                ? <ActivityIndicator color={theme.colors.accent} />
+                : <Text style={styles.imageAddPlus}>＋</Text>}
+            </Pressable>
+          )}
+
+          <Text style={styles.label}>Place (optional)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. Bergen sentrum"
+            placeholderTextColor={theme.colors.textDim}
+            value={placeName}
+            onChangeText={setPlaceName}
+          />
+
+          <Pressable
+            style={[styles.btn, (!text.trim() || posting || uploading) && styles.btnDisabled]}
+            onPress={submit}
+            disabled={!text.trim() || posting || uploading}
+          >
+            <Text style={styles.btnText}>{posting ? 'Posting…' : 'Post'}</Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
