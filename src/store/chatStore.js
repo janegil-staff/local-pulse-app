@@ -40,17 +40,16 @@ export const useChatStore = create((set, get) => ({
       });
     });
 
-    // Incoming notification → bump the badge. Requests count too: a pending
-    // conversation still needs the user's attention.
-    s.on('chat:notify', ({ conversationId, pending }) => {
+    // Incoming notification → re-sync from the server rather than blindly
+    // incrementing. The old `unread + 1` double-counted: repeated notifies for
+    // the same conversation kept bumping the badge, and it fought with
+    // refreshUnread's authoritative value. Now a notify just means "something
+    // changed, go ask the server for the true count."
+    s.on('chat:notify', ({ conversationId }) => {
       const st = get();
-      console.log('[chatStore] chat:notify received, pending =', pending);
+      console.log('[chatStore] chat:notify received');
       if (String(conversationId) === String(st.activeId)) return; // you're reading it
-      if (pending) {
-        set({ requestCount: st.requestCount + 1 });
-      } else {
-        set({ unread: st.unread + 1 });
-      }
+      get().refreshUnread();
     });
 
     s.on('chat:typing', ({ userId }) => {
