@@ -16,7 +16,17 @@ import { useLang } from '../context/LangContext.js';
 
 const { width } = Dimensions.get('window');
 const HERO_H = Math.round(width * 1.1);
-const REPORT_REASONS = ['Inappropriate photos', 'Harassment', 'Spam or scam', 'Fake profile', 'Other'];
+// Each reason carries the server enum KEY (Report.js REPORT_REASONS) plus a
+// display label. The key goes on the wire; the label is what the user taps.
+// Sending the label directly is what triggered "Invalid reason" — it isn't in
+// the enum. Labels fall back to English when a locale lacks the key.
+const REPORT_REASONS = (t) => [
+  { key: 'inappropriate', label: t.reportInappropriate || 'Inappropriate content' },
+  { key: 'harassment', label: t.reportHarassment || 'Harassment' },
+  { key: 'spam', label: t.reportSpam || 'Spam or scam' },
+  { key: 'misinformation', label: t.reportMisinformation || 'Fake or misleading profile' },
+  { key: 'other', label: t.reportOther || 'Other' },
+];
 
 export default function ProfileScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
@@ -99,14 +109,22 @@ export default function ProfileScreen({ route, navigation }) {
   }
 
   function report() {
-    const buttons = REPORT_REASONS.map((reason) => ({
-      text: reason,
+    const buttons = REPORT_REASONS(t).map(({ key, label }) => ({
+      text: label,
       onPress: async () => {
-        try { await api.reportUser(userId, reason); Alert.alert('Reported', 'Thanks — our team will review this profile.'); }
-        catch (e) { Alert.alert('Error', e?.message ?? 'Could not send report.'); }
+        try {
+          await api.reportUser(userId, key); // enum key, not the label
+          Alert.alert(t.reportThanksTitle || 'Reported', t.reportThanks || 'Thanks — our team will review this profile.');
+        } catch (e) {
+          Alert.alert(t.error || 'Error', e?.message ?? t.couldntSend ?? 'Could not send report.');
+        }
       },
     }));
-    Alert.alert('Report user', 'Why are you reporting this profile?', [...buttons, { text: 'Cancel', style: 'cancel' }]);
+    Alert.alert(
+      t.reportUserTitle || 'Report user',
+      t.reportWhy || 'Why are you reporting this profile?',
+      [...buttons, { text: t.cancel || 'Cancel', style: 'cancel' }],
+    );
   }
 
   function moreActions() {

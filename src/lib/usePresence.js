@@ -12,6 +12,7 @@
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import { connectChatSocket, getChatSocket, disconnectChatSocket } from '../api/socket.js';
+import { getToken } from '../api/client.js';
 
 // Must be < ONLINE_MS (120_000) on the server, with margin for a dropped ping.
 const PING_INTERVAL_MS = 60_000;
@@ -20,8 +21,16 @@ export function usePresence(isAuthed) {
   useEffect(() => {
     if (!isAuthed) return undefined;
 
+    // Don't connect before the JWT is set — the socket handshake carries the
+    // token (server authSocket rejects a null token), and connecting too early
+    // would open an unauthenticated socket that never receives chat events.
+    // isAuthed is derived from the token/user, so by here getToken() should be
+    // populated; this guard covers the race where the effect runs a tick early.
+    if (!getToken()) return undefined;
+
     // Bring the socket up at login (not lazily at first chat) so presence is
-    // live from the moment the user is authenticated.
+    // live from the moment the user is authenticated. connectChatSocket is
+    // idempotent — it returns the shared socket, so this never races chatStore.
     const socket = connectChatSocket();
 
     const ping = () => {

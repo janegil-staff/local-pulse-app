@@ -4,7 +4,7 @@
 // which returns { token, user } and logs in with email + (password OR pin).
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api, setToken } from '../api/client.js';
+import { api, setToken, setAuthFailureHandler } from '../api/client.js';
 
 const TOKEN_KEY = 'auth.token.v1';
 
@@ -76,6 +76,17 @@ export function AuthProvider({ children }) {
         setLoading(false);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Register the client's auth-failure hook so a 403 'Account suspended' (a
+  // banned account hitting requireAuth) drops the user to the login screen.
+  // logoutAndClearPin also wipes the stored PIN/email so a banned user can't
+  // re-enter via the local app-lock without a fresh server login (which will
+  // also 403). Re-registered if logout identity changes.
+  useEffect(() => {
+    setAuthFailureHandler(() => { logoutAndClearPin(); });
+    return () => setAuthFailureHandler(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

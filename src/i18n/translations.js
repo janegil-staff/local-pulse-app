@@ -206,7 +206,16 @@ const en = {
   feedEmptyFollowing: "Follow people to see their posts here.",
   follow: "Follow",
   following: "Following",
-  followers: "Followers"
+  followers: "Followers",
+  reportInappropriate: "Inappropriate content",
+  reportHarassment: "Harassment",
+  reportSpam: "Spam or scam",
+  reportMisinformation: "Fake or misleading profile",
+  reportOther: "Other",
+  reportUserTitle: "Report user",
+  reportWhy: "Why are you reporting this profile?",
+  reportThanksTitle: "Reported",
+  reportThanks: "Thanks — our team will review this profile."
 };
 const no = {
   appName: 'Nearby',
@@ -405,7 +414,16 @@ const no = {
   feedEmptyFollowing: "Følg folk for å se innleggene deres her.",
   follow: "Følg",
   following: "Følger",
-  followers: "Følgere"
+  followers: "Følgere",
+  reportInappropriate: "Upassende innhold",
+  reportHarassment: "Trakassering",
+  reportSpam: "Spam eller svindel",
+  reportMisinformation: "Falsk eller villedende profil",
+  reportOther: "Annet",
+  reportUserTitle: "Rapporter bruker",
+  reportWhy: "Hvorfor rapporterer du denne profilen?",
+  reportThanksTitle: "Rapportert",
+  reportThanks: "Takk — teamet vårt vil se på denne profilen."
 };
 const de = {
   appName: 'Nearby',
@@ -604,7 +622,16 @@ const de = {
   feedEmptyFollowing: "Folge Leuten, um ihre Beiträge hier zu sehen.",
   follow: "Folgen",
   following: "Folge ich",
-  followers: "Follower"
+  followers: "Follower",
+  reportInappropriate: "Unangemessene Inhalte",
+  reportHarassment: "Belästigung",
+  reportSpam: "Spam oder Betrug",
+  reportMisinformation: "Gefälschtes oder irreführendes Profil",
+  reportOther: "Sonstiges",
+  reportUserTitle: "Nutzer melden",
+  reportWhy: "Warum meldest du dieses Profil?",
+  reportThanksTitle: "Gemeldet",
+  reportThanks: "Danke — unser Team überprüft dieses Profil."
 };
 const da = {
   appName: 'Nearby',
@@ -803,7 +830,16 @@ const da = {
   feedEmptyFollowing: "Følg folk for at se deres opslag her.",
   follow: "Følg",
   following: "Følger",
-  followers: "Følgere"
+  followers: "Følgere",
+  reportInappropriate: "Upassende indhold",
+  reportHarassment: "Chikane",
+  reportSpam: "Spam eller svindel",
+  reportMisinformation: "Falsk eller vildledende profil",
+  reportOther: "Andet",
+  reportUserTitle: "Rapportér bruger",
+  reportWhy: "Hvorfor rapporterer du denne profil?",
+  reportThanksTitle: "Rapporteret",
+  reportThanks: "Tak — vores team gennemgår denne profil."
 };
 const sv = {
   appName: 'Nearby',
@@ -1002,7 +1038,16 @@ const sv = {
   feedEmptyFollowing: "Följ personer för att se deras inlägg här.",
   follow: "Följ",
   following: "Följer",
-  followers: "Följare"
+  followers: "Följare",
+  reportInappropriate: "Olämpligt innehåll",
+  reportHarassment: "Trakasserier",
+  reportSpam: "Skräppost eller bedrägeri",
+  reportMisinformation: "Falsk eller vilseledande profil",
+  reportOther: "Annat",
+  reportUserTitle: "Rapportera användare",
+  reportWhy: "Varför rapporterar du den här profilen?",
+  reportThanksTitle: "Rapporterad",
+  reportThanks: "Tack — vårt team granskar den här profilen."
 };
 const fi = {
   appName: 'Nearby',
@@ -1201,7 +1246,16 @@ const fi = {
   feedEmptyFollowing: "Seuraa ihmisiä nähdäksesi heidän julkaisunsa täällä.",
   follow: "Seuraa",
   following: "Seuraat",
-  followers: "Seuraajat"
+  followers: "Seuraajat",
+  reportInappropriate: "Sopimaton sisältö",
+  reportHarassment: "Häirintä",
+  reportSpam: "Roskaposti tai huijaus",
+  reportMisinformation: "Väärä tai harhaanjohtava profiili",
+  reportOther: "Muu",
+  reportUserTitle: "Ilmoita käyttäjästä",
+  reportWhy: "Miksi ilmoitat tästä profiilista?",
+  reportThanksTitle: "Ilmoitettu",
+  reportThanks: "Kiitos — tiimimme tarkistaa tämän profiilin."
 };
 const fr = {
   appName: 'Nearby',
@@ -1400,7 +1454,16 @@ const fr = {
   feedEmptyFollowing: "Abonnez-vous à des personnes pour voir leurs publications ici.",
   follow: "Suivre",
   following: "Abonné",
-  followers: "Abonnés"
+  followers: "Abonnés",
+  reportInappropriate: "Contenu inapproprié",
+  reportHarassment: "Harcèlement",
+  reportSpam: "Spam ou arnaque",
+  reportMisinformation: "Profil faux ou trompeur",
+  reportOther: "Autre",
+  reportUserTitle: "Signaler l'utilisateur",
+  reportWhy: "Pourquoi signalez-vous ce profil ?",
+  reportThanksTitle: "Signalé",
+  reportThanks: "Merci — notre équipe examinera ce profil."
 };
 const es = {
   appName: 'Nearby',
@@ -1599,7 +1662,16 @@ const es = {
   feedEmptyFollowing: "Sigue a personas para ver sus publicaciones aquí.",
   follow: "Seguir",
   following: "Siguiendo",
-  followers: "Seguidores"
+  followers: "Seguidores",
+  reportInappropriate: "Contenido inapropiado",
+  reportHarassment: "Acoso",
+  reportSpam: "Spam o estafa",
+  reportMisinformation: "Perfil falso o engañoso",
+  reportOther: "Otro",
+  reportUserTitle: "Denunciar usuario",
+  reportWhy: "¿Por qué denuncias este perfil?",
+  reportThanksTitle: "Denunciado",
+  reportThanks: "Gracias — nuestro equipo revisará este perfil."
 };
 const it = {
   appName: 'Nearby',
@@ -1798,7 +1870,16 @@ const it = {
   feedEmptyFollowing: "Segui delle persone per vedere qui i loro post.",
   follow: "Segui",
   following: "Segui già",
-  followers: "Follower"
+  followers: "Follower",
+  reportInappropriate: "Contenuti inappropriati",
+  reportHarassment: "Molestie",
+  reportSpam: "Spam o truffa",
+  reportMisinformation: "Profilo falso o ingannevole",
+  reportOther: "Altro",
+  reportUserTitle: "Segnala utente",
+  reportWhy: "Perché segnali questo profilo?",
+  reportThanksTitle: "Segnalato",
+  reportThanks: "Grazie — il nostro team esaminerà questo profilo."
 };
 const nl = {
   appName: 'Nearby',
@@ -1997,7 +2078,16 @@ const nl = {
   feedEmptyFollowing: "Volg mensen om hun berichten hier te zien.",
   follow: "Volgen",
   following: "Volgend",
-  followers: "Volgers"
+  followers: "Volgers",
+  reportInappropriate: "Ongepaste inhoud",
+  reportHarassment: "Intimidatie",
+  reportSpam: "Spam of oplichting",
+  reportMisinformation: "Nep- of misleidend profiel",
+  reportOther: "Anders",
+  reportUserTitle: "Gebruiker melden",
+  reportWhy: "Waarom meld je dit profiel?",
+  reportThanksTitle: "Gemeld",
+  reportThanks: "Bedankt — ons team beoordeelt dit profiel."
 };
 const pl = {
   appName: 'Nearby',
@@ -2196,7 +2286,16 @@ const pl = {
   feedEmptyFollowing: "Obserwuj ludzi, aby zobaczyć tutaj ich posty.",
   follow: "Obserwuj",
   following: "Obserwujesz",
-  followers: "Obserwujący"
+  followers: "Obserwujący",
+  reportInappropriate: "Nieodpowiednie treści",
+  reportHarassment: "Nękanie",
+  reportSpam: "Spam lub oszustwo",
+  reportMisinformation: "Fałszywy lub wprowadzający w błąd profil",
+  reportOther: "Inne",
+  reportUserTitle: "Zgłoś użytkownika",
+  reportWhy: "Dlaczego zgłaszasz ten profil?",
+  reportThanksTitle: "Zgłoszono",
+  reportThanks: "Dziękujemy — nasz zespół sprawdzi ten profil."
 };
 const pt = {
   appName: 'Nearby',
@@ -2395,7 +2494,16 @@ const pt = {
   feedEmptyFollowing: "Segue pessoas para ver as publicações delas aqui.",
   follow: "Seguir",
   following: "A seguir",
-  followers: "Seguidores"
+  followers: "Seguidores",
+  reportInappropriate: "Conteúdo inadequado",
+  reportHarassment: "Assédio",
+  reportSpam: "Spam ou fraude",
+  reportMisinformation: "Perfil falso ou enganoso",
+  reportOther: "Outro",
+  reportUserTitle: "Denunciar utilizador",
+  reportWhy: "Porque estás a denunciar este perfil?",
+  reportThanksTitle: "Denunciado",
+  reportThanks: "Obrigado — a nossa equipa vai analisar este perfil."
 };
 const TRANSLATIONS = {
   no,

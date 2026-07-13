@@ -15,6 +15,12 @@ let authToken = null;
 export function setToken(token) { authToken = token; }
 export function getToken() { return authToken; }
 
+// A banned or deauthorized session should kick the user out. client.js isn't a
+// React component, so AuthContext registers its logout() here; request() calls
+// it when the server says the account is suspended. Registered once on mount.
+let onAuthFailure = null;
+export function setAuthFailureHandler(fn) { onAuthFailure = fn; }
+
 async function request(path, { method = 'GET', body, auth = true, isForm = false } = {}) {
   const headers = {};
   if (!isForm) headers['Content-Type'] = 'application/json';
@@ -44,6 +50,14 @@ async function request(path, { method = 'GET', body, auth = true, isForm = false
 
   const data = await res.json().catch(() => ({}));
   console.log(`[api] ${method} ${path} -> ${res.status}`, res.ok ? 'OK' : JSON.stringify(data));
+
+  // A banned account gets 403 'Account suspended' from requireAuth. Kick the
+  // user out of the app: clear the session and drop to the login screen. Fire
+  // before throwing so the logout happens even though the caller sees an error.
+  if (res.status === 403 && data.error === 'Account suspended') {
+    onAuthFailure?.();
+  }
+
   if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
   return data;
 }
@@ -128,7 +142,6 @@ export const api = {
     form.append('image', { uri, name, type }); // ⚠️ 'image' must match the route's .single('image')
     return request('/upload', { method: 'POST', body: form, isForm: true });
   },
-  resendVerification: () => request('/auth/resend-verification', { method: 'POST' }),
   requestPinReset: (email) => request('/auth/forgot-pin', { method: 'POST', body: { email }, auth: false }),
   resetPin: (email, code, pin) => request('/auth/reset-pin', { method: 'POST', body: { email, code, pin }, auth: false }),
   changePin: (currentPin, newPin) => request('/auth/change-pin', { method: 'POST', body: { currentPin, newPin } }),
