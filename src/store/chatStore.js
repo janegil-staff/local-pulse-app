@@ -16,7 +16,13 @@ export const useChatStore = create((set, get) => ({
   // Wire socket listeners once, after login.
   initSocket: () => {
     if (get().bound) return;
+    console.log('[chatStore] initSocket: connecting…');
     const s = connectChatSocket();
+    console.log('[chatStore] initSocket: got socket, connected =', s?.connected);
+
+    s.on('connect', () => console.log('[chatStore] socket connect, id =', s.id));
+    s.on('connect_error', (e) => console.log('[chatStore] socket connect_error:', e?.message));
+    s.on('disconnect', (r) => console.log('[chatStore] socket disconnect:', r));
 
     s.on('chat:message', (msg) => {
       const st = get();
@@ -38,6 +44,7 @@ export const useChatStore = create((set, get) => ({
     // conversation still needs the user's attention.
     s.on('chat:notify', ({ conversationId, pending }) => {
       const st = get();
+      console.log('[chatStore] chat:notify received, pending =', pending);
       if (String(conversationId) === String(st.activeId)) return; // you're reading it
       if (pending) {
         set({ requestCount: st.requestCount + 1 });
@@ -52,6 +59,7 @@ export const useChatStore = create((set, get) => ({
     });
 
     set({ bound: true });
+    console.log('[chatStore] initSocket: bound listeners, priming unread…');
     // Prime the unread total from the server.
     get().refreshUnread();
   },
@@ -59,13 +67,19 @@ export const useChatStore = create((set, get) => ({
   refreshUnread: async () => {
     try {
       const { count } = await api.getChatUnreadCount();
+      console.log('[chatStore] refreshUnread: server count =', count);
       set({ unread: count || 0 });
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.log('[chatStore] refreshUnread failed:', e?.message);
+    }
     // Also refresh how many pending requests are waiting.
     try {
       const { requests } = await api.getRequests();
+      console.log('[chatStore] refreshUnread: requests =', (requests ?? []).length);
       set({ requestCount: (requests ?? []).length });
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.log('[chatStore] refreshUnread requests failed:', e?.message);
+    }
   },
 
   loadConversations: async () => {
