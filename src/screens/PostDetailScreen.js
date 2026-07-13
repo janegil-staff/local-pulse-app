@@ -18,7 +18,12 @@ export default function PostDetailScreen({ route }) {
   const insets = useSafeAreaInsets();
   const { t } = useLang();
   const { post: initialPost } = route.params;
-  const [post] = useState(initialPost);
+  // Read the LIVE post from the store so likes/saves reflect here. The old code
+  // froze a route-param snapshot in local state, so toggleLike updated the store
+  // while this screen kept showing the stale copy — the like looked dead.
+  // Fall back to the route-param snapshot if it isn't in the store.
+  const storePost = useFeedStore((s) => s.posts.find((p) => p.id === initialPost.id));
+  const post = storePost || initialPost;
   const [comments, setComments] = useState([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
