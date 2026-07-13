@@ -215,7 +215,17 @@ const en = {
   reportUserTitle: "Report user",
   reportWhy: "Why are you reporting this profile?",
   reportThanksTitle: "Reported",
-  reportThanks: "Thanks — our team will review this profile."
+  reportThanks: "Thanks — our team will review this profile.",
+  pinSetupSubtitle: "Enter a 4-digit PIN to secure your app",
+  pinConfirmSubtitle: "Enter your PIN again to confirm",
+  pinTryAgain: "Please try again.",
+  messages: "Messages",
+  requests: "Requests",
+  noMessagesYet: "No messages yet",
+  noConversations: "No conversations yet",
+  noRequests: "No requests",
+  accept: "Accept",
+  savedEmpty: "No saved posts yet. Tap the bookmark on a post to save it."
 };
 const no = {
   appName: 'Nearby',
@@ -423,7 +433,17 @@ const no = {
   reportUserTitle: "Rapporter bruker",
   reportWhy: "Hvorfor rapporterer du denne profilen?",
   reportThanksTitle: "Rapportert",
-  reportThanks: "Takk — teamet vårt vil se på denne profilen."
+  reportThanks: "Takk — teamet vårt vil se på denne profilen.",
+  pinSetupSubtitle: "Skriv inn en 4-sifret PIN-kode for å sikre appen",
+  pinConfirmSubtitle: "Skriv inn PIN-koden på nytt for å bekrefte",
+  pinTryAgain: "Prøv igjen.",
+  messages: "Meldinger",
+  requests: "Forespørsler",
+  noMessagesYet: "Ingen meldinger ennå",
+  noConversations: "Ingen samtaler ennå",
+  noRequests: "Ingen forespørsler",
+  accept: "Godta",
+  savedEmpty: "Ingen lagrede innlegg ennå. Trykk på bokmerket på et innlegg for å lagre det."
 };
 const de = {
   appName: 'Nearby',
@@ -631,7 +651,17 @@ const de = {
   reportUserTitle: "Nutzer melden",
   reportWhy: "Warum meldest du dieses Profil?",
   reportThanksTitle: "Gemeldet",
-  reportThanks: "Danke — unser Team überprüft dieses Profil."
+  reportThanks: "Danke — unser Team überprüft dieses Profil.",
+  pinSetupSubtitle: "Gib eine 4-stellige PIN ein, um die App zu sichern",
+  pinConfirmSubtitle: "Gib deine PIN erneut ein, um zu bestätigen",
+  pinTryAgain: "Bitte versuche es erneut.",
+  messages: "Nachrichten",
+  requests: "Anfragen",
+  noMessagesYet: "Noch keine Nachrichten",
+  noConversations: "Noch keine Unterhaltungen",
+  noRequests: "Keine Anfragen",
+  accept: "Annehmen",
+  savedEmpty: "Noch keine gespeicherten Beiträge. Tippe auf das Lesezeichen eines Beitrags, um ihn zu speichern."
 };
 const da = {
   appName: 'Nearby',
@@ -839,7 +869,17 @@ const da = {
   reportUserTitle: "Rapportér bruger",
   reportWhy: "Hvorfor rapporterer du denne profil?",
   reportThanksTitle: "Rapporteret",
-  reportThanks: "Tak — vores team gennemgår denne profil."
+  reportThanks: "Tak — vores team gennemgår denne profil.",
+  pinSetupSubtitle: "Indtast en 4-cifret PIN-kode for at sikre appen",
+  pinConfirmSubtitle: "Indtast din PIN-kode igen for at bekræfte",
+  pinTryAgain: "Prøv igen.",
+  messages: "Beskeder",
+  requests: "Anmodninger",
+  noMessagesYet: "Ingen beskeder endnu",
+  noConversations: "Ingen samtaler endnu",
+  noRequests: "Ingen anmodninger",
+  accept: "Acceptér",
+  savedEmpty: "Ingen gemte opslag endnu. Tryk på bogmærket på et opslag for at gemme det."
 };
 const sv = {
   appName: 'Nearby',
@@ -1047,7 +1087,17 @@ const sv = {
   reportUserTitle: "Rapportera användare",
   reportWhy: "Varför rapporterar du den här profilen?",
   reportThanksTitle: "Rapporterad",
-  reportThanks: "Tack — vårt team granskar den här profilen."
+  reportThanks: "Tack — vårt team granskar den här profilen.",
+  pinSetupSubtitle: "Ange en 4-siffrig PIN-kod för att skydda appen",
+  pinConfirmSubtitle: "Ange din PIN-kod igen för att bekräfta",
+  pinTryAgain: "Försök igen.",
+  messages: "Meddelanden",
+  requests: "Förfrågningar",
+  noMessagesYet: "Inga meddelanden än",
+  noConversations: "Inga konversationer än",
+  noRequests: "Inga förfrågningar",
+  accept: "Acceptera",
+  savedEmpty: "Inga sparade inlägg än. Tryck på bokmärket på ett inlägg för att spara det."
 };
 const fi = {
   appName: 'Nearby',
@@ -1255,7 +1305,17 @@ const fi = {
   reportUserTitle: "Ilmoita käyttäjästä",
   reportWhy: "Miksi ilmoitat tästä profiilista?",
   reportThanksTitle: "Ilmoitettu",
-  reportThanks: "Kiitos — tiimimme tarkistaa tämän profiilin."
+  reportThanks: "Kiitos — tiimimme tarkistaa tämän profiilin.",
+  pinSetupSubtitle: "Anna 4-numeroinen PIN suojataksesi sovelluksen",
+  pinConfirmSubtitle: "Anna PIN uudelleen vahvistaaksesi",
+  pinTryAgain: "Yritä uudelleen.",
+  messages: "Viestit",
+  requests: "Pyynnöt",
+  noMessagesYet: "Ei vielä viestejä",
+  noConversations: "Ei vielä keskusteluja",
+  noRequests: "Ei pyyntöjä",
+  accept: "Hyväksy",
+  savedEmpty: "Ei vielä tallennettuja julkaisuja. Tallenna napauttamalla julkaisun kirjanmerkkiä."
 };
 const fr = {
   appName: 'Nearby',
@@ -1463,7 +1523,17 @@ const fr = {
   reportUserTitle: "Signaler l'utilisateur",
   reportWhy: "Pourquoi signalez-vous ce profil ?",
   reportThanksTitle: "Signalé",
-  reportThanks: "Merci — notre équipe examinera ce profil."
+  reportThanks: "Merci — notre équipe examinera ce profil.",
+  pinSetupSubtitle: "Saisissez un code PIN à 4 chiffres pour sécuriser l’application",
+  pinConfirmSubtitle: "Saisissez à nouveau votre code PIN pour confirmer",
+  pinTryAgain: "Veuillez réessayer.",
+  messages: "Messages",
+  requests: "Demandes",
+  noMessagesYet: "Pas encore de messages",
+  noConversations: "Pas encore de conversations",
+  noRequests: "Aucune demande",
+  accept: "Accepter",
+  savedEmpty: "Aucune publication enregistrée. Appuyez sur le signet d’une publication pour l’enregistrer."
 };
 const es = {
   appName: 'Nearby',
@@ -1671,7 +1741,17 @@ const es = {
   reportUserTitle: "Denunciar usuario",
   reportWhy: "¿Por qué denuncias este perfil?",
   reportThanksTitle: "Denunciado",
-  reportThanks: "Gracias — nuestro equipo revisará este perfil."
+  reportThanks: "Gracias — nuestro equipo revisará este perfil.",
+  pinSetupSubtitle: "Introduce un PIN de 4 dígitos para proteger la app",
+  pinConfirmSubtitle: "Introduce tu PIN de nuevo para confirmar",
+  pinTryAgain: "Inténtalo de nuevo.",
+  messages: "Mensajes",
+  requests: "Solicitudes",
+  noMessagesYet: "Aún no hay mensajes",
+  noConversations: "Aún no hay conversaciones",
+  noRequests: "Sin solicitudes",
+  accept: "Aceptar",
+  savedEmpty: "Aún no hay publicaciones guardadas. Toca el marcador de una publicación para guardarla."
 };
 const it = {
   appName: 'Nearby',
@@ -1879,7 +1959,17 @@ const it = {
   reportUserTitle: "Segnala utente",
   reportWhy: "Perché segnali questo profilo?",
   reportThanksTitle: "Segnalato",
-  reportThanks: "Grazie — il nostro team esaminerà questo profilo."
+  reportThanks: "Grazie — il nostro team esaminerà questo profilo.",
+  pinSetupSubtitle: "Inserisci un PIN di 4 cifre per proteggere l’app",
+  pinConfirmSubtitle: "Inserisci di nuovo il PIN per confermare",
+  pinTryAgain: "Riprova.",
+  messages: "Messaggi",
+  requests: "Richieste",
+  noMessagesYet: "Ancora nessun messaggio",
+  noConversations: "Ancora nessuna conversazione",
+  noRequests: "Nessuna richiesta",
+  accept: "Accetta",
+  savedEmpty: "Ancora nessun post salvato. Tocca il segnalibro di un post per salvarlo."
 };
 const nl = {
   appName: 'Nearby',
@@ -2087,7 +2177,17 @@ const nl = {
   reportUserTitle: "Gebruiker melden",
   reportWhy: "Waarom meld je dit profiel?",
   reportThanksTitle: "Gemeld",
-  reportThanks: "Bedankt — ons team beoordeelt dit profiel."
+  reportThanks: "Bedankt — ons team beoordeelt dit profiel.",
+  pinSetupSubtitle: "Voer een 4-cijferige pincode in om je app te beveiligen",
+  pinConfirmSubtitle: "Voer je pincode nogmaals in ter bevestiging",
+  pinTryAgain: "Probeer het opnieuw.",
+  messages: "Berichten",
+  requests: "Verzoeken",
+  noMessagesYet: "Nog geen berichten",
+  noConversations: "Nog geen gesprekken",
+  noRequests: "Geen verzoeken",
+  accept: "Accepteren",
+  savedEmpty: "Nog geen opgeslagen berichten. Tik op de bladwijzer bij een bericht om het op te slaan."
 };
 const pl = {
   appName: 'Nearby',
@@ -2295,7 +2395,17 @@ const pl = {
   reportUserTitle: "Zgłoś użytkownika",
   reportWhy: "Dlaczego zgłaszasz ten profil?",
   reportThanksTitle: "Zgłoszono",
-  reportThanks: "Dziękujemy — nasz zespół sprawdzi ten profil."
+  reportThanks: "Dziękujemy — nasz zespół sprawdzi ten profil.",
+  pinSetupSubtitle: "Wprowadź 4-cyfrowy PIN, aby zabezpieczyć aplikację",
+  pinConfirmSubtitle: "Wprowadź PIN ponownie, aby potwierdzić",
+  pinTryAgain: "Spróbuj ponownie.",
+  messages: "Wiadomości",
+  requests: "Prośby",
+  noMessagesYet: "Brak wiadomości",
+  noConversations: "Brak rozmów",
+  noRequests: "Brak próśb",
+  accept: "Akceptuj",
+  savedEmpty: "Brak zapisanych postów. Dotknij zakładki na poście, aby go zapisać."
 };
 const pt = {
   appName: 'Nearby',
@@ -2503,7 +2613,17 @@ const pt = {
   reportUserTitle: "Denunciar utilizador",
   reportWhy: "Porque estás a denunciar este perfil?",
   reportThanksTitle: "Denunciado",
-  reportThanks: "Obrigado — a nossa equipa vai analisar este perfil."
+  reportThanks: "Obrigado — a nossa equipa vai analisar este perfil.",
+  pinSetupSubtitle: "Introduz um PIN de 4 dígitos para proteger a app",
+  pinConfirmSubtitle: "Introduz o teu PIN novamente para confirmar",
+  pinTryAgain: "Tenta novamente.",
+  messages: "Mensagens",
+  requests: "Pedidos",
+  noMessagesYet: "Ainda sem mensagens",
+  noConversations: "Ainda sem conversas",
+  noRequests: "Sem pedidos",
+  accept: "Aceitar",
+  savedEmpty: "Ainda sem publicações guardadas. Toca no marcador de uma publicação para a guardar."
 };
 const TRANSLATIONS = {
   no,
@@ -2520,7 +2640,7 @@ const TRANSLATIONS = {
   pt
 };
 export const SUPPORTED_LANGS = ['no', 'en', 'nl', 'fr', 'de', 'it', 'sv', 'da', 'fi', 'es', 'pl', 'pt'];
-export const DEFAULT_LANG = 'no';
+export const DEFAULT_LANG = 'en';
 
 // getTranslations(lang) -> string map. Unknown keys fall back to English;
 // unknown lang falls back to DEFAULT_LANG.

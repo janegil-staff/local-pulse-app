@@ -18,7 +18,8 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Qup Pulse uses your location to show people and posts near you.",
         "NSCameraUsageDescription": "Qup Pulse uses the camera so you can add photos to your profile and messages.",
-        "NSPhotoLibraryUsageDescription": "Qup Pulse accesses your photos so you can add them to your profile and messages."
+        "NSPhotoLibraryUsageDescription": "Qup Pulse accesses your photos so you can add them to your profile and messages.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -40,6 +41,11 @@
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "508f09c4-d482-43d9-92c7-7605aa41dc5a"
+      }
+    }
   }
 }

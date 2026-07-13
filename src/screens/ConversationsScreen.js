@@ -1,21 +1,21 @@
 // localpulse/app/src/screens/ConversationsScreen.js
+//
 // Messages inbox with a Messages / Requests toggle.
 //  - Messages: accepted conversations (getConversations returns accepted only).
 //  - Requests: pending conversations someone started with you; Accept to move
 //    them into Messages.
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
-import { useChatStore } from '../store/chatStore.js';
+import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { api } from '../api/client.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 import { theme, useStyles } from '../theme/theme.js';
+import { avatarSource } from '../lib/avatar.js';
+import { useLang } from '../context/LangContext.js';
 
 export default function ConversationsScreen({ navigation }) {
   const styles = useStyles(stylesFactory);
-  const initSocket = useChatStore((s) => s.initSocket);
-  const refreshUnread = useChatStore((s) => s.refreshUnread);
-
-  const [tab, setTab] = useState('messages'); // 'messages' | 'requests'
+  const { t } = useLang();
+  const [tab, setTab] = useState('messages');
   const [conversations, setConversations] = useState([]);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,96 +29,96 @@ export default function ConversationsScreen({ navigation }) {
       ]);
       setConversations(c.conversations ?? []);
       setRequests(r.requests ?? []);
-      refreshUnread(); // keep the header badge in sync
+    } catch {
+      /* ignore */
     } finally {
       setLoading(false);
     }
-  }, [refreshUnread]);
+  }, []);
 
   useEffect(() => {
-    initSocket();
     const unsub = navigation.addListener('focus', load);
-    load();
     return unsub;
-  }, [initSocket, load, navigation]);
+  }, [navigation, load]);
 
-  function openChat(item) {
-    const other = item.participants[0];
-    navigation.navigate('Chat', {
-      conversationId: item.id,
-      title: other?.displayName || other?.username,
-    });
-  }
-
-  async function accept(item) {
+  async function accept(conversationId) {
     try {
-      await api.acceptConversation(item.id);
-      await load();
-      setTab('messages');
-      openChat(item);
+      await api.acceptConversation(conversationId);
+      load();
     } catch {
-      /* ignore; stays in requests */
+      /* ignore */
     }
   }
 
   const data = tab === 'messages' ? conversations : requests;
 
-  function renderItem({ item }) {
-    const other = item.participants[0];
-    const name = other?.displayName || other?.username || 'Someone';
-    return (
-      <Pressable style={styles.row} onPress={() => (tab === 'messages' ? openChat(item) : openChat(item))}>
-        <View style={styles.avatarWrap}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{name[0]?.toUpperCase()}</Text>
-          </View>
-          {other?.online ? <View style={styles.onlineDot} /> : null}
+  const renderItem = ({ item }) => (
+    <Pressable
+      style={styles.row}
+      onPress={() =>
+        navigation.navigate('Chat', {
+          conversationId: item.id,
+          title: item.otherUser?.displayName || item.otherUser?.username,
+        })
+      }
+    >
+      <Image source={avatarSource(item.otherUser)} style={styles.avatar} />
+      <View style={styles.rowText}>
+        <Text style={styles.name} numberOfLines={1}>
+          {item.otherUser?.displayName || item.otherUser?.username}
+        </Text>
+        <Text style={[styles.preview, item.unread > 0 && styles.previewUnread]} numberOfLines={1}>
+          {item.lastMessage || t.noMessagesYet || 'No messages yet'}
+        </Text>
+      </View>
+      {tab === 'requests' ? (
+        <Pressable style={styles.acceptBtn} onPress={() => accept(item.id)}>
+          <Text style={styles.acceptText}>{t.accept || 'Accept'}</Text>
+        </Pressable>
+      ) : item.unread > 0 ? (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{item.unread}</Text>
         </View>
-        <View style={styles.body}>
-          <Text style={styles.name}>{name}</Text>
-          <Text style={[styles.preview, item.unread > 0 && styles.previewUnread]} numberOfLines={1}>{item.lastMessage || 'No messages yet'}</Text>
-        </View>
-        {tab === 'messages' && item.unread > 0 ? (
-          <View style={styles.unreadBadge}>
-            <Text style={styles.unreadText}>{item.unread > 99 ? '99+' : item.unread}</Text>
-          </View>
-        ) : null}
-        {tab === 'requests' && (
-          <Pressable style={styles.acceptBtn} onPress={() => accept(item)}>
-            <Text style={styles.acceptText}>Accept</Text>
-          </Pressable>
-        )}
-      </Pressable>
-    );
-  }
+      ) : null}
+    </Pressable>
+  );
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title="Messages" onBack={() => navigation.goBack()} />
+      <ScreenHeader title={t.messages || 'Messages'} onBack={() => navigation.goBack()} />
 
       <View style={styles.tabs}>
-        <Pressable style={[styles.tab, tab === 'messages' && styles.tabActive]} onPress={() => setTab('messages')}>
-          <Text style={[styles.tabText, tab === 'messages' && styles.tabTextActive]}>Messages</Text>
+        <Pressable
+          style={[styles.tab, tab === 'messages' && styles.tabActive]}
+          onPress={() => setTab('messages')}
+        >
+          <Text style={[styles.tabText, tab === 'messages' && styles.tabTextActive]}>
+            {t.messages || 'Messages'}
+          </Text>
         </Pressable>
-        <Pressable style={[styles.tab, tab === 'requests' && styles.tabActive]} onPress={() => setTab('requests')}>
+        <Pressable
+          style={[styles.tab, tab === 'requests' && styles.tabActive]}
+          onPress={() => setTab('requests')}
+        >
           <Text style={[styles.tabText, tab === 'requests' && styles.tabTextActive]}>
-            Requests{requests.length ? ` (${requests.length})` : ''}
+            {t.requests || 'Requests'}{requests.length ? ` (${requests.length})` : ''}
           </Text>
         </Pressable>
       </View>
 
       {loading ? (
-        <View style={styles.centered}><ActivityIndicator color={theme.colors.accent} /></View>
+        <ActivityIndicator style={{ marginTop: 40 }} color={theme.colors.accent} />
       ) : (
         <FlatList
           data={data}
-          keyExtractor={(c) => String(c.id)}
+          keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
+          contentContainerStyle={data.length === 0 ? { flex: 1 } : undefined}
           ListEmptyComponent={
             <Text style={styles.empty}>
               {tab === 'messages'
-                ? 'No conversations yet. Find people in Discover and say hi.'
-                : 'No message requests right now.'}
+                ? (t.noConversations || 'No conversations yet. Find people in Discover and say hi.')
+                : (t.noRequests || 'No requests right now.')}
             </Text>
           }
         />
@@ -127,31 +127,24 @@ export default function ConversationsScreen({ navigation }) {
   );
 }
 
-const stylesFactory = (({ colors, spacing }) =>
+const stylesFactory = (({ colors, spacing, radius }) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.bg },
-    centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    tabs: { flexDirection: 'row', gap: spacing(2), paddingHorizontal: spacing(4), paddingVertical: spacing(3) },
-    tab: { paddingVertical: spacing(2), paddingHorizontal: spacing(4), borderRadius: 20, backgroundColor: colors.surfaceAlt },
+    tabs: { flexDirection: 'row', paddingHorizontal: spacing(4), gap: spacing(2), marginTop: spacing(2), marginBottom: spacing(2) },
+    tab: { paddingVertical: spacing(2), paddingHorizontal: spacing(4), borderRadius: radius.lg },
     tabActive: { backgroundColor: colors.accent },
     tabText: { color: colors.textDim, fontSize: 14, fontWeight: '600' },
     tabTextActive: { color: '#fff' },
-
-    row: { flexDirection: 'row', alignItems: 'center', padding: spacing(4), borderBottomWidth: 1, borderBottomColor: colors.border },
-    avatarWrap: { position: 'relative', marginRight: spacing(3) },
-    avatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.accentDim, alignItems: 'center', justifyContent: 'center' },
-    avatarText: { color: colors.text, fontSize: 18, fontWeight: '700' },
-    onlineDot: { position: 'absolute', bottom: 0, right: 0, width: 13, height: 13, borderRadius: 7, backgroundColor: '#3BD16F', borderWidth: 2, borderColor: colors.bg },
-    body: { flex: 1 },
+    row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing(4), paddingVertical: spacing(3), gap: spacing(3) },
+    avatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.surfaceAlt },
+    rowText: { flex: 1 },
     name: { color: colors.text, fontSize: 16, fontWeight: '600' },
-    preview: { color: colors.textDim, fontSize: 14, marginTop: spacing(1) },
+    preview: { color: colors.textDim, fontSize: 14, marginTop: 2 },
     previewUnread: { color: colors.text, fontWeight: '600' },
-    unreadBadge: { minWidth: 22, height: 22, borderRadius: 11, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
-    unreadText: { color: '#fff', fontSize: 12, fontWeight: '800' },
-
-    acceptBtn: { backgroundColor: colors.accent, borderRadius: 8, paddingHorizontal: spacing(4), paddingVertical: spacing(2) },
+    acceptBtn: { backgroundColor: colors.accent, paddingHorizontal: spacing(4), paddingVertical: spacing(2), borderRadius: radius.md },
     acceptText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-
+    badge: { minWidth: 22, height: 22, borderRadius: 11, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+    badgeText: { color: '#fff', fontSize: 12, fontWeight: '700' },
     empty: { color: colors.textDim, textAlign: 'center', marginTop: spacing(20), paddingHorizontal: spacing(8), lineHeight: 22 },
   })
 );

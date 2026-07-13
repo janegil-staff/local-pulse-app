@@ -5,9 +5,11 @@ import { api } from '../api/client.js';
 import { useFeedStore } from '../store/feedStore.js';
 import PostCard from '../components/PostCard.js';
 import { theme, makeStyles, useStyles } from '../theme/theme.js';
+import { useLang } from '../context/LangContext.js';
 
 export default function SavedScreen({ navigation }) {
   const styles = useStyles(stylesFactory);
+  const { t } = useLang();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const toggleLike = useFeedStore((s) => s.toggleLike);
@@ -48,7 +50,9 @@ export default function SavedScreen({ navigation }) {
           />
         )}
         ListEmptyComponent={
-          <Text style={styles.empty}>No saved posts yet. Tap the bookmark on a post to save it.</Text>
+          <Text style={styles.empty}>
+            {t.savedEmpty || 'No saved posts yet. Tap the bookmark on a post to save it.'}
+          </Text>
         }
       />
     </View>
