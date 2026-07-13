@@ -56,7 +56,7 @@ export default function AuthScreen({ navigation }) {
             <Image source={require('../../assets/images/logo.png')} style={s.logo} resizeMode="cover" />
           </View>
 
-          <Text style={s.title}>{t.appName}</Text>
+          
           <Text style={s.tagline}>{t.tagline}</Text>
 
           <View style={{ height: 36 }} />
