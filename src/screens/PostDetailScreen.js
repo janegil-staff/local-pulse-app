@@ -13,7 +13,7 @@ import { useFeedStore } from '../store/feedStore.js';
 import PostCard from '../components/PostCard.js';
 import { theme, useStyles } from '../theme/theme.js';
 
-export default function PostDetailScreen({ route }) {
+export default function PostDetailScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
   const { t } = useLang();
@@ -28,6 +28,13 @@ export default function PostDetailScreen({ route }) {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
   const toggleLike = useFeedStore((s) => s.toggleLike);
+
+  // Open a user's profile by username. Shared by the post author (via PostCard's
+  // onAuthorPress) and each comment author. No-op if the username is missing.
+  function openProfile(username) {
+    if (!username) return;
+    navigation.navigate('Profile', { username });
+  }
 
   useEffect(() => {
     (async () => {
@@ -68,7 +75,11 @@ export default function PostDetailScreen({ route }) {
         contentContainerStyle={{ paddingBottom: theme.spacing(2) }}
         ListHeaderComponent={
           <View>
-            <PostCard post={post} onLike={toggleLike} />
+            <PostCard
+              post={post}
+              onLike={toggleLike}
+              onAuthorPress={() => openProfile(post.author?.username)}
+            />
             <Text style={styles.heading}>
               {loading ? t.loadingComments : `${t.comments} (${comments.length})`}
             </Text>
@@ -76,9 +87,11 @@ export default function PostDetailScreen({ route }) {
         }
         renderItem={({ item }) => (
           <View style={styles.comment}>
-            <Text style={styles.commentAuthor}>
-              {item.author?.displayName || item.author?.username}
-            </Text>
+            <Pressable onPress={() => openProfile(item.author?.username)} hitSlop={6}>
+              <Text style={styles.commentAuthor}>
+                {item.author?.displayName || item.author?.username}
+              </Text>
+            </Pressable>
             <Text style={styles.commentText}>{item.text}</Text>
           </View>
         )}
