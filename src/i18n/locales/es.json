@@ -239,5 +239,6 @@
   "gender_nonbinary": "No binario",
   "gender_other": "Otro",
   "reportNotePlaceholder": "Describe el problema (opcional)…",
-  "reportPostTitle": "Denunciar publicación"
+  "reportPostTitle": "Denunciar publicación",
+  "postsLabel": "Publicaciones"
 }

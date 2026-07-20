@@ -14,17 +14,10 @@ import { avatarSource } from '../lib/avatar.js';
 import VerifiedBadge from '../components/VerifiedBadge.js';
 import { useLang } from '../context/LangContext.js';
 import ReportSheet from '../components/ReportSheet.js';
+import PostCard from '../components/PostCard.js';
 
 const { width } = Dimensions.get('window');
 const HERO_H = Math.round(width * 1.1);
-
-// Language codes -> display names, mirroring the web (t.app.languages). Falls
-// back to the raw code when a name isn't mapped.
-const LANGUAGE_NAMES = {
-  no: 'Norsk', en: 'English', nl: 'Nederlands', fr: 'Français', de: 'Deutsch',
-  it: 'Italiano', sv: 'Svenska', da: 'Dansk', fi: 'Suomi', es: 'Español',
-  pl: 'Polski', pt: 'Português',
-};
 
 export default function ProfileScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
@@ -35,22 +28,37 @@ export default function ProfileScreen({ route, navigation }) {
   const [error, setError] = useState('');
   const [photoIndex, setPhotoIndex] = useState(0);
   const [reportOpen, setReportOpen] = useState(false);
+  const [posts, setPosts] = useState(route?.params?.user?.posts ?? []);
   const scrollRef = useRef(null);
 
   const load = useCallback(async () => {
-    if (!username) { setError('No user specified'); setLoading(false); return; }
+    // Discovery may navigate with only a `user` object, no separate `username`
+    // param — fall back to the username carried on that object so we can still
+    // fetch the full profile (which brings followerCount/followingCount + posts).
+    const handle = username || route?.params?.user?.username;
+    if (!handle) { setError('No user specified'); setLoading(false); return; }
     setLoading(true); setError('');
     try {
-      const data = await api.getProfile(username);
+      const data = await api.getProfile(handle);
       setProfile(data.profile ?? data.user ?? data);
+      // getProfile returns the author's recent posts alongside the profile.
+      // The old code read only data.profile and dropped these on the floor.
+      if (Array.isArray(data.posts)) setPosts(data.posts);
     } catch (e) {
       setError(e?.message ?? 'Could not load profile');
     } finally {
       setLoading(false);
     }
-  }, [username]);
+  }, [username, route?.params?.user?.username]);
 
-  useEffect(() => { if (!profile || !profile.photos) load(); }, [load, profile]);
+  // Always fetch the full profile when we have a username. A route-param `user`
+  // (from feed or Discovery) is only a fast first paint and may lack fields the
+  // full profile carries — notably followerCount/followingCount and posts. So
+  // refetch unless we already hold a complete profile (photos + counts present).
+  useEffect(() => {
+    const complete = profile && profile.photos && profile.followerCount != null;
+    if (!complete) load();
+  }, [load, profile]);
 
   const userId = profile?.id ?? profile?._id;
 
@@ -150,28 +158,31 @@ export default function ProfileScreen({ route, navigation }) {
   const photos = (profile.photos || []).map((p) => (typeof p === 'string' ? { url: p } : p));
   const name = profile.displayName || profile.username || 'Someone';
 
-  // Facts card rows — every detail the API returns, built the same way the web
-  // profile builds its facts strip. Null/blank entries are filtered out so the
-  // card only shows what the user actually has.
-  const GENDER_KEYS = { female: 'female', male: 'male', nonbinary: 'genderNonbinary', other: 'genderOther' };
-  const genderLabel = profile.gender
-    ? (t[GENDER_KEYS[profile.gender]] || profile.gender)
-    : null;
-  const memberSince = profile.memberSince
-    ? new Date(profile.memberSince).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })
-    : null;
-  // Age, location, and distance already appear in the hero header, so the
-  // Details card only carries what isn't shown there: gender, app language,
-  // and member-since.
-  const facts = [
-    genderLabel ? { key: 'gender', label: t.gender || 'Gender', value: genderLabel } : null,
-    profile.language ? { key: 'lang', label: t.appLanguage || 'App language', value: LANGUAGE_NAMES[profile.language] || profile.language } : null,
-    memberSince ? { key: 'since', label: t.memberSince || 'Member since', value: memberSince } : null,
-  ].filter(Boolean);
-
   function onPhotoScroll(e) {
     const i = Math.round(e.nativeEvent.contentOffset.x / width);
     if (i !== photoIndex) setPhotoIndex(i);
+  }
+
+  // Like a post from the profile list. Optimistic local update — this screen
+  // isn't backed by the feed store, so we toggle the post in local state and
+  // call the API. Reverts if the request fails.
+  async function likePost(postId) {
+    setPosts((list) => list.map((p) =>
+      p.id === postId
+        ? { ...p, likedByMe: !p.likedByMe, likeCount: p.likeCount + (p.likedByMe ? -1 : 1) }
+        : p));
+    try {
+      await api.toggleLike(postId);
+    } catch {
+      setPosts((list) => list.map((p) =>
+        p.id === postId
+          ? { ...p, likedByMe: !p.likedByMe, likeCount: p.likeCount + (p.likedByMe ? -1 : 1) }
+          : p));
+    }
+  }
+
+  function openPost(post) {
+    navigation.navigate('PostDetail', { post });
   }
 
   return (
@@ -232,36 +243,39 @@ export default function ProfileScreen({ route, navigation }) {
           </View>
         </View>
 
-        {/* Follower / following counts */}
-        {(profile.followerCount != null || profile.followingCount != null) ? (
-          <View style={styles.stats}>
-            <View style={styles.stat}>
-              <Text style={styles.statNum}>{profile.followerCount ?? 0}</Text>
-              <Text style={styles.statLabel}>{t.followers || 'Followers'}</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.stat}>
-              <Text style={styles.statNum}>{profile.followingCount ?? 0}</Text>
-              <Text style={styles.statLabel}>{t.following || 'Following'}</Text>
-            </View>
-          </View>
-        ) : null}
+        {/* Actions — Message / Follow / More (report + block), placed above the
+            follower/following counts. */}
+        <View style={styles.actions}>
+          <Pressable style={styles.messageBtn} onPress={message}>
+            <Text style={styles.messageText}>Message</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.followBtn, following && styles.followingBtn]}
+            onPress={toggleFollow}
+            disabled={followBusy}
+          >
+            <Text style={[styles.followText, following && styles.followingText]}>
+              {following ? (t.following || 'Following') : (t.follow || 'Follow')}
+            </Text>
+          </Pressable>
+          <Pressable style={styles.moreBtn} onPress={moreActions}>
+            <Text style={styles.moreText}>•••</Text>
+          </Pressable>
+        </View>
 
-        {/* Details — facts not already in the hero: gender, app language, and
-            member-since. Age / location / distance live in the header above. */}
-        {facts.length > 0 ? (
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>{t.detailsLabel || 'Details'}</Text>
-            <View style={styles.factsGrid}>
-              {facts.map((f) => (
-                <View key={f.key} style={styles.factItem}>
-                  <Text style={styles.factLabel}>{f.label}</Text>
-                  <Text style={styles.factValue}>{f.value}</Text>
-                </View>
-              ))}
-            </View>
+        {/* Follower / following counts — shown on every profile (feed or
+            Discovery). Defaults to 0 until the full profile loads. */}
+        <View style={styles.stats}>
+          <View style={styles.stat}>
+            <Text style={styles.statNum}>{profile.followerCount ?? 0}</Text>
+            <Text style={styles.statLabel}>{t.followers || 'Followers'}</Text>
           </View>
-        ) : null}
+          <View style={styles.statDivider} />
+          <View style={styles.stat}>
+            <Text style={styles.statNum}>{profile.followingCount ?? 0}</Text>
+            <Text style={styles.statLabel}>{t.following || 'Following'}</Text>
+          </View>
+        </View>
 
         {/* About */}
         {profile.bio ? (
@@ -291,24 +305,23 @@ export default function ProfileScreen({ route, navigation }) {
           </View>
         )}
 
-        {/* Actions */}
-        <View style={styles.actions}>
-          <Pressable style={styles.messageBtn} onPress={message}>
-            <Text style={styles.messageText}>Message</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.followBtn, following && styles.followingBtn]}
-            onPress={toggleFollow}
-            disabled={followBusy}
-          >
-            <Text style={[styles.followText, following && styles.followingText]}>
-              {following ? (t.following || 'Following') : (t.follow || 'Follow')}
-            </Text>
-          </Pressable>
-          <Pressable style={styles.moreBtn} onPress={moreActions}>
-            <Text style={styles.moreText}>•••</Text>
-          </Pressable>
-        </View>
+        {/* Posts — everything this user has written (most recent first).
+            Reuses PostCard; tapping a card opens the post. Save/report/author
+            actions are omitted since this is already the author's profile. */}
+        {posts.length > 0 ? (
+          <View style={styles.postsSection}>
+            <Text style={styles.postsLabel}>{t.postsLabel || 'Posts'}</Text>
+            {posts.map((p) => (
+              <PostCard
+                key={String(p.id)}
+                post={p}
+                onLike={likePost}
+                onPress={() => openPost(p)}
+              />
+            ))}
+          </View>
+        ) : null}
+
       </ScrollView>
 
       <ReportSheet
@@ -357,15 +370,14 @@ const stylesFactory = (({ colors, spacing, radius }) =>
     cardLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 },
     bio: { color: colors.text, fontSize: 16, lineHeight: 23 },
 
-    // Facts grid — two-column wrap, matching the web facts strip's feel.
-    factsGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 14, columnGap: 24, marginTop: 2 },
-    factItem: { minWidth: '38%' },
-    factLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
-    factValue: { color: colors.text, fontSize: 16, marginTop: 3, textTransform: 'capitalize' },
-
     chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     chip: { backgroundColor: colors.surfaceAlt, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: colors.border },
     chipText: { color: colors.text, fontSize: 14 },
+
+    // Posts list. PostCard supplies its own horizontal margins, so the section
+    // only owns the top spacing and the section label (aligned to the cards).
+    postsSection: { marginTop: 24 },
+    postsLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginHorizontal: 16, marginBottom: 4 },
 
     actions: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, marginTop: 24 },
     messageBtn: { flex: 1, height: 54, borderRadius: radius.md, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },

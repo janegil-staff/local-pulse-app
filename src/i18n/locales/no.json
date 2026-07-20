@@ -239,5 +239,6 @@
   "gender_nonbinary": "Ikke-binær",
   "gender_other": "Annet",
   "reportNotePlaceholder": "Beskriv hva som er galt (valgfritt)…",
-  "reportPostTitle": "Rapporter innlegg"
+  "reportPostTitle": "Rapporter innlegg",
+  "postsLabel": "Innlegg"
 }

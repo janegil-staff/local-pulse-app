@@ -239,5 +239,6 @@
   "gender_nonbinary": "Nichtbinär",
   "gender_other": "Andere",
   "reportNotePlaceholder": "Beschreibe das Problem (optional)…",
-  "reportPostTitle": "Beitrag melden"
+  "reportPostTitle": "Beitrag melden",
+  "postsLabel": "Beiträge"
 }

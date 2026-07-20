@@ -239,5 +239,6 @@
   "gender_nonbinary": "Icke-binär",
   "gender_other": "Annat",
   "reportNotePlaceholder": "Beskriv vad som är fel (valfritt)…",
-  "reportPostTitle": "Rapportera inlägg"
+  "reportPostTitle": "Rapportera inlägg",
+  "postsLabel": "Inlägg"
 }
