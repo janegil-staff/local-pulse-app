@@ -193,20 +193,28 @@ export default function MyProfileScreen({ navigation }) {
         </View>
 
         {/* ── Email confirmation ───────────────── */}
+        {/* Matches the web (qup-pulse-admin) verify card: amber-tinted surface
+            with an amber border, a mail-icon chip, title + muted body, and a
+            solid amber "resend" button. */}
         {!user.emailVerified && (
           <View style={styles.verifyCard}>
-            <Text style={styles.verifyTitle}>{t.verifyTitle}</Text>
-            <Text style={styles.verifyBody}>{t.verifyBody}</Text>
-            <TouchableOpacity
-              style={styles.verifyBtn}
-              onPress={!resending ? resendVerification : undefined}
-              disabled={resending}
-              activeOpacity={0.85}
-            >
-              {resending
-                ? <ActivityIndicator size="small" color={theme.colors.accent} />
-                : <Text style={styles.verifyBtnText}>{t.verifyResend}</Text>}
-            </TouchableOpacity>
+            <View style={styles.verifyIcon}>
+              <Text style={styles.verifyIconGlyph}>✉</Text>
+            </View>
+            <View style={styles.verifyTextCol}>
+              <Text style={styles.verifyTitle}>{t.verifyTitle}</Text>
+              <Text style={styles.verifyBody}>{t.verifyBody}</Text>
+              <TouchableOpacity
+                style={styles.verifyBtn}
+                onPress={!resending ? resendVerification : undefined}
+                disabled={resending}
+                activeOpacity={0.85}
+              >
+                {resending
+                  ? <ActivityIndicator size="small" color="#3a2500" />
+                  : <Text style={styles.verifyBtnText}>{t.verifyResend}</Text>}
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -333,11 +341,47 @@ const stylesFactory = ({ colors }) => StyleSheet.create({
   heroCam: { position: 'absolute', right: 18, bottom: 18, width: 52, height: 52, borderRadius: 26, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 5 },
   heroCamText: { color: '#fff', fontSize: 30, fontWeight: '300', marginTop: -2 },
 
-  verifyCard: { backgroundColor: colors.accent, marginHorizontal: 16, marginTop: 16, borderRadius: 18, paddingHorizontal: 20, paddingVertical: 22 },
-  verifyTitle: { color: '#fff', fontSize: 22, fontWeight: '800' },
-  verifyBody: { color: 'rgba(255,255,255,0.9)', fontSize: 14, marginTop: 6, lineHeight: 20 },
-  verifyBtn: { backgroundColor: '#fff', borderRadius: 12, marginTop: 18, paddingVertical: 15, alignItems: 'center', justifyContent: 'center', minHeight: 52 },
-  verifyBtnText: { color: colors.accent, fontSize: 16, fontWeight: '800' },
+  // Amber verify card matching the web (qup-pulse-admin) design: tinted
+  // translucent amber surface, amber border, mail-icon chip, and a solid amber
+  // resend button. Colors are literals (not theme tokens) so the amber reads
+  // the same in light and dark mode, as it does on the web.
+  verifyCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 14,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.35)',
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+  },
+  verifyIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(245, 158, 11, 0.20)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verifyIconGlyph: { color: '#f59e0b', fontSize: 20 },
+  verifyTextCol: { flex: 1 },
+  verifyTitle: { color: '#f59e0b', fontSize: 17, fontWeight: '800' },
+  verifyBody: { color: colors.textDim, fontSize: 14, marginTop: 6, lineHeight: 20 },
+  verifyBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#f59e0b',
+    borderRadius: 10,
+    marginTop: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  verifyBtnText: { color: '#3a2500', fontSize: 15, fontWeight: '800' },
 
   card: { backgroundColor: colors.surface, marginHorizontal: 16, marginTop: 16, borderRadius: 18, padding: 18, borderWidth: 1, borderColor: colors.border },
   cardLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },

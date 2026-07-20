@@ -17,14 +17,14 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.qupda.quppulse",
+      "bundleIdentifier": "com.qup.pulse",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow photo access to send pictures in chat.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.qupda.quppulse",
+      "package": "com.qup.pulse",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",

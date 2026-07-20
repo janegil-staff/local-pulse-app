@@ -16,7 +16,7 @@ const traverse = require('@babel/traverse').default;
 const generate = require('@babel/generator').default;
 const t = require('@babel/types');
 
-const FILE = path.join(__dirname, 'src', 'i18n', 'translations.js');
+const FILE = path.join(__dirname, 'src', 'i18n', 'locales');
 
 // Keyed by language, then by string key. Every language is present.
 const STRINGS = {

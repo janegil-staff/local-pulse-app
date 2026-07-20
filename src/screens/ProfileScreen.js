@@ -13,20 +13,18 @@ import ScreenHeader from '../components/ScreenHeader.js';
 import { avatarSource } from '../lib/avatar.js';
 import VerifiedBadge from '../components/VerifiedBadge.js';
 import { useLang } from '../context/LangContext.js';
+import ReportSheet from '../components/ReportSheet.js';
 
 const { width } = Dimensions.get('window');
 const HERO_H = Math.round(width * 1.1);
-// Each reason carries the server enum KEY (Report.js REPORT_REASONS) plus a
-// display label. The key goes on the wire; the label is what the user taps.
-// Sending the label directly is what triggered "Invalid reason" — it isn't in
-// the enum. Labels fall back to English when a locale lacks the key.
-const REPORT_REASONS = (t) => [
-  { key: 'inappropriate', label: t.reportInappropriate || 'Inappropriate content' },
-  { key: 'harassment', label: t.reportHarassment || 'Harassment' },
-  { key: 'spam', label: t.reportSpam || 'Spam or scam' },
-  { key: 'misinformation', label: t.reportMisinformation || 'Fake or misleading profile' },
-  { key: 'other', label: t.reportOther || 'Other' },
-];
+
+// Language codes -> display names, mirroring the web (t.app.languages). Falls
+// back to the raw code when a name isn't mapped.
+const LANGUAGE_NAMES = {
+  no: 'Norsk', en: 'English', nl: 'Nederlands', fr: 'Français', de: 'Deutsch',
+  it: 'Italiano', sv: 'Svenska', da: 'Dansk', fi: 'Suomi', es: 'Español',
+  pl: 'Polski', pt: 'Português',
+};
 
 export default function ProfileScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
@@ -36,6 +34,7 @@ export default function ProfileScreen({ route, navigation }) {
   const [loading, setLoading] = useState(!route?.params?.user);
   const [error, setError] = useState('');
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [reportOpen, setReportOpen] = useState(false);
   const scrollRef = useRef(null);
 
   const load = useCallback(async () => {
@@ -108,28 +107,21 @@ export default function ProfileScreen({ route, navigation }) {
     ]);
   }
 
-  function report() {
-    const buttons = REPORT_REASONS(t).map(({ key, label }) => ({
-      text: label,
-      onPress: async () => {
-        try {
-          await api.reportUser(userId, key); // enum key, not the label
-          Alert.alert(t.reportThanksTitle || 'Reported', t.reportThanks || 'Thanks — our team will review this profile.');
-        } catch (e) {
-          Alert.alert(t.error || 'Error', e?.message ?? t.couldntSend ?? 'Could not send report.');
-        }
-      },
-    }));
-    Alert.alert(
-      t.reportUserTitle || 'Report user',
-      t.reportWhy || 'Why are you reporting this profile?',
-      [...buttons, { text: t.cancel || 'Cancel', style: 'cancel' }],
-    );
+  // Submit handler for the report sheet. Receives the enum reason key and the
+  // optional note; the sheet owns the UI and reason selection.
+  async function submitReport(reason, note) {
+    try {
+      await api.reportUser(userId, reason, note); // enum key + optional note
+      setReportOpen(false);
+      Alert.alert(t.reportThanksTitle || 'Reported', t.reportThanks || 'Thanks — our team will review this profile.');
+    } catch (e) {
+      Alert.alert(t.error || 'Error', e?.message ?? t.couldntSend ?? 'Could not send report.');
+    }
   }
 
   function moreActions() {
     Alert.alert(profile?.displayName || profile?.username || 'User', undefined, [
-      { text: 'Report', onPress: report },
+      { text: 'Report', onPress: () => setReportOpen(true) },
       { text: 'Block', style: 'destructive', onPress: confirmBlock },
       { text: 'Cancel', style: 'cancel' },
     ]);
@@ -157,6 +149,25 @@ export default function ProfileScreen({ route, navigation }) {
   // and an older cached one may still hold the flat form.
   const photos = (profile.photos || []).map((p) => (typeof p === 'string' ? { url: p } : p));
   const name = profile.displayName || profile.username || 'Someone';
+
+  // Facts card rows — every detail the API returns, built the same way the web
+  // profile builds its facts strip. Null/blank entries are filtered out so the
+  // card only shows what the user actually has.
+  const GENDER_KEYS = { female: 'female', male: 'male', nonbinary: 'genderNonbinary', other: 'genderOther' };
+  const genderLabel = profile.gender
+    ? (t[GENDER_KEYS[profile.gender]] || profile.gender)
+    : null;
+  const memberSince = profile.memberSince
+    ? new Date(profile.memberSince).toLocaleDateString(undefined, { year: 'numeric', month: 'long' })
+    : null;
+  // Age, location, and distance already appear in the hero header, so the
+  // Details card only carries what isn't shown there: gender, app language,
+  // and member-since.
+  const facts = [
+    genderLabel ? { key: 'gender', label: t.gender || 'Gender', value: genderLabel } : null,
+    profile.language ? { key: 'lang', label: t.appLanguage || 'App language', value: LANGUAGE_NAMES[profile.language] || profile.language } : null,
+    memberSince ? { key: 'since', label: t.memberSince || 'Member since', value: memberSince } : null,
+  ].filter(Boolean);
 
   function onPhotoScroll(e) {
     const i = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -236,11 +247,35 @@ export default function ProfileScreen({ route, navigation }) {
           </View>
         ) : null}
 
+        {/* Details — facts not already in the hero: gender, app language, and
+            member-since. Age / location / distance live in the header above. */}
+        {facts.length > 0 ? (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>{t.detailsLabel || 'Details'}</Text>
+            <View style={styles.factsGrid}>
+              {facts.map((f) => (
+                <View key={f.key} style={styles.factItem}>
+                  <Text style={styles.factLabel}>{f.label}</Text>
+                  <Text style={styles.factValue}>{f.value}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
         {/* About */}
         {profile.bio ? (
           <View style={styles.card}>
             <Text style={styles.cardLabel}>About</Text>
             <Text style={styles.bio}>{profile.bio}</Text>
+          </View>
+        ) : null}
+
+        {/* Neighborhood — self-authored "local flavor", shown when present. */}
+        {profile.neighborhood ? (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>{t.neighborhoodLabel || 'Neighborhood'}</Text>
+            <Text style={styles.bio}>{profile.neighborhood}</Text>
           </View>
         ) : null}
 
@@ -275,6 +310,14 @@ export default function ProfileScreen({ route, navigation }) {
           </Pressable>
         </View>
       </ScrollView>
+
+      <ReportSheet
+        visible={reportOpen}
+        onClose={() => setReportOpen(false)}
+        onSubmit={submitReport}
+        title={t.reportUserTitle || 'Report user'}
+        prompt={t.reportWhy || 'Why are you reporting this profile?'}
+      />
     </View>
   );
 }
@@ -313,6 +356,12 @@ const stylesFactory = (({ colors, spacing, radius }) =>
     card: { backgroundColor: colors.surface, marginHorizontal: 16, marginTop: 16, borderRadius: 18, padding: 18, borderWidth: 1, borderColor: colors.border },
     cardLabel: { color: colors.textDim, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 },
     bio: { color: colors.text, fontSize: 16, lineHeight: 23 },
+
+    // Facts grid — two-column wrap, matching the web facts strip's feel.
+    factsGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 14, columnGap: 24, marginTop: 2 },
+    factItem: { minWidth: '38%' },
+    factLabel: { color: colors.textDim, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
+    factValue: { color: colors.text, fontSize: 16, marginTop: 3, textTransform: 'capitalize' },
 
     chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     chip: { backgroundColor: colors.surfaceAlt, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: colors.border },

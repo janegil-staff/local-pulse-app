@@ -1,11 +1,11 @@
 // localpulse/app/src/screens/FeedScreen.js
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, Pressable, RefreshControl, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, Pressable, RefreshControl, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import * as Location from 'expo-location';
 import { api } from '../api/client.js';
 import { useFeedStore } from '../store/feedStore.js';
-import { reportPostFlow } from '../lib/moderation.js';
 import PostCard from '../components/PostCard.js';
+import ReportSheet from '../components/ReportSheet.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 import { theme, makeStyles, useStyles } from '../theme/theme.js';
 import { useLang } from '../context/LangContext.js';
@@ -23,6 +23,9 @@ export default function FeedScreen({ navigation }) {
   const [tab, setTab] = useState('nearby'); // 'nearby' (All feeds) | 'following'
   const [followingPosts, setFollowingPosts] = useState([]);
   const [followLoading, setFollowLoading] = useState(false);
+  // Post being reported (null = sheet closed). Replaces the old Alert-based
+  // reportPostFlow, which couldn't host a free-text complaint field.
+  const [reportPostId, setReportPostId] = useState(null);
   const { t } = useLang();
 
   useEffect(() => {
@@ -67,6 +70,18 @@ export default function FeedScreen({ navigation }) {
     navigation.navigate('Profile', { username: post.author?.username });
   }
 
+  // Report handler for the sheet: takes the enum reason key + optional note and
+  // posts it. The sheet owns the reason selection and note input.
+  async function submitReport(reason, note) {
+    try {
+      await api.reportPost(reportPostId, reason, note);
+      setReportPostId(null);
+      Alert.alert(t.reportThanksTitle || 'Reported', t.reportThanks || 'Thanks — our team will review this.');
+    } catch (e) {
+      Alert.alert(t.error || 'Error', e?.message ?? t.couldntSend ?? 'Could not send report.');
+    }
+  }
+
   return (
     <View style={styles.root}>
       <ScreenHeader title={t.feedTitle || 'Feed'} navigation={navigation} />
@@ -91,7 +106,7 @@ export default function FeedScreen({ navigation }) {
               post={item}
               onLike={toggleLike}
               onSave={(id) => toggleSave(id, { saved: t.postSaved, unsaved: t.postUnsaved, failed: t.couldntSave })}
-              onReport={reportPostFlow}
+              onReport={(post) => setReportPostId(post.id)}
               onPress={() => openPost(item)}
               onAuthorPress={() => openAuthor(item)}
             />
@@ -115,6 +130,14 @@ export default function FeedScreen({ navigation }) {
       <Pressable style={styles.fab} onPress={() => navigation.navigate('Compose')}>
         <Text style={styles.fabText}>+</Text>
       </Pressable>
+
+      <ReportSheet
+        visible={reportPostId != null}
+        onClose={() => setReportPostId(null)}
+        onSubmit={submitReport}
+        title={t.reportPostTitle || 'Report post'}
+        prompt={t.reportWhy || 'Why are you reporting this?'}
+      />
     </View>
   );
 }
