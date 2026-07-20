@@ -24,6 +24,7 @@
     },
     "android": {
       "package": "com.qup.pulse",
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"

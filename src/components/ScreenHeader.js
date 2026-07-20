@@ -97,20 +97,74 @@ const stylesFactory = ({ colors }) =>
       justifyContent: 'space-between',
       paddingHorizontal: 16,
       paddingBottom: 12,
-      backgroundColor: colors.accent,
+      backgroundColor: colors.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
     },
-    side: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-    arrow: { color: '#fff', fontSize: 34, lineHeight: 36 },
-    icon: { color: '#fff', fontSize: 22 },
+
+    side: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    arrow: {
+      color: colors.text,
+      fontSize: 34,
+      lineHeight: 36,
+    },
+
+    icon: {
+      color: colors.text,
+      fontSize: 22,
+    },
+
     badge: {
-      position: 'absolute', top: 4, right: 4, minWidth: 18, height: 18, borderRadius: 9,
-      backgroundColor: '#E5484D', alignItems: 'center', justifyContent: 'center',
-      paddingHorizontal: 4, borderWidth: 1.5, borderColor: colors.accent,
+      position: 'absolute',
+      top: 4,
+      right: 4,
+      minWidth: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: colors.danger,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 4,
+      borderWidth: 1.5,
+      borderColor: colors.surface,
     },
-    badgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
-    titleTouch: { flex: 1 },
-    titleWrap: { flex: 1, alignItems: 'center' },
-    title: { color: '#fff', fontSize: 18, fontWeight: '700', textAlign: 'center' },
-    caret: { color: '#ffffffcc', fontSize: 13 },
-    subtitle: { color: '#ffffffb3', fontSize: 11, marginTop: 1 },
+
+    badgeText: {
+      color: '#fff',
+      fontSize: 10,
+      fontWeight: '800',
+    },
+
+    titleTouch: {
+      flex: 1,
+    },
+
+    titleWrap: {
+      flex: 1,
+      alignItems: 'center',
+    },
+
+    title: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+
+    caret: {
+      color: colors.textDim,
+      fontSize: 13,
+    },
+
+    subtitle: {
+      color: colors.textDim,
+      fontSize: 11,
+      marginTop: 1,
+    },
   });

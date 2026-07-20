@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View, Text, TextInput, Pressable, FlatList, StyleSheet, KeyboardAvoidingView, Platform,
-  Image, Alert, ActivityIndicator, Modal,
+  Image, Alert, ActivityIndicator, Modal, Keyboard,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,6 +27,16 @@ export default function ChatScreen({ route, navigation }) {
   const [text, setText] = useState('');
   const listRef = useRef(null);
   const [fullImage, setFullImage] = useState(null);
+  // Track keyboard visibility so we can drop the bottom safe-area inset while
+  // it's open. On Android insets.bottom (the nav-bar height) is still reported
+  // when the keyboard is up, and padding-behavior KAV would then lift the input
+  // by keyboardHeight + navBarHeight — that surplus is the visible gap.
+  const [kbVisible, setKbVisible] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKbVisible(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKbVisible(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
   useEffect(() => {
     enterConversation(conversationId);
     return () => leaveConversation();
@@ -64,15 +74,20 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <View style={styles.root}>
       <ScreenHeader title={title || 'Chat'} onBack={() => navigation.goBack()} />
+      {/* `padding` on both platforms keeps the input above the keyboard in
+          Expo Go (adjustResize isn't guaranteed there). The KAV starts below
+          the header, so its own top edge is the reference — offset is 0. */}
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior="padding"
         keyboardVerticalOffset={0}
       >
         <FlatList
           ref={listRef}
           data={messages}
           keyExtractor={(m) => String(m.id)}
+          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+          onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
           contentContainerStyle={{ padding: theme.spacing(3), flexGrow: 1, justifyContent: 'flex-end' }}
           renderItem={({ item }) => {
             const mine = String(item.sender?.id) === String(me?.id);
@@ -81,7 +96,7 @@ export default function ChatScreen({ route, navigation }) {
             if (item.imageUrl) {
               return (
                 <View style={[styles.bubbleRow, mine ? styles.rowMine : styles.rowTheirs]}>
-                  <Pressable onPress={() => setFullImage(item.imageUrl)}>
+                  <Pressable onPress={() => { Keyboard.dismiss(); setFullImage(item.imageUrl); }}>
                     <Image source={{ uri: item.imageUrl }} style={styles.imageBubble} resizeMode="cover" />
                   </Pressable>
                 </View>
@@ -98,7 +113,7 @@ export default function ChatScreen({ route, navigation }) {
         />
         {typingUserId ? <Text style={styles.typing}>typing…</Text> : null}
 
-        <View style={[styles.inputRow, { paddingBottom: Math.max(insets.bottom, theme.spacing(3)) }]}>
+        <View style={[styles.inputRow, { paddingBottom: kbVisible ? theme.spacing(3) : Math.max(insets.bottom, theme.spacing(3)) }]}>
           <Pressable style={styles.attachBtn} onPress={attachImage} disabled={sendingImage}>
             {sendingImage
               ? <ActivityIndicator size="small" color={theme.colors.textDim} />

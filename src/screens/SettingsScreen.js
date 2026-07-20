@@ -15,9 +15,10 @@ import { Row, ToggleRow, Section, settingsStyles } from '../components/SettingsR
 import Svg, { Path, Polyline, Line } from 'react-native-svg';
 
 // Standard "log out" icon (door with arrow out).
-function LogOutIcon() {
+// Stroke follows the theme so it stays visible in both light and dark mode.
+function LogOutIcon({ color }) {
   return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <Polyline points="16 17 21 12 16 7" />
       <Line x1="21" y1="12" x2="9" y2="12" />
@@ -65,13 +66,13 @@ export default function SettingsScreen({ navigation }) {
 
   return (
     <View style={styles.screen}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
       <ScreenHeader
         title={t.settingsTitle}
         onBack={() => navigation.goBack()}
         right={
           <Pressable onPress={confirmLogout} hitSlop={12}>
-            <LogOutIcon />
+            <LogOutIcon color={theme.colors.text} />
           </Pressable>
         }
       />

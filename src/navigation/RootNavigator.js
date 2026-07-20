@@ -23,7 +23,7 @@ import MyProfileScreen from '../screens/MyProfileScreen.js';
 import ChangeEmailScreen from '../screens/ChangeEmailScreen.js';
 import LocationPickerScreen from '../screens/LocationPickerScreen.js';
 import { registerForPush } from '../lib/push.js';
-import { theme } from '../theme/theme.js';
+import { useStyles } from '../theme/theme.js';
 import PersonalSettingsScreen from '../screens/PersonalSettingsScreen.js';
 import ForgotPinScreen from '../screens/ForgotPinScreen.js';
 import ChangePinScreen from '../screens/ChangePinScreen.js';
@@ -32,41 +32,86 @@ import BlockedUsersScreen from '../screens/BlockedUsersScreen.js';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const screenOptions = {
-  headerStyle: { backgroundColor: theme.colors.accent },
-  headerTintColor: '#fff',
-  headerTitleStyle: { color: '#fff', fontWeight: '700' },
-  headerShadowVisible: false,
-  contentStyle: { backgroundColor: theme.colors.bg },
-};
+const navigationStylesFactory = ({ colors }) => ({
+  stackScreenOptions: {
+    headerStyle: {
+      backgroundColor: colors.surface,
+    },
+    headerTintColor: colors.text,
+    headerTitleStyle: {
+      color: colors.text,
+      fontWeight: '700',
+    },
+    headerShadowVisible: false,
+    headerBackTitleVisible: false,
+    contentStyle: {
+      backgroundColor: colors.bg,
+    },
+  },
+
+  tabScreenOptions: {
+    tabBarStyle: {
+      backgroundColor: colors.surface,
+      borderTopColor: colors.border,
+      borderTopWidth: 1,
+    },
+    tabBarActiveTintColor: colors.accent,
+    tabBarInactiveTintColor: colors.textDim,
+    tabBarLabelStyle: {
+      fontWeight: '600',
+    },
+  },
+});
 
 function tabIcon(glyph) {
   return ({ color }) => <Text style={{ color, fontSize: 20 }}>{glyph}</Text>;
 }
 
 function Tabs() {
+  const navStyles = useStyles(navigationStylesFactory);
+
   return (
     <Tab.Navigator
       screenOptions={{
-        ...screenOptions,
-        tabBarStyle: { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border },
-        tabBarActiveTintColor: theme.colors.accent,
-        tabBarInactiveTintColor: theme.colors.textDim,
+        ...navStyles.stackScreenOptions,
+        ...navStyles.tabScreenOptions,
       }}
     >
       {/* Messages lives in the header (✉), not the tab bar. */}
-      <Tab.Screen name="Discover" component={DiscoveryScreen} options={{ headerShown: false, tabBarIcon: tabIcon('◎') }} />
-      <Tab.Screen name="Feed" component={FeedScreen} options={{ headerShown: false, tabBarIcon: tabIcon('⌂') }} />
+      <Tab.Screen
+        name="Discover"
+        component={DiscoveryScreen}
+        options={{
+          headerShown: false,
+          tabBarIcon: tabIcon('◎'),
+        }}
+      />
+
+      <Tab.Screen
+        name="Feed"
+        component={FeedScreen}
+        options={{
+          headerShown: false,
+          tabBarIcon: tabIcon('⌂'),
+        }}
+      />
+
       <Tab.Screen
         name="MyProfile"
         component={MyProfileScreen}
-        options={{ headerShown: false, title: 'Profile', tabBarIcon: tabIcon('☺') }}
+        options={{
+          headerShown: false,
+          title: 'Profile',
+          tabBarIcon: tabIcon('☺'),
+        }}
       />
     </Tab.Navigator>
   );
 }
 
+
 export default function RootNavigator() {
+  const navStyles = useStyles(navigationStylesFactory);
   const { token, user } = useAuth();
   const initSocket = useChatStore((s) => s.initSocket);
 
@@ -81,7 +126,7 @@ export default function RootNavigator() {
   }, [loggedIn, initSocket]);
 
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator screenOptions={navStyles.stackScreenOptions}>
       {!loggedIn ? (
         <>
           <Stack.Screen name="Auth" component={AuthScreen} options={{ headerShown: false }} />
@@ -132,3 +177,4 @@ export default function RootNavigator() {
     </Stack.Navigator>
   );
 }
+
