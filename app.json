@@ -2,51 +2,52 @@
   "expo": {
     "name": "Qup Pulse",
     "slug": "qup-pulse",
-    "version": "1.0.2",
+    "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "scheme": "quppulse",
     "splash": {
       "image": "./assets/images/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0e1116"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.qup.pulse",
+      "supportsTablet": false,
+      "bundleIdentifier": "com.qupda.quppulse",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Qup Pulse uses your location to show people and posts near you.",
-        "NSCameraUsageDescription": "Qup Pulse uses the camera so you can add photos to your profile and messages.",
-        "NSPhotoLibraryUsageDescription": "Qup Pulse accesses your photos so you can add them to your profile and messages.",
+        "NSPhotoLibraryUsageDescription": "Allow photo access to send pictures in chat.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.qup.pulse",
+      "package": "com.qupda.quppulse",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0e1116"
       },
-      "edgeToEdgeEnabled": true,
       "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "CAMERA",
-        "READ_MEDIA_IMAGES"
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.RECORD_AUDIO"
       ]
     },
-    "web": {
-      "favicon": "./assets/favicon.ico"
-    },
     "plugins": [
-      "expo-secure-store"
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow photo access to send pictures in chat."
+        }
+      ]
     ],
     "extra": {
       "eas": {
         "projectId": "508f09c4-d482-43d9-92c7-7605aa41dc5a"
       }
-    }
+    },
+    "owner": "janstovr"
   }
 }

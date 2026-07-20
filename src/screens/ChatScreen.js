@@ -1,7 +1,23 @@
 // localpulse/app/src/screens/ChatScreen.js
+//
+// Keyboard handling for Expo Go: uses React Native's built-in
+// KeyboardAvoidingView with `padding` on both platforms and offset 0. The KAV
+// starts BELOW the header (the header is a sibling above it), so its own top
+// edge is the reference and no header math is needed. While the keyboard is
+// open we drop the bottom safe-area inset from the input row, because on
+// Android insets.bottom (the nav-bar height) is still reported when the
+// keyboard is up and would otherwise add a surplus gap above the keyboard.
+//
+// NOTE: the cleaner cross-platform fix is react-native-keyboard-controller, but
+// it has a native (reanimated worklets) dependency and CANNOT run in Expo Go —
+// it needs a dev build. This file is the Expo-Go-compatible version. When you
+// move to a dev build, swap the import below for
+//   import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+// wrap the app root in <KeyboardProvider>, and you can delete the kbVisible
+// logic.
 import React, { useEffect, useState, useRef } from 'react';
 import {
-  View, Text, TextInput, Pressable, FlatList, StyleSheet, KeyboardAvoidingView, Platform,
+  View, Text, TextInput, Pressable, FlatList, StyleSheet, KeyboardAvoidingView,
   Image, Alert, ActivityIndicator, Modal, Keyboard,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -27,24 +43,51 @@ export default function ChatScreen({ route, navigation }) {
   const [text, setText] = useState('');
   const listRef = useRef(null);
   const [fullImage, setFullImage] = useState(null);
-  // Track keyboard visibility so we can drop the bottom safe-area inset while
-  // it's open. On Android insets.bottom (the nav-bar height) is still reported
-  // when the keyboard is up, and padding-behavior KAV would then lift the input
-  // by keyboardHeight + navBarHeight — that surplus is the visible gap.
+
+  // While the keyboard is up, drop the bottom safe-area inset (nav-bar height)
+  // so padding-behavior KAV doesn't lift the input by keyboardHeight + navBar.
   const [kbVisible, setKbVisible] = useState(false);
   useEffect(() => {
     const show = Keyboard.addListener('keyboardDidShow', () => setKbVisible(true));
     const hide = Keyboard.addListener('keyboardDidHide', () => setKbVisible(false));
     return () => { show.remove(); hide.remove(); };
   }, []);
+
   useEffect(() => {
     enterConversation(conversationId);
     return () => leaveConversation();
   }, [conversationId, enterConversation, leaveConversation]);
 
+  // messages is oldest-first from the store. The list is inverted (renders from
+  // the bottom up), so we feed it newest-first. useMemo avoids reversing on
+  // every render.
+  const inverted = React.useMemo(() => [...messages].reverse(), [messages]);
+
+  // In an inverted list the bottom is offset 0. When messages first arrive
+  // (they load async after mount), snap to offset 0 so the newest message sits
+  // flush against the input instead of the list holding its old position.
+  const didInitialScroll = useRef(false);
   useEffect(() => {
-    if (messages.length) listRef.current?.scrollToEnd({ animated: true });
-  }, [messages.length]);
+    if (!didInitialScroll.current && inverted.length) {
+      didInitialScroll.current = true;
+      requestAnimationFrame(() => {
+        listRef.current?.scrollToOffset({ offset: 0, animated: false });
+      });
+    }
+  }, [inverted.length]);
+
+  // Snap to the newest message (offset 0) whenever the count grows — sending or
+  // receiving. Skips the very first population, which the initial-scroll effect
+  // above already handles.
+  const prevLen = useRef(0);
+  useEffect(() => {
+    if (inverted.length > prevLen.current && prevLen.current !== 0) {
+      requestAnimationFrame(() => {
+        listRef.current?.scrollToOffset({ offset: 0, animated: true });
+      });
+    }
+    prevLen.current = inverted.length;
+  }, [inverted.length]);
 
   function submit() {
     if (!text.trim()) return;
@@ -74,21 +117,17 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <View style={styles.root}>
       <ScreenHeader title={title || 'Chat'} onBack={() => navigation.goBack()} />
-      {/* `padding` on both platforms keeps the input above the keyboard in
-          Expo Go (adjustResize isn't guaranteed there). The KAV starts below
-          the header, so its own top edge is the reference — offset is 0. */}
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior="padding"
+        behavior={kbVisible ? 'padding' : undefined}
         keyboardVerticalOffset={0}
       >
         <FlatList
           ref={listRef}
-          data={messages}
+          data={inverted}
+          inverted
           keyExtractor={(m) => String(m.id)}
-          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
-          onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
-          contentContainerStyle={{ padding: theme.spacing(3), flexGrow: 1, justifyContent: 'flex-end' }}
+          contentContainerStyle={{ padding: theme.spacing(3) }}
           renderItem={({ item }) => {
             const mine = String(item.sender?.id) === String(me?.id);
             // Image bubbles drop the padding and background — the photo is the
@@ -162,7 +201,7 @@ const stylesFactory = (({ colors, spacing, radius }) =>
     viewerCloseText: { color: '#fff', fontSize: 26, fontWeight: '300', marginTop: -3 },
     root: { flex: 1, backgroundColor: colors.bg },
     flex: { flex: 1 },
-    bubbleRow: { marginBottom: spacing(2), flexDirection: 'row' },
+    bubbleRow: { marginTop: spacing(2), flexDirection: 'row' },
     rowMine: { justifyContent: 'flex-end' },
     rowTheirs: { justifyContent: 'flex-start' },
     bubble: { maxWidth: '78%', paddingHorizontal: spacing(3.5), paddingVertical: spacing(2.5), borderRadius: radius.lg },
