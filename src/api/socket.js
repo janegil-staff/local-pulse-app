@@ -16,7 +16,7 @@ let socket = null;
 export function connectChatSocket() {
   if (socket) return socket;
   socket = io(SOCKET_URL, {
-    transports: ['websocket'],
+    transports: ['websocket', 'polling'],
     autoConnect: true,
     reconnection: true,
     auth: (cb) => cb({ token: getToken() }),
