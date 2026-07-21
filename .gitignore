@@ -43,3 +43,4 @@ yarn-error.*
 leaktest.env git status
 .env
 .env
+.env
