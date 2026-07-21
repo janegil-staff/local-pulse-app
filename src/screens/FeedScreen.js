@@ -17,6 +17,9 @@ export default function FeedScreen({ navigation }) {
   const refreshing = useFeedStore((s) => s.refreshing);
   const error = useFeedStore((s) => s.error);
   const loadFeed = useFeedStore((s) => s.loadFeed);
+  const loadMore = useFeedStore((s) => s.loadMore);
+  const loadingMore = useFeedStore((s) => s.loadingMore);
+  const hasMore = useFeedStore((s) => s.hasMore);
   const toggleLike = useFeedStore((s) => s.toggleLike);
   const toggleSave = useFeedStore((s) => s.toggleSave);
   const setCoords = useFeedStore((s) => s.setCoords);
@@ -112,6 +115,18 @@ export default function FeedScreen({ navigation }) {
             />
           )}
           contentContainerStyle={{ paddingVertical: theme.spacing(3) }}
+          onEndReachedThreshold={0.5}
+          onEndReached={() => {
+            // Only the nearby feed paginates via the store; the following tab
+            // loads in one shot. Fires at 50% from the bottom so the next page
+            // is already arriving before the user reaches it.
+            if (tab === 'nearby' && hasMore && !loadingMore) loadMore();
+          }}
+          ListFooterComponent={
+            tab === 'nearby' && loadingMore ? (
+              <ActivityIndicator style={{ marginVertical: theme.spacing(4) }} color={theme.colors.accent} />
+            ) : null
+          }
           refreshControl={
             tab === 'nearby' ? (
               <RefreshControl refreshing={refreshing} onRefresh={() => loadFeed({ refresh: true })} tintColor={theme.colors.accent} />

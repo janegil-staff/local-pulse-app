@@ -3,12 +3,19 @@ import { create } from 'zustand';
 import { api } from '../api/client.js';
 import Toast from 'react-native-toast-message';
 
+// How many posts to request per page. The server should honour a `limit` and a
+// `before` cursor (ISO timestamp of the oldest post already shown) and return
+// posts strictly older than it, newest-first. See getFeed notes at the bottom.
+const PAGE_SIZE = 20;
+
 export const useFeedStore = create((set, get) => ({
   posts: [],
   loading: false,
   refreshing: false,
+  loadingMore: false,   // a "load older" page is in flight
+  hasMore: true,        // false once the server returns a short/empty page
   error: null,
-  coords: null, // { lng, lat } when location is available
+  coords: null,         // { lng, lat } when location is available
 
   setCoords: (coords) => set({ coords }),
 
@@ -16,11 +23,53 @@ export const useFeedStore = create((set, get) => ({
     set(refresh ? { refreshing: true, error: null } : { loading: true, error: null });
     try {
       const { coords } = get();
-      const params = coords ? { lng: coords.lng, lat: coords.lat } : {};
+      const params = { limit: PAGE_SIZE };
+      if (coords) { params.lng = coords.lng; params.lat = coords.lat; }
       const { posts } = await api.getFeed(params);
-      set({ posts, loading: false, refreshing: false });
+      // Fresh load replaces the list and resets pagination. If the first page
+      // came back full, assume there may be more; if short, we're at the end.
+      set({
+        posts,
+        hasMore: posts.length >= PAGE_SIZE,
+        loading: false,
+        refreshing: false,
+      });
     } catch (e) {
       set({ error: e.message, loading: false, refreshing: false });
+    }
+  },
+
+  // Fetch the next (older) page and APPEND it. No-op if already loading, if
+  // there's nothing more, or if the list is empty (nothing to page from).
+  loadMore: async () => {
+    const { posts, loadingMore, hasMore, coords } = get();
+    if (loadingMore || !hasMore || posts.length === 0) return;
+
+    // Cursor = createdAt of the oldest post we currently hold. The server
+    // returns posts strictly older than this.
+    const before = posts[posts.length - 1]?.createdAt;
+    if (!before) return;
+
+    set({ loadingMore: true });
+    try {
+      const params = { limit: PAGE_SIZE, before };
+      if (coords) { params.lng = coords.lng; params.lat = coords.lat; }
+      const { posts: older } = await api.getFeed(params);
+
+      // De-dupe against what we already have (guards against a boundary post
+      // repeating if two share the same createdAt).
+      const seen = new Set(get().posts.map((p) => p.id));
+      const fresh = (older || []).filter((p) => !seen.has(p.id));
+
+      set((s) => ({
+        posts: [...s.posts, ...fresh],
+        // Out of pages when the server returns fewer than a full page.
+        hasMore: (older?.length || 0) >= PAGE_SIZE,
+        loadingMore: false,
+      }));
+    } catch (e) {
+      // Don't surface a blocking error for pagination — just stop trying.
+      set({ loadingMore: false });
     }
   },
 
