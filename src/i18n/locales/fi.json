@@ -268,5 +268,14 @@
   "interest_technology": "Teknologia",
   "interest_football": "Jalkapallo",
   "interest_climbing": "Kiipeily",
-  "interest_baking": "Leipominen"
+  "interest_baking": "Leipominen",
+  "photo": {
+    "add": "Lisää kuva",
+    "permissionTitle": "Lupa tarvitaan",
+    "permissionBody": "Salli pääsy kuviisi lisätäksesi kuvan.",
+    "errorTitle": "Kuvia ei voitu avata",
+    "errorBody": "Valitsimen avaamisessa tapahtui virhe. Yritä uudelleen.",
+    "uploadErrorTitle": "Lataus epäonnistui",
+    "uploadErrorBody": "Kuvaa ei voitu ladata. Tarkista yhteys ja yritä uudelleen."
+  }
 }

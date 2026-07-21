@@ -268,5 +268,14 @@
   "interest_technology": "Technologie",
   "interest_football": "Fußball",
   "interest_climbing": "Klettern",
-  "interest_baking": "Backen"
+  "interest_baking": "Backen",
+  "photo": {
+    "add": "Foto hinzufügen",
+    "permissionTitle": "Berechtigung erforderlich",
+    "permissionBody": "Erlaube den Zugriff auf deine Fotos, um ein Bild hinzuzufügen.",
+    "errorTitle": "Fotos konnten nicht geöffnet werden",
+    "errorBody": "Beim Öffnen der Auswahl ist ein Fehler aufgetreten. Bitte erneut versuchen.",
+    "uploadErrorTitle": "Upload fehlgeschlagen",
+    "uploadErrorBody": "Foto konnte nicht hochgeladen werden. Prüfe die Verbindung und versuche es erneut."
+  }
 }

@@ -268,5 +268,14 @@
   "interest_technology": "Teknologi",
   "interest_football": "Fotball",
   "interest_climbing": "Klatring",
-  "interest_baking": "Baking"
+  "interest_baking": "Baking",
+  "photo": {
+    "add": "Legg til bilde",
+    "permissionTitle": "Tilgang kreves",
+    "permissionBody": "Gi appen tilgang til bildene dine for å legge til et bilde.",
+    "errorTitle": "Kunne ikke åpne bilder",
+    "errorBody": "Noe gikk galt da bildevelgeren skulle åpnes. Prøv igjen.",
+    "uploadErrorTitle": "Opplasting mislyktes",
+    "uploadErrorBody": "Kunne ikke laste opp bildet. Sjekk nettverket og prøv igjen."
+  }
 }

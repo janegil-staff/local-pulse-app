@@ -268,5 +268,14 @@
   "interest_technology": "Tecnologia",
   "interest_football": "Futebol",
   "interest_climbing": "Escalada",
-  "interest_baking": "Padaria"
+  "interest_baking": "Padaria",
+  "photo": {
+    "add": "Adicionar foto",
+    "permissionTitle": "Permissão necessária",
+    "permissionBody": "Permita o acesso às suas fotos para adicionar uma imagem.",
+    "errorTitle": "Não foi possível abrir as fotos",
+    "errorBody": "Ocorreu um erro ao abrir o seletor. Tente novamente.",
+    "uploadErrorTitle": "Falha no envio",
+    "uploadErrorBody": "Não foi possível enviar a foto. Verifique a ligação e tente novamente."
+  }
 }

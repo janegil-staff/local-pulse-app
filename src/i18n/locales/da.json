@@ -268,5 +268,14 @@
   "interest_technology": "Teknologi",
   "interest_football": "Fodbold",
   "interest_climbing": "Klatring",
-  "interest_baking": "Bagning"
+  "interest_baking": "Bagning",
+  "photo": {
+    "add": "Tilføj billede",
+    "permissionTitle": "Tilladelse kræves",
+    "permissionBody": "Giv adgang til dine billeder for at tilføje et foto.",
+    "errorTitle": "Kunne ikke åbne billeder",
+    "errorBody": "Noget gik galt, da vælgeren skulle åbnes. Prøv igen.",
+    "uploadErrorTitle": "Upload mislykkedes",
+    "uploadErrorBody": "Kunne ikke uploade billedet. Tjek din forbindelse, og prøv igen."
+  }
 }

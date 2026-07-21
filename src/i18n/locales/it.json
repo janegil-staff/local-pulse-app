@@ -268,5 +268,14 @@
   "interest_technology": "Tecnologia",
   "interest_football": "Calcio",
   "interest_climbing": "Arrampicata",
-  "interest_baking": "Cottura"
+  "interest_baking": "Cottura",
+  "photo": {
+    "add": "Aggiungi foto",
+    "permissionTitle": "Autorizzazione necessaria",
+    "permissionBody": "Consenti l’accesso alle tue foto per aggiungere un’immagine.",
+    "errorTitle": "Impossibile aprire le foto",
+    "errorBody": "Si è verificato un errore durante l’apertura del selettore. Riprova.",
+    "uploadErrorTitle": "Caricamento non riuscito",
+    "uploadErrorBody": "Impossibile caricare la foto. Controlla la connessione e riprova."
+  }
 }

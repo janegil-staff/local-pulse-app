@@ -1,12 +1,14 @@
 // localpulse/app/src/api/client.js
 // On a device, localhost is the phone. Set EXPO_PUBLIC_API_URL to your Mac's
 // LAN IP in dev (e.g. http://192.168.1.71:4000), the Android emulator's
-;// http://10.0.2.2:4000, or your deployed URL. Falls back to localhost.
+// http://10.0.2.2:4000, or your deployed URL. Falls back to the deployed API.
 
-//import { Platform } from 'react-native';
-//const HOST = Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://localhost:4000';
+// import { Platform } from 'react-native';
+// const HOST = Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://localhost:4000';
 
-const HOST = "https://lionfish-app-ed6lo.ondigitalocean.app"
+// Prefer the env var; fall back to the deployed URL so a missing .env doesn't
+// break the build. EXPO_PUBLIC_ vars are inlined at bundle time by Expo.
+const HOST = process.env.EXPO_PUBLIC_API_URL || 'https://lionfish-app-ed6lo.ondigitalocean.app';
 
 export const API_URL = `${HOST}/api`;
 export const SOCKET_URL = HOST;

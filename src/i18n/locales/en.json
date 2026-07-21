@@ -268,5 +268,14 @@
   "interest_technology": "Technology",
   "interest_football": "Football",
   "interest_climbing": "Climbing",
-  "interest_baking": "Baking"
+  "interest_baking": "Baking",
+  "photo": {
+    "add": "Add photo",
+    "permissionTitle": "Permission needed",
+    "permissionBody": "Allow access to your photos to add a picture.",
+    "errorTitle": "Could not open photos",
+    "errorBody": "Something went wrong opening the picker. Please try again.",
+    "uploadErrorTitle": "Upload failed",
+    "uploadErrorBody": "Could not upload the photo. Check your connection and try again."
+  }
 }

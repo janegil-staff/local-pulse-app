@@ -296,7 +296,7 @@ export default function ProfileScreen({ route, navigation }) {
         {/* Interests */}
         {Array.isArray(profile.interests) && profile.interests.length > 0 && (
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>Interests</Text>
+            <Text style={styles.cardLabel}>{t.interests || 'Interests'}</Text>
             <View style={styles.chips}>
               {profile.interests.map((tag) => (
                 <View key={tag} style={styles.chip}><Text style={styles.chipText}>{tag}</Text></View>

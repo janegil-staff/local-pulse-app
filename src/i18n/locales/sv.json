@@ -268,5 +268,14 @@
   "interest_technology": "Teknik",
   "interest_football": "Fotboll",
   "interest_climbing": "Klättring",
-  "interest_baking": "Bakning"
+  "interest_baking": "Bakning",
+  "photo": {
+    "add": "Lägg till foto",
+    "permissionTitle": "Behörighet krävs",
+    "permissionBody": "Ge appen åtkomst till dina bilder för att lägga till ett foto.",
+    "errorTitle": "Kunde inte öppna bilder",
+    "errorBody": "Något gick fel när väljaren skulle öppnas. Försök igen.",
+    "uploadErrorTitle": "Uppladdning misslyckades",
+    "uploadErrorBody": "Kunde inte ladda upp fotot. Kontrollera anslutningen och försök igen."
+  }
 }

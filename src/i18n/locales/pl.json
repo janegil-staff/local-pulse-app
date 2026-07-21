@@ -268,5 +268,14 @@
   "interest_technology": "Technologia",
   "interest_football": "Piłka nożna",
   "interest_climbing": "Wspinaczka",
-  "interest_baking": "Pieczenie"
+  "interest_baking": "Pieczenie",
+  "photo": {
+    "add": "Dodaj zdjęcie",
+    "permissionTitle": "Wymagane uprawnienia",
+    "permissionBody": "Zezwól na dostęp do zdjęć, aby dodać obraz.",
+    "errorTitle": "Nie można otworzyć zdjęć",
+    "errorBody": "Wystąpił błąd podczas otwierania selektora. Spróbuj ponownie.",
+    "uploadErrorTitle": "Przesyłanie nie powiodło się",
+    "uploadErrorBody": "Nie udało się przesłać zdjęcia. Sprawdź połączenie i spróbuj ponownie."
+  }
 }

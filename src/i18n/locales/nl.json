@@ -268,5 +268,14 @@
   "interest_technology": "Technologie",
   "interest_football": "Voetbal",
   "interest_climbing": "Klimmen",
-  "interest_baking": "Bakken"
+  "interest_baking": "Bakken",
+  "photo": {
+    "add": "Foto toevoegen",
+    "permissionTitle": "Toestemming vereist",
+    "permissionBody": "Geef toegang tot je foto’s om een afbeelding toe te voegen.",
+    "errorTitle": "Kon foto’s niet openen",
+    "errorBody": "Er ging iets mis bij het openen van de kiezer. Probeer het opnieuw.",
+    "uploadErrorTitle": "Uploaden mislukt",
+    "uploadErrorBody": "Kon de foto niet uploaden. Controleer je verbinding en probeer opnieuw."
+  }
 }

@@ -69,7 +69,8 @@ export default function BlockedUsersScreen({ navigation }) {
   }
 
   function renderRow({ item }) {
-    const id = String(item.id ?? item._id);
+    console.log(item); 
+    const id = String(item.id);
     const busy = pending.includes(id);
     return (
       <View style={styles.row}>

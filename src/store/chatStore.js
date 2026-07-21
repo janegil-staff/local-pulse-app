@@ -91,13 +91,13 @@ export const useChatStore = create((set, get) => ({
     return conversationId;
   },
 
+  // src/store/chatStore.js — enterConversation
   enterConversation: async (conversationId) => {
     set({ activeId: conversationId, messages: [] });
-    const s = getChatSocket();
-    s?.emit('chat:join', { conversationId });
+    const s = connectChatSocket();
+    s.emit('chat:join', { conversationId });
     const { messages } = await api.getMessages(conversationId);
     set({ messages });
-    // Mark this conversation read, then refresh the unread total.
     try {
       await api.markConversationRead(conversationId);
       get().refreshUnread();
