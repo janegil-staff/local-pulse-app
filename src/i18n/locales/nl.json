@@ -277,5 +277,9 @@
     "errorBody": "Er ging iets mis bij het openen van de kiezer. Probeer het opnieuw.",
     "uploadErrorTitle": "Uploaden mislukt",
     "uploadErrorBody": "Kon de foto niet uploaden. Controleer je verbinding en probeer opnieuw."
-  }
+  },
+  "chatPendingLimit": "Je kunt maar één bericht sturen totdat deze persoon je verzoek accepteert. Wacht tot ze reageren.",
+  "chatPendingRecipient": "Accepteer het verzoek voordat je antwoordt.",
+  "chatSendFailed": "Kon het bericht niet verzenden.",
+  "chatPendingTitle": "Nog niet verzenden"
 }

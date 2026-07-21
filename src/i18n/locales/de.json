@@ -277,5 +277,9 @@
     "errorBody": "Beim Öffnen der Auswahl ist ein Fehler aufgetreten. Bitte erneut versuchen.",
     "uploadErrorTitle": "Upload fehlgeschlagen",
     "uploadErrorBody": "Foto konnte nicht hochgeladen werden. Prüfe die Verbindung und versuche es erneut."
-  }
+  },
+  "chatPendingLimit": "Du kannst nur eine Nachricht senden, bis diese Person deine Anfrage annimmt. Bitte warte auf ihre Antwort.",
+  "chatPendingRecipient": "Nimm die Anfrage an, bevor du antwortest.",
+  "chatSendFailed": "Nachricht konnte nicht gesendet werden.",
+  "chatPendingTitle": "Senden noch nicht möglich"
 }

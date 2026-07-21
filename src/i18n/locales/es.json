@@ -277,5 +277,9 @@
     "errorBody": "Ocurrió un error al abrir el selector. Inténtalo de nuevo.",
     "uploadErrorTitle": "Error al subir",
     "uploadErrorBody": "No se pudo subir la foto. Comprueba tu conexión e inténtalo de nuevo."
-  }
+  },
+  "chatPendingLimit": "Solo puedes enviar un mensaje hasta que esta persona acepte tu solicitud. Espera su respuesta.",
+  "chatPendingRecipient": "Acepta la solicitud antes de responder.",
+  "chatSendFailed": "No se pudo enviar el mensaje.",
+  "chatPendingTitle": "Aún no puedes enviar"
 }

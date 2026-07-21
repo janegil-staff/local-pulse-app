@@ -277,5 +277,9 @@
     "errorBody": "Valitsimen avaamisessa tapahtui virhe. Yritä uudelleen.",
     "uploadErrorTitle": "Lataus epäonnistui",
     "uploadErrorBody": "Kuvaa ei voitu ladata. Tarkista yhteys ja yritä uudelleen."
-  }
+  },
+  "chatPendingLimit": "Voit lähettää vain yhden viestin, kunnes tämä henkilö hyväksyy pyyntösi. Odota vastausta.",
+  "chatPendingRecipient": "Hyväksy pyyntö ennen vastaamista.",
+  "chatSendFailed": "Viestin lähetys epäonnistui.",
+  "chatPendingTitle": "Ei voi vielä lähettää"
 }

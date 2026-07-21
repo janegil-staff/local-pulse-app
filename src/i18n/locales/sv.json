@@ -277,5 +277,9 @@
     "errorBody": "Något gick fel när väljaren skulle öppnas. Försök igen.",
     "uploadErrorTitle": "Uppladdning misslyckades",
     "uploadErrorBody": "Kunde inte ladda upp fotot. Kontrollera anslutningen och försök igen."
-  }
+  },
+  "chatPendingLimit": "Du kan bara skicka ett meddelande tills den här personen godkänner din förfrågan. Vänta på svar.",
+  "chatPendingRecipient": "Acceptera förfrågan innan du svarar.",
+  "chatSendFailed": "Kunde inte skicka meddelandet.",
+  "chatPendingTitle": "Kan inte skicka än"
 }

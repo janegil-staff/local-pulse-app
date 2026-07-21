@@ -277,5 +277,9 @@
     "errorBody": "Noe gikk galt da bildevelgeren skulle åpnes. Prøv igjen.",
     "uploadErrorTitle": "Opplasting mislyktes",
     "uploadErrorBody": "Kunne ikke laste opp bildet. Sjekk nettverket og prøv igjen."
-  }
+  },
+  "chatPendingLimit": "Du kan bare sende én melding til denne personen godtar forespørselen din. Vent til de svarer.",
+  "chatPendingRecipient": "Godta forespørselen før du svarer.",
+  "chatSendFailed": "Kunne ikke sende meldingen.",
+  "chatPendingTitle": "Kan ikke sende ennå"
 }

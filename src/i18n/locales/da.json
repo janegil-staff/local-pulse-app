@@ -277,5 +277,9 @@
     "errorBody": "Noget gik galt, da vælgeren skulle åbnes. Prøv igen.",
     "uploadErrorTitle": "Upload mislykkedes",
     "uploadErrorBody": "Kunne ikke uploade billedet. Tjek din forbindelse, og prøv igen."
-  }
+  },
+  "chatPendingLimit": "Du kan kun sende én besked, indtil denne person accepterer din anmodning. Vent på deres svar.",
+  "chatPendingRecipient": "Accepter anmodningen, før du svarer.",
+  "chatSendFailed": "Kunne ikke sende beskeden.",
+  "chatPendingTitle": "Kan ikke sende endnu"
 }

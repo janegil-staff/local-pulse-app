@@ -277,5 +277,9 @@
     "errorBody": "Wystąpił błąd podczas otwierania selektora. Spróbuj ponownie.",
     "uploadErrorTitle": "Przesyłanie nie powiodło się",
     "uploadErrorBody": "Nie udało się przesłać zdjęcia. Sprawdź połączenie i spróbuj ponownie."
-  }
+  },
+  "chatPendingLimit": "Możesz wysłać tylko jedną wiadomość, dopóki ta osoba nie zaakceptuje Twojej prośby. Poczekaj na odpowiedź.",
+  "chatPendingRecipient": "Zaakceptuj prośbę przed odpowiedzią.",
+  "chatSendFailed": "Nie udało się wysłać wiadomości.",
+  "chatPendingTitle": "Nie można jeszcze wysłać"
 }

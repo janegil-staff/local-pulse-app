@@ -277,5 +277,9 @@
     "errorBody": "Ocorreu um erro ao abrir o seletor. Tente novamente.",
     "uploadErrorTitle": "Falha no envio",
     "uploadErrorBody": "Não foi possível enviar a foto. Verifique a ligação e tente novamente."
-  }
+  },
+  "chatPendingLimit": "Só podes enviar uma mensagem até esta pessoa aceitar o teu pedido. Aguarda a resposta.",
+  "chatPendingRecipient": "Aceita o pedido antes de responder.",
+  "chatSendFailed": "Não foi possível enviar a mensagem.",
+  "chatPendingTitle": "Ainda não podes enviar"
 }

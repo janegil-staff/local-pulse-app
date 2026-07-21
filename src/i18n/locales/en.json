@@ -277,5 +277,9 @@
     "errorBody": "Something went wrong opening the picker. Please try again.",
     "uploadErrorTitle": "Upload failed",
     "uploadErrorBody": "Could not upload the photo. Check your connection and try again."
-  }
+  },
+  "chatPendingLimit": "You can only send one message until this person accepts your request. Please wait for them to respond.",
+  "chatPendingRecipient": "Accept the request before replying.",
+  "chatSendFailed": "Could not send the message.",
+  "chatPendingTitle": "Can’t send yet"
 }

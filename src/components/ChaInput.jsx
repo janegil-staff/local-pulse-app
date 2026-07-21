@@ -1,19 +1,18 @@
-// local-pulse-app/src/components/ChatInput.js
+// localpulse/app/src/components/ChaInput.jsx
 import React, { useState, useCallback } from 'react';
 import { View, TextInput, TouchableOpacity, Text } from 'react-native';
-import { getSocket } from '../services/socket';
+import { useChatStore } from '../store/chatStore.js';
 
-export default function ChatInput({ conversationId, styles }) {
+export default function ChatInput({ styles }) {
   const [text, setText] = useState('');
+  const send = useChatStore((s) => s.send);
 
-  const send = useCallback(() => {
+  const submit = useCallback(() => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    const socket = getSocket();
-    if (!socket?.connected) return;
-    socket.emit('message:send', { conversationId, text: trimmed });
+    send(trimmed);
     setText('');
-  }, [text, conversationId]);
+  }, [text, send]);
 
   return (
     <View style={styles.inputRow}>
@@ -23,9 +22,9 @@ export default function ChatInput({ conversationId, styles }) {
         onChangeText={setText}
         placeholder="Skriv en melding…"
         multiline
-        onSubmitEditing={send}
+        onSubmitEditing={submit}
       />
-      <TouchableOpacity style={styles.sendBtn} onPress={send}>
+      <TouchableOpacity style={styles.sendBtn} onPress={submit}>
         <Text style={styles.sendText}>Send</Text>
       </TouchableOpacity>
     </View>

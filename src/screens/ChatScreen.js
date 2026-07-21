@@ -26,6 +26,7 @@ import { useChatStore } from '../store/chatStore.js';
 import { useAuth } from '../context/AuthContext.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 import { theme, makeStyles, useStyles } from '../theme/theme.js';
+import { useLang } from '../context/LangContext.js';  
 
 export default function ChatScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
@@ -43,7 +44,7 @@ export default function ChatScreen({ route, navigation }) {
   const [text, setText] = useState('');
   const listRef = useRef(null);
   const [fullImage, setFullImage] = useState(null);
-
+const { t } = useLang();
   // While the keyboard is up, drop the bottom safe-area inset (nav-bar height)
   // so padding-behavior KAV doesn't lift the input by keyboardHeight + navBar.
   const [kbVisible, setKbVisible] = useState(false);
@@ -89,9 +90,13 @@ export default function ChatScreen({ route, navigation }) {
     prevLen.current = inverted.length;
   }, [inverted.length]);
 
-  function submit() {
+function submit() {
     if (!text.trim()) return;
-    send(text);
+    send(text, {
+      PENDING_LIMIT: t.chatPendingLimit,
+      PENDING_RECIPIENT: t.chatPendingRecipient,
+      default: t.chatSendFailed,
+    });
     setText('');
   }
 

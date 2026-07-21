@@ -1,7 +1,9 @@
 // localpulse/app/src/store/chatStore.js
 import { create } from 'zustand';
+import Toast from 'react-native-toast-message';
 import { api } from '../api/client.js';
 import { connectChatSocket, getChatSocket } from '../api/socket.js';
+import { Alert } from 'react-native';
 
 export const useChatStore = create((set, get) => ({
   conversations: [],
@@ -27,8 +29,6 @@ export const useChatStore = create((set, get) => ({
     s.on('chat:message', (msg) => {
       const st = get();
       const isActive = String(msg.conversationId) === String(st.activeId);
-      // An image message has no text — fall back to the server's marker so the
-      // conversation row doesn't go blank.
       const preview = msg.text || '📷';
       set({
         messages: isActive ? [...st.messages, msg] : st.messages,
@@ -40,15 +40,10 @@ export const useChatStore = create((set, get) => ({
       });
     });
 
-    // Incoming notification → re-sync from the server rather than blindly
-    // incrementing. The old `unread + 1` double-counted: repeated notifies for
-    // the same conversation kept bumping the badge, and it fought with
-    // refreshUnread's authoritative value. Now a notify just means "something
-    // changed, go ask the server for the true count."
     s.on('chat:notify', ({ conversationId }) => {
       const st = get();
       console.log('[chatStore] chat:notify received');
-      if (String(conversationId) === String(st.activeId)) return; // you're reading it
+      if (String(conversationId) === String(st.activeId)) return;
       get().refreshUnread();
     });
 
@@ -59,7 +54,6 @@ export const useChatStore = create((set, get) => ({
 
     set({ bound: true });
     console.log('[chatStore] initSocket: bound listeners, priming unread…');
-    // Prime the unread total from the server.
     get().refreshUnread();
   },
 
@@ -71,7 +65,6 @@ export const useChatStore = create((set, get) => ({
     } catch (e) {
       console.log('[chatStore] refreshUnread failed:', e?.message);
     }
-    // Also refresh how many pending requests are waiting.
     try {
       const { requests } = await api.getRequests();
       console.log('[chatStore] refreshUnread: requests =', (requests ?? []).length);
@@ -91,7 +84,6 @@ export const useChatStore = create((set, get) => ({
     return conversationId;
   },
 
-  // src/store/chatStore.js — enterConversation
   enterConversation: async (conversationId) => {
     set({ activeId: conversationId, messages: [] });
     const s = connectChatSocket();
@@ -111,17 +103,26 @@ export const useChatStore = create((set, get) => ({
     set({ activeId: null, messages: [], typingUserId: null });
   },
 
-  send: (text) => {
+
+send: (text, labels = {}) => {
     const { activeId } = get();
     const s = getChatSocket();
     if (!activeId || !text.trim()) return;
-    s?.emit('chat:send', { conversationId: activeId, text: text.trim() });
+    s?.emit('chat:send', { conversationId: activeId, text: text.trim() }, (ack) => {
+      console.log('[chatStore] send ack:', ack);
+      if (ack?.error) {
+        // Localized: the screen passes these in via labels (store can't use
+        // useLang). Default to the pending-limit explanation, then generic.
+        const body =
+          (ack.code && labels[ack.code]) ||
+          labels.PENDING_LIMIT ||
+          labels.default ||
+          ack.error;
+        Alert.alert(labels.title || '', body);
+      }
+    });
   },
 
-  // Upload first, then emit the resulting URL. Returns an error string on
-  // failure rather than throwing, because the caller renders it in an Alert.
-  // The server rejects images on pending conversations — that error surfaces
-  // here via the ack.
   sendImage: async (uri) => {
     const { activeId } = get();
     if (!activeId) return 'No conversation';
@@ -134,8 +135,6 @@ export const useChatStore = create((set, get) => ({
       const s = getChatSocket();
       if (!s) return 'Not connected';
 
-      // Wait for the ack so a rejection (pending conversation, block) reaches
-      // the user instead of vanishing.
       const ack = await new Promise((resolve) => {
         let settled = false;
         const done = (v) => { if (!settled) { settled = true; resolve(v); } };

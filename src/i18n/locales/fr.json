@@ -277,5 +277,9 @@
     "errorBody": "Une erreur s’est produite à l’ouverture du sélecteur. Réessayez.",
     "uploadErrorTitle": "Échec de l’envoi",
     "uploadErrorBody": "Impossible d’envoyer la photo. Vérifiez votre connexion et réessayez."
-  }
+  },
+  "chatPendingLimit": "Vous ne pouvez envoyer qu’un seul message tant que cette personne n’a pas accepté votre demande. Attendez sa réponse.",
+  "chatPendingRecipient": "Acceptez la demande avant de répondre.",
+  "chatSendFailed": "Impossible d’envoyer le message.",
+  "chatPendingTitle": "Envoi impossible"
 }
