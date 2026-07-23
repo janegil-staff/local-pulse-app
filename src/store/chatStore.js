@@ -1,6 +1,5 @@
 // localpulse/app/src/store/chatStore.js
 import { create } from 'zustand';
-import Toast from 'react-native-toast-message';
 import { api } from '../api/client.js';
 import { connectChatSocket, getChatSocket } from '../api/socket.js';
 import { Alert } from 'react-native';
@@ -9,6 +8,7 @@ export const useChatStore = create((set, get) => ({
   conversations: [],
   messages: [],        // for the active conversation
   activeId: null,
+  activeStatus: null,  // status of the active conversation ('pending'|'accepted')
   typingUserId: null,
   unread: 0,           // unread messages in accepted conversations
   requestCount: 0,     // pending message requests awaiting your response
@@ -26,12 +26,17 @@ export const useChatStore = create((set, get) => ({
     s.on('connect_error', (e) => console.log('[chatStore] socket connect_error:', e?.message));
     s.on('disconnect', (r) => console.log('[chatStore] socket disconnect:', r));
 
+    // Inbound live messages. The server broadcasts chat:message to the whole
+    // conversation room — INCLUDING the sender — so a message we just sent over
+    // REST is echoed back here too. Dedup by id so our optimistic append (in
+    // send()) and this echo don't produce a doubled bubble.
     s.on('chat:message', (msg) => {
       const st = get();
       const isActive = String(msg.conversationId) === String(st.activeId);
+      const exists = st.messages.some((m) => String(m.id) === String(msg.id));
       const preview = msg.text || '📷';
       set({
-        messages: isActive ? [...st.messages, msg] : st.messages,
+        messages: isActive && !exists ? [...st.messages, msg] : st.messages,
         conversations: st.conversations.map((c) =>
           String(c.id) === String(msg.conversationId)
             ? { ...c, lastMessage: preview, lastMessageAt: msg.createdAt }
@@ -44,6 +49,21 @@ export const useChatStore = create((set, get) => ({
       const st = get();
       console.log('[chatStore] chat:notify received');
       if (String(conversationId) === String(st.activeId)) return;
+      get().refreshUnread();
+    });
+
+    // CHAT_ACCEPTED_V1 — the recipient accepting a request flips the
+    // conversation to 'accepted' server-side and emits chat:accepted to BOTH
+    // participants (to each user's personal room). Update local status if this
+    // is the open conversation, and reload lists so the row moves from Requests
+    // into Messages on both sides.
+    s.on('chat:accepted', ({ conversationId }) => {
+      const st = get();
+      console.log('[chatStore] chat:accepted for', conversationId);
+      if (String(conversationId) === String(st.activeId)) {
+        set({ activeStatus: 'accepted' });
+      }
+      get().loadConversations().catch(() => {});
       get().refreshUnread();
     });
 
@@ -85,42 +105,95 @@ export const useChatStore = create((set, get) => ({
   },
 
   enterConversation: async (conversationId) => {
-    set({ activeId: conversationId, messages: [] });
+    set({ activeId: conversationId, messages: [], activeStatus: null });
     const s = connectChatSocket();
     s.emit('chat:join', { conversationId });
-    const { messages } = await api.getMessages(conversationId);
-    set({ messages });
+    const res = await api.getMessages(conversationId);
+    set({
+      messages: res.messages ?? [],
+      // getMessages returns conversation: { id, status, initiator } — seed the
+      // active status so the input knows whether the chat is pending/accepted.
+      activeStatus: res.conversation?.status ?? null,
+    });
     try {
       await api.markConversationRead(conversationId);
       get().refreshUnread();
     } catch { /* ignore */ }
   },
 
+  // Recipient accepts a pending request. Optimistically flip local status so
+  // the input unlocks immediately; the server also emits chat:accepted which
+  // reconciles both sides.
+  acceptActive: async () => {
+    const { activeId } = get();
+    if (!activeId) return;
+    try {
+      await api.acceptConversation(activeId);
+      set({ activeStatus: 'accepted' });
+      get().loadConversations().catch(() => {});
+      get().refreshUnread();
+    } catch (e) {
+      Alert.alert('', e?.message || 'Could not accept');
+    }
+  },
+
   leaveConversation: () => {
     const { activeId } = get();
     const s = getChatSocket();
     if (activeId) s?.emit('chat:leave', { conversationId: activeId });
-    set({ activeId: null, messages: [], typingUserId: null });
+    set({ activeId: null, messages: [], typingUserId: null, activeStatus: null });
   },
 
-
-send: (text, labels = {}) => {
+  // Send a text message over REST — the reliable path on both platforms.
+  //
+  // WHY NOT socket.emit('chat:send'): on Android the websocket is frequently
+  // suspended/dropped (OS backgrounding, flaky transport). emit() into a
+  // disconnected socket is SILENTLY dropped — no ack, no error, message lost.
+  // That caused the "first message never arrives, but the request appears" bug:
+  // openConversation (REST) created the pending convo, but the opener sent over
+  // the socket vanished, so no message was ever persisted. The server already
+  // treats POST /conversations/:id/messages as the single source of truth (it
+  // persists AND broadcasts chat:message to both sides), so REST loses nothing.
+  // The chat:message listener above appends the echoed copy; we dedup by id.
+  send: async (text, labels = {}) => {
     const { activeId } = get();
-    const s = getChatSocket();
     if (!activeId || !text.trim()) return;
-    s?.emit('chat:send', { conversationId: activeId, text: text.trim() }, (ack) => {
-      console.log('[chatStore] send ack:', ack);
-      if (ack?.error) {
-        // Localized: the screen passes these in via labels (store can't use
-        // useLang). Default to the pending-limit explanation, then generic.
-        const body =
-          (ack.code && labels[ack.code]) ||
-          labels.PENDING_LIMIT ||
-          labels.default ||
-          ack.error;
-        Alert.alert(labels.title || '', body);
+    const bodyText = text.trim();
+
+    try {
+      const res = await api.sendMessage(activeId, { text: bodyText });
+      const msg = res?.message;
+
+      // Optimistic append (deduped) so the sender sees it instantly even if the
+      // socket echo is slow or the socket is down.
+      if (msg) {
+        set((st) => {
+          const exists = st.messages.some((m) => String(m.id) === String(msg.id));
+          const isActive = String(msg.conversationId ?? activeId) === String(st.activeId);
+          return {
+            messages: isActive && !exists ? [...st.messages, msg] : st.messages,
+            conversations: st.conversations.map((c) =>
+              String(c.id) === String(activeId)
+                ? { ...c, lastMessage: msg.text || '📷', lastMessageAt: msg.createdAt }
+                : c
+            ),
+          };
+        });
       }
-    });
+    } catch (e) {
+      // The server returns 403 with these messages for the pending gate. Map
+      // them back to the localized labels the screen passed in.
+      const m = e?.message || '';
+      const code =
+        /accept the request/i.test(m) ? 'PENDING_RECIPIENT' :
+        /wait for your request/i.test(m) ? 'PENDING_LIMIT' : null;
+      const body =
+        (code && labels[code]) ||
+        labels.default ||
+        m ||
+        'Could not send';
+      Alert.alert(labels.title || '', body);
+    }
   },
 
   sendImage: async (uri) => {
@@ -132,19 +205,30 @@ send: (text, labels = {}) => {
       const imageUrl = typeof res === 'string' ? res : res?.url;
       if (!imageUrl) return 'Upload failed';
 
-      const s = getChatSocket();
-      if (!s) return 'Not connected';
-
-      const ack = await new Promise((resolve) => {
-        let settled = false;
-        const done = (v) => { if (!settled) { settled = true; resolve(v); } };
-        s.emit('chat:sendImage', { conversationId: activeId, imageUrl }, done);
-        setTimeout(() => done({ error: 'Send timed out' }), 15000);
-      });
-
-      return ack?.error ?? null;
+      // Send the image message over REST too, for the same reliability reason
+      // as text. Server persists + broadcasts chat:message.
+      const sent = await api.sendMessage(activeId, { imageUrl });
+      const msg = sent?.message;
+      if (msg) {
+        set((st) => {
+          const exists = st.messages.some((m) => String(m.id) === String(msg.id));
+          const isActive = String(msg.conversationId ?? activeId) === String(st.activeId);
+          return {
+            messages: isActive && !exists ? [...st.messages, msg] : st.messages,
+            conversations: st.conversations.map((c) =>
+              String(c.id) === String(activeId)
+                ? { ...c, lastMessage: '📷', lastMessageAt: msg.createdAt }
+                : c
+            ),
+          };
+        });
+      }
+      return null;
     } catch (e) {
-      return e?.message ?? 'Upload failed';
+      const m = e?.message || 'Upload failed';
+      // Surface pending-gate rejections for images too.
+      if (/accept the request|wait for your request/i.test(m)) return m;
+      return m;
     } finally {
       set({ sendingImage: false });
     }

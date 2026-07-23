@@ -2,8 +2,8 @@
   "expo": {
     "name": "Qup Pulse",
     "slug": "qup-pulse",
-    "version": "1.5",
-    "orientation": "portrait",
+    "version": "1.7",
+    "orientation": "default",
     "icon": "./assets/images/logo.png",
     "userInterfaceStyle": "automatic",
     "scheme": "quppulse",
@@ -16,7 +16,7 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "com.qup.pulse",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow photo access to send pictures in chat.",

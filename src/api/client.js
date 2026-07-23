@@ -144,6 +144,9 @@ export const api = {
     form.append('image', { uri, name, type }); // ⚠️ 'image' must match the route's .single('image')
     return request('/upload', { method: 'POST', body: form, isForm: true });
   },
+
+  sendMessage: (id, body) => request(`/chat/conversations/${id}/messages`, { method: 'POST', body }),
+ 
   requestPinReset: (email) => request('/auth/forgot-pin', { method: 'POST', body: { email }, auth: false }),
   resetPin: (email, code, pin) => request('/auth/reset-pin', { method: 'POST', body: { email, code, pin }, auth: false }),
   changePin: (currentPin, newPin) => request('/auth/change-pin', { method: 'POST', body: { currentPin, newPin } }),
