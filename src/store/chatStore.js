@@ -54,8 +54,8 @@ export const useChatStore = create((set, get) => ({
 
     // CHAT_ACCEPTED_V1 — the recipient accepting a request flips the
     // conversation to 'accepted' server-side and emits chat:accepted to BOTH
-    // participants (to each user's personal room). Update local status if this
-    // is the open conversation, and reload lists so the row moves from Requests
+    // participants (each user's personal room). Update local status if this is
+    // the open conversation, and reload lists so the row moves from Requests
     // into Messages on both sides.
     s.on('chat:accepted', ({ conversationId }) => {
       const st = get();
@@ -121,6 +121,38 @@ export const useChatStore = create((set, get) => ({
     } catch { /* ignore */ }
   },
 
+  // Re-fetch the active conversation's messages and merge by id. Fallback for
+  // unreliable socket delivery (notably Android): ChatScreen polls this while
+  // open so a message that never arrived via chat:message still shows up.
+  // Merge-by-id means already-present messages aren't duplicated or reordered,
+  // and locally-optimistic sends stay put.
+  refetchActiveMessages: async () => {
+    const { activeId } = get();
+    if (!activeId) return;
+    try {
+      const res = await api.getMessages(activeId);
+      const incoming = res.messages ?? [];
+      set((st) => {
+        // Only apply if still on the same conversation.
+        if (String(st.activeId) !== String(activeId)) return {};
+        if (!incoming.length) {
+          return { activeStatus: res.conversation?.status ?? st.activeStatus };
+        }
+        // Server returns oldest-first. Start from the authoritative server list,
+        // then keep any locally-optimistic messages not yet returned by the
+        // server (e.g. just-sent, echo pending) appended in their existing order.
+        const incomingIds = new Set(incoming.map((m) => String(m.id)));
+        const localOnly = st.messages.filter((m) => !incomingIds.has(String(m.id)));
+        return {
+          messages: [...incoming, ...localOnly],
+          activeStatus: res.conversation?.status ?? st.activeStatus,
+        };
+      });
+    } catch {
+      /* transient — next poll retries */
+    }
+  },
+
   // Recipient accepts a pending request. Optimistically flip local status so
   // the input unlocks immediately; the server also emits chat:accepted which
   // reconciles both sides.
@@ -149,21 +181,16 @@ export const useChatStore = create((set, get) => ({
   // WHY NOT socket.emit('chat:send'): on Android the websocket is frequently
   // suspended/dropped (OS backgrounding, flaky transport). emit() into a
   // disconnected socket is SILENTLY dropped — no ack, no error, message lost.
-  // That caused the "first message never arrives, but the request appears" bug:
-  // openConversation (REST) created the pending convo, but the opener sent over
-  // the socket vanished, so no message was ever persisted. The server already
-  // treats POST /conversations/:id/messages as the single source of truth (it
-  // persists AND broadcasts chat:message to both sides), so REST loses nothing.
-  // The chat:message listener above appends the echoed copy; we dedup by id.
+  // The server treats POST /conversations/:id/messages as the single source of
+  // truth (persists AND broadcasts chat:message to both sides), so REST loses
+  // nothing. The chat:message listener appends the echoed copy; we dedup by id.
   send: async (text, labels = {}) => {
     const { activeId } = get();
     if (!activeId || !text.trim()) return;
     const bodyText = text.trim();
-
     try {
       const res = await api.sendMessage(activeId, { text: bodyText });
       const msg = res?.message;
-
       // Optimistic append (deduped) so the sender sees it instantly even if the
       // socket echo is slow or the socket is down.
       if (msg) {
@@ -181,8 +208,6 @@ export const useChatStore = create((set, get) => ({
         });
       }
     } catch (e) {
-      // The server returns 403 with these messages for the pending gate. Map
-      // them back to the localized labels the screen passed in.
       const m = e?.message || '';
       const code =
         /accept the request/i.test(m) ? 'PENDING_RECIPIENT' :
@@ -204,9 +229,7 @@ export const useChatStore = create((set, get) => ({
       const res = await api.uploadImage(uri);
       const imageUrl = typeof res === 'string' ? res : res?.url;
       if (!imageUrl) return 'Upload failed';
-
-      // Send the image message over REST too, for the same reliability reason
-      // as text. Server persists + broadcasts chat:message.
+      // Send the image message over REST too, same reliability reason as text.
       const sent = await api.sendMessage(activeId, { imageUrl });
       const msg = sent?.message;
       if (msg) {
@@ -225,10 +248,7 @@ export const useChatStore = create((set, get) => ({
       }
       return null;
     } catch (e) {
-      const m = e?.message || 'Upload failed';
-      // Surface pending-gate rejections for images too.
-      if (/accept the request|wait for your request/i.test(m)) return m;
-      return m;
+      return e?.message || 'Upload failed';
     } finally {
       set({ sendingImage: false });
     }

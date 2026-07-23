@@ -8,13 +8,12 @@
 // Android insets.bottom (the nav-bar height) is still reported when the
 // keyboard is up and would otherwise add a surplus gap above the keyboard.
 //
-// NOTE: the cleaner cross-platform fix is react-native-keyboard-controller, but
-// it has a native (reanimated worklets) dependency and CANNOT run in Expo Go —
-// it needs a dev build. This file is the Expo-Go-compatible version. When you
-// move to a dev build, swap the import below for
-//   import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-// wrap the app root in <KeyboardProvider>, and you can delete the kbVisible
-// logic.
+// LIVE DELIVERY: messages arrive live via the chat:message socket event, but
+// Android sockets are unreliable (background/reconnect drops room membership).
+// As a fallback, this screen POLLS refetchActiveMessages every few seconds
+// while open, so a message that never arrived over the socket still appears.
+// The store merges by id, so polling never duplicates already-delivered
+// messages.
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View, Text, TextInput, Pressable, FlatList, StyleSheet, KeyboardAvoidingView,
@@ -26,7 +25,7 @@ import { useChatStore } from '../store/chatStore.js';
 import { useAuth } from '../context/AuthContext.js';
 import ScreenHeader from '../components/ScreenHeader.js';
 import { theme, makeStyles, useStyles } from '../theme/theme.js';
-import { useLang } from '../context/LangContext.js';  
+import { useLang } from '../context/LangContext.js';
 
 export default function ChatScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
@@ -38,13 +37,15 @@ export default function ChatScreen({ route, navigation }) {
   const sendingImage = useChatStore((s) => s.sendingImage);
   const enterConversation = useChatStore((s) => s.enterConversation);
   const leaveConversation = useChatStore((s) => s.leaveConversation);
+  const refetchActiveMessages = useChatStore((s) => s.refetchActiveMessages);
   const send = useChatStore((s) => s.send);
   const sendImage = useChatStore((s) => s.sendImage);
   const emitTyping = useChatStore((s) => s.emitTyping);
   const [text, setText] = useState('');
   const listRef = useRef(null);
   const [fullImage, setFullImage] = useState(null);
-const { t } = useLang();
+  const { t } = useLang();
+
   // While the keyboard is up, drop the bottom safe-area inset (nav-bar height)
   // so padding-behavior KAV doesn't lift the input by keyboardHeight + navBar.
   const [kbVisible, setKbVisible] = useState(false);
@@ -58,6 +59,16 @@ const { t } = useLang();
     enterConversation(conversationId);
     return () => leaveConversation();
   }, [conversationId, enterConversation, leaveConversation]);
+
+  // Poll for new messages while the thread is open — fallback for unreliable
+  // socket delivery on Android. The store merges by id, so this is cheap and
+  // never duplicates messages already delivered via chat:message.
+  useEffect(() => {
+    const id = setInterval(() => {
+      refetchActiveMessages();
+    }, 4000);
+    return () => clearInterval(id);
+  }, [conversationId, refetchActiveMessages]);
 
   // messages is oldest-first from the store. The list is inverted (renders from
   // the bottom up), so we feed it newest-first. useMemo avoids reversing on
@@ -90,7 +101,7 @@ const { t } = useLang();
     prevLen.current = inverted.length;
   }, [inverted.length]);
 
-function submit() {
+  function submit() {
     if (!text.trim()) return;
     send(text, {
       PENDING_LIMIT: t.chatPendingLimit,
@@ -113,8 +124,7 @@ function submit() {
     });
     if (result.canceled) return;
 
-    // sendImage resolves to an error string, or null on success — the server
-    // rejects photos in pending conversations, and that message lands here.
+    // sendImage resolves to an error string, or null on success.
     const err = await sendImage(result.assets[0].uri);
     if (err) Alert.alert('Could not send', err);
   }
@@ -168,7 +178,7 @@ function submit() {
             placeholder="Message…"
             placeholderTextColor={theme.colors.textDim}
             value={text}
-            onChangeText={(t) => { setText(t); emitTyping(); }}
+            onChangeText={(v) => { setText(v); emitTyping(); }}
             multiline
           />
           <Pressable style={styles.sendBtn} onPress={submit}>
