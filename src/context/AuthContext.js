@@ -2,30 +2,45 @@
 // Mirrors the Recover / copd_doctor auth pattern (local PIN verify, SecureStore
 // for email+pin, pinVerified/isNewUser flags), adapted to Nearby's backend
 // which returns { token, user } and logs in with email + (password OR pin).
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api, setToken, setAuthFailureHandler } from '../api/client.js';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { api, setToken, setAuthFailureHandler } from "../api/client.js";
 
-const TOKEN_KEY = 'auth.token.v1';
+const TOKEN_KEY = "auth.token.v1";
 
 // Load SecureStore defensively — if the native module isn't linked, fall back
 // to AsyncStorage so the app never crashes at import time.
 let SecureStore = null;
 try {
   // eslint-disable-next-line global-require
-  SecureStore = require('expo-secure-store');
+  SecureStore = require("expo-secure-store");
 } catch {
   SecureStore = null;
+}
+
+async function loadProfile() {
+  const res = await api.getMyProfile();
+  const profile = res?.profile ?? res?.user ?? null;
+
+  if (!profile) {
+    // A 200 with an unexpected shape is worse than an error: the user sees
+    // a login screen that just does nothing.
+    console.error("getMyProfile returned no profile:", JSON.stringify(res));
+    throw new Error("Unexpected profile response");
+  }
+
+  return profile;
 }
 
 // Crash-proof storage wrappers. Prefer SecureStore; fall back to AsyncStorage.
 async function secureSet(key, value) {
   try {
     if (value == null) return;
-    if (SecureStore?.setItemAsync) await SecureStore.setItemAsync(key, String(value));
+    if (SecureStore?.setItemAsync)
+      await SecureStore.setItemAsync(key, String(value));
     else await AsyncStorage.setItem(`secure.${key}`, String(value));
   } catch (e) {
-    console.warn('secureSet failed', key, e?.message);
+    console.warn("secureSet failed", key, e?.message);
   }
 }
 async function secureGet(key) {
@@ -33,7 +48,7 @@ async function secureGet(key) {
     if (SecureStore?.getItemAsync) return await SecureStore.getItemAsync(key);
     return await AsyncStorage.getItem(`secure.${key}`);
   } catch (e) {
-    console.warn('secureGet failed', key, e?.message);
+    console.warn("secureGet failed", key, e?.message);
     return null;
   }
 }
@@ -41,7 +56,9 @@ async function secureDelete(key) {
   try {
     if (SecureStore?.deleteItemAsync) await SecureStore.deleteItemAsync(key);
     else await AsyncStorage.removeItem(`secure.${key}`);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 const AuthContext = createContext(null);
@@ -56,8 +73,8 @@ export function AuthProvider({ children }) {
   // Set the token both in the API client (for requests) and in state (so the
   // navigator reacts to login/logout).
   const applyToken = (t) => {
-    setToken(t);        // client module — attaches to requests
-    setTokenState(t);   // react state — drives navigation
+    setToken(t); // client module — attaches to requests
+    setTokenState(t); // react state — drives navigation
   };
 
   // Restore session on launch: token from AsyncStorage → load full profile.
@@ -85,33 +102,48 @@ export function AuthProvider({ children }) {
   // re-enter via the local app-lock without a fresh server login (which will
   // also 403). Re-registered if logout identity changes.
   useEffect(() => {
-    setAuthFailureHandler(() => { logoutAndClearPin(); });
+    setAuthFailureHandler(() => {
+      logoutAndClearPin();
+    });
     return () => setAuthFailureHandler(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function persist(token, email) {
-    if (!token) throw new Error('Server did not return a token');
+    if (!token) throw new Error("Server did not return a token");
     applyToken(token);
     await AsyncStorage.setItem(TOKEN_KEY, token);
-    if (email) await secureSet('userEmail', email.trim().toLowerCase());
+    if (email) await secureSet("userEmail", email.trim().toLowerCase());
   }
 
   // login(emailOrUsername, secret) — secret is the PIN (or password). Always
   // authenticate against the server so we get a fresh valid token; the backend
   // accepts either the PIN or the password.
   const login = async (email, secret) => {
+    // localpulse/app/src/context/AuthContext.js — inside login()
+
     const cleanEntered = String(email).trim().toLowerCase();
-    const { token } = await api.login({ emailOrUsername: cleanEntered, password: secret });
+    const { token } = await api.login({
+      emailOrUsername: cleanEntered,
+      password: secret,
+    });
     await persist(token, cleanEntered);
-    await secureSet('userPin', secret);
-    const { profile } = await api.getMyProfile();
+    await secureSet("userPin", secret);
+    const profile = await loadProfile();
+    const res = await api.getMyProfile();
+    console.log("ME BODY", JSON.stringify(res));
+
+    console.log(
+      "PROFILE",
+      profile ? "ok" : "UNDEFINED",
+      profile?.profileComplete,
+    );
+
     setPinVerified(true);
     setUser(profile);
     return profile;
   };
 
-  // register(data) — creates the account with username + profile basics.
   const register = async (data, opts = {}) => {
     const { token } = await api.register({
       email: data.email,
@@ -123,19 +155,22 @@ export function AuthProvider({ children }) {
       gender: data.gender,
     });
     const cleanEmail = String(data.email).trim().toLowerCase();
-    await persist(token, cleanEmail);
-    if (data.pin) await secureSet('userPin', data.pin);
+
+    // BEFORE persist(). Setting the token first produces a render where
+    // loggedIn is true but isNewUser is still false — the navigator briefly
+    // leaves the signup branch, unmounts the multi-step screen, and it
+    // remounts at step 1 when the flag catches up.
     setIsNewUser(true);
     setPinVerified(true);
-    // When deferUser is set (multi-step onboarding), DON'T publish the user yet —
-    // otherwise the navigator sees an incomplete profile and bounces to
-    // onboarding mid-flow. The caller sets the user once everything's saved.
+
+    await persist(token, cleanEmail);
+    if (data.pin) await secureSet("userPin", data.pin);
+
     if (opts.deferUser) return null;
     const { profile } = await api.getMyProfile();
     setUser(profile);
     return profile;
   };
-
   // Adopt a session the server handed us without a login round-trip. Used by
   // the PIN reset flow: resetPin() returns a token because the user just
   // proved control of their inbox and set a fresh credential. Mirrors login()
@@ -143,7 +178,7 @@ export function AuthProvider({ children }) {
   const adoptSession = async (token, email, pin) => {
     const cleanEmail = String(email).trim().toLowerCase();
     await persist(token, cleanEmail);
-    if (pin) await secureSet('userPin', pin);
+    if (pin) await secureSet("userPin", pin);
     setPinVerified(true);
     const { profile } = await api.getMyProfile();
     setUser(profile);
@@ -151,12 +186,13 @@ export function AuthProvider({ children }) {
   };
 
   const savePin = async (pin) => {
-    await secureSet('userPin', pin);
-    const email = user?.email ?? (await secureGet('userEmail'));
-    if (email) await secureSet('userEmail', email.trim().toLowerCase());
+    await secureSet("userPin", pin);
+    const email = user?.email ?? (await secureGet("userEmail"));
+    if (email) await secureSet("userEmail", email.trim().toLowerCase());
   };
 
-  const updateUser = (data) => setUser((prev) => (prev ? { ...prev, ...data } : prev));
+  const updateUser = (data) =>
+    setUser((prev) => (prev ? { ...prev, ...data } : prev));
 
   // Refresh the full profile (used by onboarding to flip profileComplete).
   const hydrate = async () => {
@@ -174,8 +210,8 @@ export function AuthProvider({ children }) {
 
   const logoutAndClearPin = async () => {
     await AsyncStorage.removeItem(TOKEN_KEY);
-    await secureDelete('userPin');
-    await secureDelete('userEmail');
+    await secureDelete("userPin");
+    await secureDelete("userEmail");
     applyToken(null);
     setPinVerified(false);
     setUser(null);
@@ -185,7 +221,7 @@ export function AuthProvider({ children }) {
   // accepting the old value.
   const changePin = async (currentPin, newPin) => {
     await api.changePin(currentPin, newPin);
-    await secureSet('userPin', newPin);
+    await secureSet("userPin", newPin);
   };
   return (
     <AuthContext.Provider
@@ -216,6 +252,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
