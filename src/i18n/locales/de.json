@@ -288,5 +288,7 @@
   "dobInvalid": "Ungültiges Geburtsdatum.",
   "dobChangeLimit": "Du kannst dein Geburtsdatum nicht erneut ändern. Wende dich an den Support, wenn es falsch ist.",
   "dobChangesLeft": "Du kannst dein Geburtsdatum noch {n} Mal ändern.",
-  "dobLastChangeWarning": "Dies ist das letzte Mal, dass du dein Geburtsdatum ändern kannst. Bist du sicher?"
+  "dobLastChangeWarning": "Dies ist das letzte Mal, dass du dein Geburtsdatum ändern kannst. Bist du sicher?",
+  "noFollowers": "Noch keine Follower.",
+  "noFollowing": "Folgt noch niemandem."
 }

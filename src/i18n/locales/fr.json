@@ -288,5 +288,7 @@
   "dobInvalid": "Date de naissance invalide.",
   "dobChangeLimit": "Vous ne pouvez plus modifier votre date de naissance. Contactez le support si elle est incorrecte.",
   "dobChangesLeft": "Vous pouvez encore modifier votre date de naissance {n} fois.",
-  "dobLastChangeWarning": "C’est la dernière fois que vous pouvez modifier votre date de naissance. Confirmer ?"
+  "dobLastChangeWarning": "C’est la dernière fois que vous pouvez modifier votre date de naissance. Confirmer ?",
+  "noFollowers": "Pas encore d’abonnés.",
+  "noFollowing": "Ne suit encore personne."
 }

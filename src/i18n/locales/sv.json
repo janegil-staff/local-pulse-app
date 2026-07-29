@@ -288,5 +288,7 @@
   "dobInvalid": "Ogiltigt födelsedatum.",
   "dobChangeLimit": "Du kan inte ändra ditt födelsedatum igen. Kontakta supporten om det är fel.",
   "dobChangesLeft": "Du kan ändra ditt födelsedatum {n} gång(er) till.",
-  "dobLastChangeWarning": "Det här är sista gången du kan ändra ditt födelsedatum. Är du säker?"
+  "dobLastChangeWarning": "Det här är sista gången du kan ändra ditt födelsedatum. Är du säker?",
+  "noFollowers": "Inga följare ännu.",
+  "noFollowing": "Följer ingen ännu."
 }

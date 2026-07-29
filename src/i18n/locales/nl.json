@@ -288,5 +288,7 @@
   "dobInvalid": "Ongeldige geboortedatum.",
   "dobChangeLimit": "Je kunt je geboortedatum niet nogmaals wijzigen. Neem contact op met support als deze onjuist is.",
   "dobChangesLeft": "Je kunt je geboortedatum nog {n} keer wijzigen.",
-  "dobLastChangeWarning": "Dit is de laatste keer dat je je geboortedatum kunt wijzigen. Weet je het zeker?"
+  "dobLastChangeWarning": "Dit is de laatste keer dat je je geboortedatum kunt wijzigen. Weet je het zeker?",
+  "noFollowers": "Nog geen volgers.",
+  "noFollowing": "Volgt nog niemand."
 }

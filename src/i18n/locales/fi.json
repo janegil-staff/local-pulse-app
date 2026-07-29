@@ -288,5 +288,7 @@
   "dobInvalid": "Virheellinen syntymäaika.",
   "dobChangeLimit": "Et voi enää muuttaa syntymäaikaasi. Ota yhteyttä tukeen, jos se on väärin.",
   "dobChangesLeft": "Voit muuttaa syntymäaikaasi vielä {n} kertaa.",
-  "dobLastChangeWarning": "Tämä on viimeinen kerta, kun voit muuttaa syntymäaikaasi. Oletko varma?"
+  "dobLastChangeWarning": "Tämä on viimeinen kerta, kun voit muuttaa syntymäaikaasi. Oletko varma?",
+  "noFollowers": "Ei vielä seuraajia.",
+  "noFollowing": "Ei seuraa vielä ketään."
 }

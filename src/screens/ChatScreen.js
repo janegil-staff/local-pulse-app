@@ -48,13 +48,13 @@ export default function ChatScreen({ route, navigation }) {
   const { user: me } = useAuth();
   const messages = useChatStore((s) => s.messages);
   const typingUserId = useChatStore((s) => s.typingUserId);
+  const emitTyping = useChatStore((s) => s.emitTyping);
   const sendingImage = useChatStore((s) => s.sendingImage);
   const enterConversation = useChatStore((s) => s.enterConversation);
   const leaveConversation = useChatStore((s) => s.leaveConversation);
   const refetchActiveMessages = useChatStore((s) => s.refetchActiveMessages);
   const send = useChatStore((s) => s.send);
   const sendImage = useChatStore((s) => s.sendImage);
-  const emitTyping = useChatStore((s) => s.emitTyping);
   const [text, setText] = useState("");
   const listRef = useRef(null);
   const [fullImage, setFullImage] = useState(null);
@@ -142,9 +142,11 @@ export default function ChatScreen({ route, navigation }) {
 
   function submit() {
     if (!text.trim()) return;
+
     send(text, {
-      PENDING_LIMIT: t.chatPendingLimit,
-      PENDING_RECIPIENT: t.chatPendingRecipient,
+      title: t.chatPendingTitle,
+      chatPendingLimit: t.chatPendingLimit,
+      chatPendingRecipient: t.chatPendingRecipient,
       default: t.chatSendFailed,
     });
 
@@ -237,14 +239,15 @@ export default function ChatScreen({ route, navigation }) {
             );
           }}
         />
-        {typingUserId ? <Text style={styles.typing}>typing…</Text> : null}
         <TextInput
-          value={text}
-          onChangeText={(value) => {
-            setText(value); // your existing line, unchanged
-            onTextChange(value); // add this
+          onChangeText={(v) => {
+            setText(v);
+            emitTyping();
           }}
         />
+
+        {typingUserId && <TypingIndicator />}
+
         <View
           style={[
             styles.inputRow,

@@ -1,5 +1,5 @@
 // localpulse/app/src/navigation/RootNavigator.js
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { ActivityIndicator, Text, View } from "react-native";
@@ -28,6 +28,7 @@ import PersonalSettingsScreen from "../screens/PersonalSettingsScreen.js";
 import ForgotPinScreen from "../screens/ForgotPinScreen.js";
 import ChangePinScreen from "../screens/ChangePinScreen.js";
 import BlockedUsersScreen from "../screens/BlockedUsersScreen.js";
+import FollowersScreen from "../screens/FollowersScreen.js";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -89,6 +90,13 @@ function BootSplash() {
 function Tabs() {
   const navStyles = useStyles(navigationStylesFactory);
 
+  // NOTE: no unread badge on any of these.
+  //
+  // Messages lives in the header (✉), not the tab bar, so the unread count
+  // belongs on that button — see components/MessagesButton.js. Putting it on
+  // Discover, Feed and Profile would tell the user there is something new in
+  // three places that never contain messages, and tapping any of them would
+  // not clear it.
   return (
     <Tab.Navigator
       screenOptions={{
@@ -96,7 +104,6 @@ function Tabs() {
         ...navStyles.tabScreenOptions,
       }}
     >
-      {/* Messages lives in the header (✉), not the tab bar. */}
       <Tab.Screen
         name="Discover"
         component={DiscoveryScreen}
@@ -132,6 +139,7 @@ export default function RootNavigator() {
   const navStyles = useStyles(navigationStylesFactory);
   const { token, user, loading, isNewUser } = useAuth();
   const initSocket = useChatStore((s) => s.initSocket);
+  const [splashTimedOut, setSplashTimedOut] = useState(false);
 
   const loggedIn = Boolean(token);
 
@@ -141,6 +149,14 @@ export default function RootNavigator() {
       registerForPush().catch(() => {});
     }
   }, [loggedIn, initSocket]);
+
+  // Bounds the splash. Any bug that leaves `user` null would otherwise be an
+  // indefinite spinner with no way out — a login screen the user can act on
+  // beats a spinner they cannot.
+  useEffect(() => {
+    const timer = setTimeout(() => setSplashTimedOut(true), 8000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // ---- routing --------------------------------------------------------
   //
@@ -162,22 +178,21 @@ export default function RootNavigator() {
   // which meant anyone who skipped a step could never reach the app again.
   // Completeness is advisory now: <ProfilePrompt /> inside the app says
   // what is missing and links to the screen that fixes it.
-  console.log("NAV", {
-    loggedIn,
-    isNewUser,
-    hasUser: !!user,
-    loading,
-    inSignupFlow,
-  });
-  if (loading) {
+  //
+  // Declaration order matters below: `inSignupFlow` is a const, so any guard
+  // that reads it must come AFTER it. Referencing it earlier throws a
+  // ReferenceError during render, which produces no tree at all — the screen
+  // freezes on whatever rendered last, which looks exactly like a hang.
+
+  if (loading && !splashTimedOut) {
     return <BootSplash />;
   }
 
   const inSignupFlow = !loggedIn || isNewUser;
 
-  // Token restored at launch but the profile has not arrived yet. Only
-  // reachable outside the signup flow, so it cannot trap a new account.
-  if (!inSignupFlow && !user) {
+  // Token restored at launch but the profile has not arrived yet. Not
+  // reachable during signup, so it cannot trap a new account.
+  if (!inSignupFlow && !user && !splashTimedOut) {
     return <BootSplash />;
   }
 
@@ -240,7 +255,6 @@ export default function RootNavigator() {
             component={Tabs}
             options={{ headerShown: false }}
           />
-
           <Stack.Screen
             name="BlockedUsers"
             component={BlockedUsersScreen}
@@ -311,6 +325,11 @@ export default function RootNavigator() {
             name="Privacy"
             component={LegalScreen}
             initialParams={{ doc: "privacy" }}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Followers"
+            component={FollowersScreen}
             options={{ headerShown: false }}
           />
         </>

@@ -288,5 +288,7 @@
   "dobInvalid": "Fecha de nacimiento no válida.",
   "dobChangeLimit": "No puedes volver a cambiar tu fecha de nacimiento. Contacta con soporte si es incorrecta.",
   "dobChangesLeft": "Puedes cambiar tu fecha de nacimiento {n} vez/veces más.",
-  "dobLastChangeWarning": "Esta es la última vez que puedes cambiar tu fecha de nacimiento. ¿Seguro?"
+  "dobLastChangeWarning": "Esta es la última vez que puedes cambiar tu fecha de nacimiento. ¿Seguro?",
+  "noFollowers": "Aún no hay seguidores.",
+  "noFollowing": "Todavía no sigue a nadie."
 }

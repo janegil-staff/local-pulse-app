@@ -288,5 +288,7 @@
   "dobInvalid": "Invalid date of birth.",
   "dobChangeLimit": "You cannot change your date of birth again. Contact support if it is wrong.",
   "dobChangesLeft": "You can change your date of birth {n} more time(s).",
-  "dobLastChangeWarning": "This is the last time you can change your date of birth. Are you sure?"
+  "dobLastChangeWarning": "This is the last time you can change your date of birth. Are you sure?",
+  "noFollowers": "No followers yet.",
+  "noFollowing": "Not following anyone yet."
 }

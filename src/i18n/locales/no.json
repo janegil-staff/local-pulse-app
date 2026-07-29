@@ -288,5 +288,7 @@
   "dobInvalid": "Ugyldig fødselsdato.",
   "dobChangeLimit": "Du kan ikke endre fødselsdatoen flere ganger. Kontakt support hvis den er feil.",
   "dobChangesLeft": "Du kan endre fødselsdatoen {n} gang(er) til.",
-  "dobLastChangeWarning": "Dette er siste gangen du kan endre fødselsdatoen. Er du sikker?"
+  "dobLastChangeWarning": "Dette er siste gangen du kan endre fødselsdatoen. Er du sikker?",
+  "noFollowers": "Ingen følgere ennå.",
+  "noFollowing": "Følger ingen ennå."
 }

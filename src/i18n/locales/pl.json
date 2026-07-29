@@ -288,5 +288,7 @@
   "dobInvalid": "Nieprawidłowa data urodzenia.",
   "dobChangeLimit": "Nie możesz ponownie zmienić daty urodzenia. Skontaktuj się z pomocą techniczną, jeśli jest błędna.",
   "dobChangesLeft": "Możesz jeszcze {n} raz(y) zmienić datę urodzenia.",
-  "dobLastChangeWarning": "To ostatni raz, gdy możesz zmienić datę urodzenia. Na pewno?"
+  "dobLastChangeWarning": "To ostatni raz, gdy możesz zmienić datę urodzenia. Na pewno?",
+  "noFollowers": "Brak obserwujących.",
+  "noFollowing": "Nikogo jeszcze nie obserwuje."
 }

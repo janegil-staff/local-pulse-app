@@ -1,53 +1,60 @@
 // localpulse/app/src/store/chatStore.js
-import { create } from 'zustand';
-import { api } from '../api/client.js';
-import { connectChatSocket, getChatSocket } from '../api/socket.js';
-import { Alert } from 'react-native';
+import { create } from "zustand";
+import { api } from "../api/client.js";
+import { connectChatSocket, getChatSocket } from "../api/socket.js";
+import { Alert } from "react-native";
 
 export const useChatStore = create((set, get) => ({
   conversations: [],
-  messages: [],        // for the active conversation
+  messages: [], // for the active conversation
   activeId: null,
-  activeStatus: null,  // status of the active conversation ('pending'|'accepted')
+  activeStatus: null, // status of the active conversation ('pending'|'accepted')
   typingUserId: null,
-  unread: 0,           // unread messages in accepted conversations
-  requestCount: 0,     // pending message requests awaiting your response
+  unread: 0, // unread messages in accepted conversations
+  requestCount: 0, // pending message requests awaiting your response
   bound: false,
   sendingImage: false,
 
   // Wire socket listeners once, after login.
   initSocket: () => {
     if (get().bound) return;
-    console.log('[chatStore] initSocket: connecting…');
+    console.log("[chatStore] initSocket: connecting…");
     const s = connectChatSocket();
-    console.log('[chatStore] initSocket: got socket, connected =', s?.connected);
+    console.log(
+      "[chatStore] initSocket: got socket, connected =",
+      s?.connected,
+    );
 
-    s.on('connect', () => console.log('[chatStore] socket connect, id =', s.id));
-    s.on('connect_error', (e) => console.log('[chatStore] socket connect_error:', e?.message));
-    s.on('disconnect', (r) => console.log('[chatStore] socket disconnect:', r));
+    s.on("connect", () =>
+      console.log("[chatStore] socket connect, id =", s.id),
+    );
+    s.on("connect_error", (e) =>
+      console.log("[chatStore] socket connect_error:", e?.message),
+    );
+    s.on("disconnect", (r) => console.log("[chatStore] socket disconnect:", r));
 
     // Inbound live messages. The server broadcasts chat:message to the whole
     // conversation room — INCLUDING the sender — so a message we just sent over
     // REST is echoed back here too. Dedup by id so our optimistic append (in
     // send()) and this echo don't produce a doubled bubble.
-    s.on('chat:message', (msg) => {
+    s.on("chat:message", (msg) => {
       const st = get();
       const isActive = String(msg.conversationId) === String(st.activeId);
       const exists = st.messages.some((m) => String(m.id) === String(msg.id));
-      const preview = msg.text || '📷';
+      const preview = msg.text || "📷";
       set({
         messages: isActive && !exists ? [...st.messages, msg] : st.messages,
         conversations: st.conversations.map((c) =>
           String(c.id) === String(msg.conversationId)
             ? { ...c, lastMessage: preview, lastMessageAt: msg.createdAt }
-            : c
+            : c,
         ),
       });
     });
 
-    s.on('chat:notify', ({ conversationId }) => {
+    s.on("chat:notify", ({ conversationId }) => {
       const st = get();
-      console.log('[chatStore] chat:notify received');
+      console.log("[chatStore] chat:notify received");
       if (String(conversationId) === String(st.activeId)) return;
       get().refreshUnread();
     });
@@ -57,40 +64,56 @@ export const useChatStore = create((set, get) => ({
     // participants (each user's personal room). Update local status if this is
     // the open conversation, and reload lists so the row moves from Requests
     // into Messages on both sides.
-    s.on('chat:accepted', ({ conversationId }) => {
+    s.on("chat:accepted", ({ conversationId }) => {
       const st = get();
-      console.log('[chatStore] chat:accepted for', conversationId);
+      console.log("[chatStore] chat:accepted for", conversationId);
       if (String(conversationId) === String(st.activeId)) {
-        set({ activeStatus: 'accepted' });
+        set({ activeStatus: "accepted" });
       }
-      get().loadConversations().catch(() => {});
+      get()
+        .loadConversations()
+        .catch(() => {});
       get().refreshUnread();
     });
 
-    s.on('chat:typing', ({ userId }) => {
+    s.on("chat:typing", ({ userId }) => {
       set({ typingUserId: userId });
-      setTimeout(() => set((st) => (st.typingUserId === userId ? { typingUserId: null } : {})), 2500);
+      setTimeout(
+        () =>
+          set((st) =>
+            st.typingUserId === userId ? { typingUserId: null } : {},
+          ),
+        2500,
+      );
     });
 
     set({ bound: true });
-    console.log('[chatStore] initSocket: bound listeners, priming unread…');
+    console.log("[chatStore] initSocket: bound listeners, priming unread…");
     get().refreshUnread();
   },
 
   refreshUnread: async () => {
     try {
-      const { count } = await api.getChatUnreadCount();
-      console.log('[chatStore] refreshUnread: server count =', count);
-      set({ unread: count || 0 });
+      // ONE call. The endpoint returns both numbers, scoped so they never
+      // double-count: `count` covers accepted conversations, `requestCount`
+      // covers pending ones awaiting your approval.
+      //
+      // This previously made a second call to getRequests() and counted the
+      // array — two endpoints, two chances to disagree, and its catch block
+      // swallowed failures so a broken request list looked identical to an
+      // empty one.
+      const { count, requestCount } = await api.getChatUnreadCount();
+
+      console.log("[chatStore] refreshUnread:", { count, requestCount });
+
+      set({
+        unread: count || 0,
+        requestCount: requestCount || 0,
+      });
     } catch (e) {
-      console.log('[chatStore] refreshUnread failed:', e?.message);
-    }
-    try {
-      const { requests } = await api.getRequests();
-      console.log('[chatStore] refreshUnread: requests =', (requests ?? []).length);
-      set({ requestCount: (requests ?? []).length });
-    } catch (e) {
-      console.log('[chatStore] refreshUnread requests failed:', e?.message);
+      // Left visible on purpose. A silent failure here is indistinguishable
+      // from "nothing waiting", which is exactly the state that hid this bug.
+      console.log("[chatStore] refreshUnread failed:", e?.message);
     }
   },
 
@@ -107,7 +130,7 @@ export const useChatStore = create((set, get) => ({
   enterConversation: async (conversationId) => {
     set({ activeId: conversationId, messages: [], activeStatus: null });
     const s = connectChatSocket();
-    s.emit('chat:join', { conversationId });
+    s.emit("chat:join", { conversationId });
     const res = await api.getMessages(conversationId);
     set({
       messages: res.messages ?? [],
@@ -118,7 +141,9 @@ export const useChatStore = create((set, get) => ({
     try {
       await api.markConversationRead(conversationId);
       get().refreshUnread();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   },
 
   // Re-fetch the active conversation's messages and merge by id. Fallback for
@@ -142,7 +167,9 @@ export const useChatStore = create((set, get) => ({
         // then keep any locally-optimistic messages not yet returned by the
         // server (e.g. just-sent, echo pending) appended in their existing order.
         const incomingIds = new Set(incoming.map((m) => String(m.id)));
-        const localOnly = st.messages.filter((m) => !incomingIds.has(String(m.id)));
+        const localOnly = st.messages.filter(
+          (m) => !incomingIds.has(String(m.id)),
+        );
         return {
           messages: [...incoming, ...localOnly],
           activeStatus: res.conversation?.status ?? st.activeStatus,
@@ -161,19 +188,26 @@ export const useChatStore = create((set, get) => ({
     if (!activeId) return;
     try {
       await api.acceptConversation(activeId);
-      set({ activeStatus: 'accepted' });
-      get().loadConversations().catch(() => {});
+      set({ activeStatus: "accepted" });
+      get()
+        .loadConversations()
+        .catch(() => {});
       get().refreshUnread();
     } catch (e) {
-      Alert.alert('', e?.message || 'Could not accept');
+      Alert.alert("", e?.message || "Could not accept");
     }
   },
 
   leaveConversation: () => {
     const { activeId } = get();
     const s = getChatSocket();
-    if (activeId) s?.emit('chat:leave', { conversationId: activeId });
-    set({ activeId: null, messages: [], typingUserId: null, activeStatus: null });
+    if (activeId) s?.emit("chat:leave", { conversationId: activeId });
+    set({
+      activeId: null,
+      messages: [],
+      typingUserId: null,
+      activeStatus: null,
+    });
   },
 
   // Send a text message over REST — the reliable path on both platforms.
@@ -195,67 +229,93 @@ export const useChatStore = create((set, get) => ({
       // socket echo is slow or the socket is down.
       if (msg) {
         set((st) => {
-          const exists = st.messages.some((m) => String(m.id) === String(msg.id));
-          const isActive = String(msg.conversationId ?? activeId) === String(st.activeId);
+          const exists = st.messages.some(
+            (m) => String(m.id) === String(msg.id),
+          );
+          const isActive =
+            String(msg.conversationId ?? activeId) === String(st.activeId);
           return {
             messages: isActive && !exists ? [...st.messages, msg] : st.messages,
             conversations: st.conversations.map((c) =>
               String(c.id) === String(activeId)
-                ? { ...c, lastMessage: msg.text || '📷', lastMessageAt: msg.createdAt }
-                : c
+                ? {
+                    ...c,
+                    lastMessage: msg.text || "📷",
+                    lastMessageAt: msg.createdAt,
+                  }
+                : c,
             ),
           };
         });
       }
     } catch (e) {
-      const m = e?.message || '';
-      const code =
-        /accept the request/i.test(m) ? 'PENDING_RECIPIENT' :
-        /wait for your request/i.test(m) ? 'PENDING_LIMIT' : null;
-      const body =
-        (code && labels[code]) ||
-        labels.default ||
-        m ||
-        'Could not send';
-      Alert.alert(labels.title || '', body);
+      // The server returns a TRANSLATION KEY for anything the user can act on
+      // (chatPendingLimit, chatPendingRecipient) — not an English sentence.
+      // The old code regex-matched prose, which broke the moment the server
+      // switched to keys, and could never have worked once those sentences
+      // were localised.
+      const key = e?.message || "";
+      const body = labels[key] || labels.default || key || "Could not send";
+      Alert.alert(labels.title || "", body);
     }
   },
 
   sendImage: async (uri) => {
     const { activeId } = get();
-    if (!activeId) return 'No conversation';
+    if (!activeId) return "No conversation";
     set({ sendingImage: true });
     try {
       const res = await api.uploadImage(uri);
-      const imageUrl = typeof res === 'string' ? res : res?.url;
-      if (!imageUrl) return 'Upload failed';
+      const imageUrl = typeof res === "string" ? res : res?.url;
+      if (!imageUrl) return "Upload failed";
       // Send the image message over REST too, same reliability reason as text.
       const sent = await api.sendMessage(activeId, { imageUrl });
       const msg = sent?.message;
       if (msg) {
         set((st) => {
-          const exists = st.messages.some((m) => String(m.id) === String(msg.id));
-          const isActive = String(msg.conversationId ?? activeId) === String(st.activeId);
+          const exists = st.messages.some(
+            (m) => String(m.id) === String(msg.id),
+          );
+          const isActive =
+            String(msg.conversationId ?? activeId) === String(st.activeId);
           return {
             messages: isActive && !exists ? [...st.messages, msg] : st.messages,
             conversations: st.conversations.map((c) =>
               String(c.id) === String(activeId)
-                ? { ...c, lastMessage: '📷', lastMessageAt: msg.createdAt }
-                : c
+                ? { ...c, lastMessage: "📷", lastMessageAt: msg.createdAt }
+                : c,
             ),
           };
         });
       }
       return null;
     } catch (e) {
-      return e?.message || 'Upload failed';
+      return e?.message || "Upload failed";
     } finally {
       set({ sendingImage: false });
     }
   },
-
+  // Called from AuthContext.logout(). Without this the counts, conversations
+  // and socket binding survive into the next login — the new user sees the
+  // previous one's badge, and initSocket() no-ops because bound is still true,
+  // so the listeners stay attached to a socket authenticated as someone else.
+  reset: () => {
+    const s = getChatSocket();
+    if (s) s.removeAllListeners();
+    set({
+      conversations: [],
+      messages: [],
+      activeId: null,
+      activeStatus: null,
+      typingUserId: null,
+      unread: 0,
+      requestCount: 0,
+      bound: false,
+      sendingImage: false,
+    });
+  },
   emitTyping: () => {
     const { activeId } = get();
-    getChatSocket()?.emit('chat:typing', { conversationId: activeId });
+    getChatSocket()?.emit("chat:typing", { conversationId: activeId });
   },
 }));

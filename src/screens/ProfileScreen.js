@@ -23,6 +23,7 @@ import { useLang } from "../context/LangContext.js";
 import ReportSheet from "../components/ReportSheet.js";
 import PostCard from "../components/PostCard.js";
 import InterestChips from "../components/InterestChips.js";
+import useFollow from "../hooks/useFollow.js";
 
 const { width } = Dimensions.get("window");
 const HERO_H = Math.round(width * 1.1);
@@ -30,7 +31,7 @@ const HERO_H = Math.round(width * 1.1);
 export default function ProfileScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
   const username = route?.params?.username;
-  const { t, lang, setLang } = useLang();
+  const { t } = useLang();
   const [profile, setProfile] = useState(route?.params?.user ?? null);
   const [loading, setLoading] = useState(!route?.params?.user);
   const [error, setError] = useState("");
@@ -38,6 +39,29 @@ export default function ProfileScreen({ route, navigation }) {
   const [reportOpen, setReportOpen] = useState(false);
   const [posts, setPosts] = useState(route?.params?.user?.posts ?? []);
   const scrollRef = useRef(null);
+
+  const userId = profile?.id ?? profile?._id;
+
+  // Follow state, optimistic. Hooks cannot be called conditionally, so this
+  // runs even while `profile` is null — hence the ?. throughout. The hook
+  // no-ops without a userId and re-seeds from the props when the profile
+  // arrives, so an early render costs nothing.
+  //
+  // `followedByMe` is the field the API returns. isFollowing is accepted as a
+  // fallback in case the shape differs between the discovery card and the
+  // full profile.
+  const {
+    following,
+    followerCount,
+    busy: followBusy,
+    toggle: toggleFollow,
+  } = useFollow({
+    userId,
+    initialFollowing: profile?.followedByMe ?? profile?.isFollowing ?? false,
+    initialFollowerCount: profile?.followerCount ?? 0,
+    followFn: api.follow,
+    unfollowFn: api.unfollow,
+  });
 
   const load = useCallback(async () => {
     // Discovery may navigate with only a `user` object, no separate `username`
@@ -55,7 +79,6 @@ export default function ProfileScreen({ route, navigation }) {
       const data = await api.getProfile(handle);
       setProfile(data.profile ?? data.user ?? data);
       // getProfile returns the author's recent posts alongside the profile.
-      // The old code read only data.profile and dropped these on the floor.
       if (Array.isArray(data.posts)) setPosts(data.posts);
     } catch (e) {
       setError(e?.message ?? "Could not load profile");
@@ -73,31 +96,13 @@ export default function ProfileScreen({ route, navigation }) {
     if (!complete) load();
   }, [load, profile]);
 
-  const userId = profile?.id ?? profile?._id;
-
-  // ── Follow state ──────────────────────────────────────────
-  // getProfile returns `followedByMe`; seed the button from it once the
-  // profile loads, then toggle optimistically against the follow endpoints.
-  const [following, setFollowing] = useState(false);
-  const [followBusy, setFollowBusy] = useState(false);
-
-  useEffect(() => {
-    if (profile) setFollowing(Boolean(profile.followedByMe));
-  }, [profile]);
-
-  async function toggleFollow() {
-    if (followBusy || !userId) return;
-    setFollowBusy(true);
-    const next = !following;
-    setFollowing(next); // optimistic
+  // Follow failures surface here rather than inside the hook: the hook owns
+  // the state and the rollback, the screen owns how the user is told.
+  async function onFollowPress() {
     try {
-      if (next) await api.follow(userId);
-      else await api.unfollow(userId);
+      await toggleFollow();
     } catch (e) {
-      setFollowing(!next); // revert on failure
       Alert.alert(t.error || "Error", e?.message || t.tryAgain || "Try again.");
-    } finally {
-      setFollowBusy(false);
     }
   }
 
@@ -237,6 +242,16 @@ export default function ProfileScreen({ route, navigation }) {
     navigation.navigate("PostDetail", { post });
   }
 
+  // Tapping a count opens the list. REGISTER "Followers" IN RootNavigator
+  // BEFORE SHIPPING — navigating to an unregistered route throws.
+  function openFollowList(mode) {
+    navigation.navigate("Followers", {
+      userId,
+      username: profile.username,
+      mode, // 'followers' | 'following'
+    });
+  }
+
   return (
     <View style={styles.screen}>
       <ScreenHeader
@@ -332,7 +347,7 @@ export default function ProfileScreen({ route, navigation }) {
           </Pressable>
           <Pressable
             style={[styles.followBtn, following && styles.followingBtn]}
-            onPress={toggleFollow}
+            onPress={onFollowPress}
             disabled={followBusy}
           >
             <Text
@@ -346,18 +361,27 @@ export default function ProfileScreen({ route, navigation }) {
           </Pressable>
         </View>
 
-        {/* Follower / following counts — shown on every profile (feed or
-            Discovery). Defaults to 0 until the full profile loads. */}
+        {/* Follower / following counts.
+            followerCount comes from the follow hook, NOT from `profile`, so it
+            moves the instant the button is tapped. Reading profile.followerCount
+            here would leave the number stale until the next full refetch —
+            which is what made the button feel like it had done nothing. */}
         <View style={styles.stats}>
-          <View style={styles.stat}>
-            <Text style={styles.statNum}>{profile.followerCount ?? 0}</Text>
+          <Pressable
+            style={styles.stat}
+            onPress={() => openFollowList("followers")}
+          >
+            <Text style={styles.statNum}>{followerCount}</Text>
             <Text style={styles.statLabel}>{t.followers || "Followers"}</Text>
-          </View>
+          </Pressable>
           <View style={styles.statDivider} />
-          <View style={styles.stat}>
+          <Pressable
+            style={styles.stat}
+            onPress={() => openFollowList("following")}
+          >
             <Text style={styles.statNum}>{profile.followingCount ?? 0}</Text>
             <Text style={styles.statLabel}>{t.following || "Following"}</Text>
-          </View>
+          </Pressable>
         </View>
 
         {/* About */}
@@ -378,19 +402,16 @@ export default function ProfileScreen({ route, navigation }) {
           </View>
         ) : null}
 
-        {/* Interests */}
-        {Array.isArray(profile.interests) && profile.interests.length > 0 && (
+        {/* Interests. Rendered through InterestChips so the labels are
+            translated — the stored values are ids ("hiking"), not display
+            text, so mapping them raw showed English to every locale. The
+            component returns null when the list is empty, so the card is
+            only mounted when there is something in it. */}
+        {Array.isArray(profile.interests) && profile.interests.length > 0 ? (
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>{t.interests || "Interests"}</Text>
-            <View style={styles.chips}>
-              {profile.interests.map((tag) => (
-                <View key={tag} style={styles.chip}>
-                  <Text style={styles.chipText}>{tag}</Text>
-                </View>
-              ))}
-            </View>
+            <InterestChips interests={profile.interests} showLabel={false} />
           </View>
-        )}
+        ) : null}
 
         {/* Posts — everything this user has written (most recent first).
             Reuses PostCard; tapping a card opens the post. Save/report/author
@@ -549,17 +570,6 @@ const stylesFactory = ({ colors, spacing, radius }) =>
       marginBottom: 8,
     },
     bio: { color: colors.text, fontSize: 16, lineHeight: 23 },
-
-    chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-    chip: {
-      backgroundColor: colors.surfaceAlt,
-      borderRadius: radius.lg,
-      paddingHorizontal: 14,
-      paddingVertical: 7,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    chipText: { color: colors.text, fontSize: 14 },
 
     // Posts list. PostCard supplies its own horizontal margins, so the section
     // only owns the top spacing and the section label (aligned to the cards).

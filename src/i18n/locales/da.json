@@ -288,5 +288,7 @@
   "dobInvalid": "Ugyldig fødselsdato.",
   "dobChangeLimit": "Du kan ikke ændre din fødselsdato igen. Kontakt support, hvis den er forkert.",
   "dobChangesLeft": "Du kan ændre din fødselsdato {n} gang(e) mere.",
-  "dobLastChangeWarning": "Dette er sidste gang, du kan ændre din fødselsdato. Er du sikker?"
+  "dobLastChangeWarning": "Dette er sidste gang, du kan ændre din fødselsdato. Er du sikker?",
+  "noFollowers": "Ingen følgere endnu.",
+  "noFollowing": "Følger ingen endnu."
 }

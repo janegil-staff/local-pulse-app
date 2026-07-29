@@ -1,7 +1,8 @@
 // src/screens/MyProfileScreen.js
 //
 // "My Profile" — the logged-in user's own profile with inline editing, the
-// email-confirmation banner, and a link into their private Saved posts.
+// email-confirmation banner, follower counts, interests, and a link into
+// their private Saved posts.
 //
 // NOTE: `t` from useLang() is a plain object of strings, not a function.
 // Access keys as t.someKey — never t('someKey').
@@ -175,6 +176,16 @@ export default function MyProfileScreen({ navigation }) {
     ]);
   }
 
+  // Opens the same list screen the public profile uses. Requires "Followers"
+  // to be registered in RootNavigator's main branch.
+  function openFollowList(mode) {
+    navigation.navigate("Followers", {
+      userId: user?.id ?? user?._id,
+      username: user?.username,
+      mode, // 'followers' | 'following'
+    });
+  }
+
   if (!user) {
     return (
       <View style={[styles.container, styles.centered]}>
@@ -224,7 +235,9 @@ export default function MyProfileScreen({ navigation }) {
               </View>
             ) : null}
             {user.gender ? (
-              <Text style={styles.heroMeta}>{user.gender}</Text>
+              <Text style={styles.heroMeta}>
+                {t[`gender_${user.gender}`] || user.gender}
+              </Text>
             ) : null}
           </View>
           <TouchableOpacity
@@ -238,6 +251,31 @@ export default function MyProfileScreen({ navigation }) {
             ) : (
               <Text style={styles.heroCamText}>＋</Text>
             )}
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Follower / following counts ──────── */}
+        {/* Tappable, opening the same list screen the public profile uses.
+            Requires GET /api/me to return followerCount and followingCount —
+            toSelf() does not include them, so without that server change both
+            read 0 forever. */}
+        <View style={styles.stats}>
+          <TouchableOpacity
+            style={styles.stat}
+            onPress={() => openFollowList("followers")}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.statNum}>{user.followerCount ?? 0}</Text>
+            <Text style={styles.statLabel}>{t.followers}</Text>
+          </TouchableOpacity>
+          <View style={styles.statDivider} />
+          <TouchableOpacity
+            style={styles.stat}
+            onPress={() => openFollowList("following")}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.statNum}>{user.followingCount ?? 0}</Text>
+            <Text style={styles.statLabel}>{t.following}</Text>
           </TouchableOpacity>
         </View>
 
@@ -334,6 +372,15 @@ export default function MyProfileScreen({ navigation }) {
           />
         </View>
 
+        {/* ── Interests ────────────────────────── */}
+        {/* Inside the ScrollView, in a card like every other section. It was
+            previously a sibling of the ScrollView, which pinned it to the
+            bottom of the screen on top of the content instead of placing it
+            in the flow. */}
+        <View style={styles.card}>
+          <InterestsEditor />
+        </View>
+
         {/* ── Saved posts (private, this user only) ── */}
         <View style={styles.card}>
           <TouchableOpacity
@@ -357,8 +404,6 @@ export default function MyProfileScreen({ navigation }) {
           <Text style={styles.logoutText}>{t.logout}</Text>
         </TouchableOpacity>
       </ScrollView>
-
-      <InterestsEditor />
     </View>
   );
 }
@@ -502,6 +547,32 @@ const stylesFactory = ({ colors }) =>
       fontWeight: "300",
       marginTop: -2,
     },
+
+    // Follower / following. Same shape as the public ProfileScreen so the two
+    // read as the same app.
+    stats: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      marginHorizontal: 16,
+      marginTop: 16,
+      paddingVertical: 14,
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    stat: { flex: 1, alignItems: "center" },
+    statNum: { color: colors.text, fontSize: 20, fontWeight: "800" },
+    statLabel: {
+      color: colors.textDim,
+      fontSize: 12,
+      fontWeight: "600",
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+      marginTop: 2,
+    },
+    statDivider: { width: 1, height: 32, backgroundColor: colors.border },
 
     // Amber verify card matching the web (qup-pulse-admin) design: tinted
     // translucent amber surface, amber border, mail-icon chip, and a solid amber
