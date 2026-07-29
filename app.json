@@ -2,7 +2,7 @@
   "expo": {
     "name": "Qup Pulse",
     "slug": "qup-pulse",
-    "version": "2.0",
+    "version": "2.1",
     "orientation": "default",
     "icon": "./assets/images/logo.png",
     "userInterfaceStyle": "automatic",
@@ -12,9 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#0e1116"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.qup.pulse",
