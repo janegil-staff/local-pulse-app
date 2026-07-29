@@ -281,5 +281,12 @@
   "chatPendingLimit": "Je kunt maar één bericht sturen totdat deze persoon je verzoek accepteert. Wacht tot ze reageren.",
   "chatPendingRecipient": "Accepteer het verzoek voordat je antwoordt.",
   "chatSendFailed": "Kon het bericht niet verzenden.",
-  "chatPendingTitle": "Nog niet verzenden"
+  "chatPendingTitle": "Nog niet verzenden",
+  "dobSaved": "Geboortedatum opgeslagen.",
+  "dobUnderAge": "Je moet minstens 18 zijn om de app te gebruiken.",
+  "dobInFuture": "Geboortedatum kan niet in de toekomst liggen.",
+  "dobInvalid": "Ongeldige geboortedatum.",
+  "dobChangeLimit": "Je kunt je geboortedatum niet nogmaals wijzigen. Neem contact op met support als deze onjuist is.",
+  "dobChangesLeft": "Je kunt je geboortedatum nog {n} keer wijzigen.",
+  "dobLastChangeWarning": "Dit is de laatste keer dat je je geboortedatum kunt wijzigen. Weet je het zeker?"
 }

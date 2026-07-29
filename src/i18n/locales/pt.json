@@ -281,5 +281,12 @@
   "chatPendingLimit": "Só podes enviar uma mensagem até esta pessoa aceitar o teu pedido. Aguarda a resposta.",
   "chatPendingRecipient": "Aceita o pedido antes de responder.",
   "chatSendFailed": "Não foi possível enviar a mensagem.",
-  "chatPendingTitle": "Ainda não podes enviar"
+  "chatPendingTitle": "Ainda não podes enviar",
+  "dobSaved": "Data de nascimento guardada.",
+  "dobUnderAge": "Tem de ter pelo menos 18 anos para usar a aplicação.",
+  "dobInFuture": "A data de nascimento não pode estar no futuro.",
+  "dobInvalid": "Data de nascimento inválida.",
+  "dobChangeLimit": "Não pode voltar a alterar a sua data de nascimento. Contacte o suporte se estiver errada.",
+  "dobChangesLeft": "Pode alterar a sua data de nascimento mais {n} vez(es).",
+  "dobLastChangeWarning": "Esta é a última vez que pode alterar a sua data de nascimento. Tem a certeza?"
 }

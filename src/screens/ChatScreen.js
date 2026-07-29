@@ -14,18 +14,32 @@
 // while open, so a message that never arrived over the socket still appears.
 // The store merges by id, so polling never duplicates already-delivered
 // messages.
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from "react";
 import {
-  View, Text, TextInput, Pressable, FlatList, StyleSheet, KeyboardAvoidingView,
-  Image, Alert, ActivityIndicator, Modal, Keyboard,
-} from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useChatStore } from '../store/chatStore.js';
-import { useAuth } from '../context/AuthContext.js';
-import ScreenHeader from '../components/ScreenHeader.js';
-import { theme, makeStyles, useStyles } from '../theme/theme.js';
-import { useLang } from '../context/LangContext.js';
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  FlatList,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Image,
+  Alert,
+  ActivityIndicator,
+  Modal,
+  Keyboard,
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useChatStore } from "../store/chatStore.js";
+import { useAuth } from "../context/AuthContext.js";
+import ScreenHeader from "../components/ScreenHeader.js";
+import { theme, makeStyles, useStyles } from "../theme/theme.js";
+import { useLang } from "../context/LangContext.js";
+// with the other imports
+import { getChatSocket } from "../api/socket.js";
+import useTyping from "../hooks/useTyping.js";
+import TypingIndicator from "../components/TypingIndicator.js";
 
 export default function ChatScreen({ route, navigation }) {
   const styles = useStyles(stylesFactory);
@@ -41,7 +55,7 @@ export default function ChatScreen({ route, navigation }) {
   const send = useChatStore((s) => s.send);
   const sendImage = useChatStore((s) => s.sendImage);
   const emitTyping = useChatStore((s) => s.emitTyping);
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const listRef = useRef(null);
   const [fullImage, setFullImage] = useState(null);
   const { t } = useLang();
@@ -49,10 +63,35 @@ export default function ChatScreen({ route, navigation }) {
   // While the keyboard is up, drop the bottom safe-area inset (nav-bar height)
   // so padding-behavior KAV doesn't lift the input by keyboardHeight + navBar.
   const [kbVisible, setKbVisible] = useState(false);
+
+  // inside the component, near your other hooks
+  const socket = getChatSocket();
+  const { peerTyping, onTextChange, stopTyping } = useTyping({
+    socket,
+    conversationId,
+  });
+
   useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', () => setKbVisible(true));
-    const hide = Keyboard.addListener('keyboardDidHide', () => setKbVisible(false));
-    return () => { show.remove(); hide.remove(); };
+    if (!socket || !conversationId) return undefined;
+    socket.emit("conversation:join", conversationId);
+    const rejoin = () => socket.emit("conversation:join", conversationId);
+    socket.on("connect", rejoin);
+    return () => {
+      socket.off("connect", rejoin);
+      socket.emit("conversation:leave", conversationId);
+    };
+  }, [socket, conversationId]);
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", () =>
+      setKbVisible(true),
+    );
+    const hide = Keyboard.addListener("keyboardDidHide", () =>
+      setKbVisible(false),
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -108,33 +147,40 @@ export default function ChatScreen({ route, navigation }) {
       PENDING_RECIPIENT: t.chatPendingRecipient,
       default: t.chatSendFailed,
     });
-    setText('');
+
+    setText("");
+    stopTyping();
   }
 
   async function attachImage() {
     if (sendingImage) return;
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert('Permission needed', 'Allow photo access to send a picture.');
+      Alert.alert("Permission needed", "Allow photo access to send a picture.");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaType ? ['images'] : ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaType
+        ? ["images"]
+        : ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
     });
     if (result.canceled) return;
 
     // sendImage resolves to an error string, or null on success.
     const err = await sendImage(result.assets[0].uri);
-    if (err) Alert.alert('Could not send', err);
+    if (err) Alert.alert("Could not send", err);
   }
 
   return (
     <View style={styles.root}>
-      <ScreenHeader title={title || 'Chat'} onBack={() => navigation.goBack()} />
+      <ScreenHeader
+        title={title || "Chat"}
+        onBack={() => navigation.goBack()}
+      />
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={kbVisible ? 'padding' : undefined}
+        behavior={kbVisible ? "padding" : undefined}
         keyboardVerticalOffset={0}
       >
         <FlatList
@@ -149,36 +195,86 @@ export default function ChatScreen({ route, navigation }) {
             // bubble. Text bubbles are unchanged.
             if (item.imageUrl) {
               return (
-                <View style={[styles.bubbleRow, mine ? styles.rowMine : styles.rowTheirs]}>
-                  <Pressable onPress={() => { Keyboard.dismiss(); setFullImage(item.imageUrl); }}>
-                    <Image source={{ uri: item.imageUrl }} style={styles.imageBubble} resizeMode="cover" />
+                <View
+                  style={[
+                    styles.bubbleRow,
+                    mine ? styles.rowMine : styles.rowTheirs,
+                  ]}
+                >
+                  <Pressable
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      setFullImage(item.imageUrl);
+                    }}
+                  >
+                    <Image
+                      source={{ uri: item.imageUrl }}
+                      style={styles.imageBubble}
+                      resizeMode="cover"
+                    />
                   </Pressable>
                 </View>
               );
             }
             return (
-              <View style={[styles.bubbleRow, mine ? styles.rowMine : styles.rowTheirs]}>
-                <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
-                  <Text style={[styles.msgText, mine && styles.msgTextMine]}>{item.text}</Text>
+              <View
+                style={[
+                  styles.bubbleRow,
+                  mine ? styles.rowMine : styles.rowTheirs,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.bubble,
+                    mine ? styles.bubbleMine : styles.bubbleTheirs,
+                  ]}
+                >
+                  <Text style={[styles.msgText, mine && styles.msgTextMine]}>
+                    {item.text}
+                  </Text>
                 </View>
               </View>
             );
           }}
         />
         {typingUserId ? <Text style={styles.typing}>typing…</Text> : null}
-
-        <View style={[styles.inputRow, { paddingBottom: kbVisible ? theme.spacing(3) : Math.max(insets.bottom, theme.spacing(3)) }]}>
-          <Pressable style={styles.attachBtn} onPress={attachImage} disabled={sendingImage}>
-            {sendingImage
-              ? <ActivityIndicator size="small" color={theme.colors.textDim} />
-              : <Text style={styles.attachText}>＋</Text>}
+        <TextInput
+          value={text}
+          onChangeText={(value) => {
+            setText(value); // your existing line, unchanged
+            onTextChange(value); // add this
+          }}
+        />
+        <View
+          style={[
+            styles.inputRow,
+            {
+              paddingBottom: kbVisible
+                ? theme.spacing(3)
+                : Math.max(insets.bottom, theme.spacing(3)),
+            },
+          ]}
+        >
+          <Pressable
+            style={styles.attachBtn}
+            onPress={attachImage}
+            disabled={sendingImage}
+          >
+            {sendingImage ? (
+              <ActivityIndicator size="small" color={theme.colors.textDim} />
+            ) : (
+              <Text style={styles.attachText}>＋</Text>
+            )}
           </Pressable>
           <TextInput
             style={styles.input}
             placeholder="Message…"
             placeholderTextColor={theme.colors.textDim}
             value={text}
-            onChangeText={(v) => { setText(v); emitTyping(); }}
+            onChangeText={(v) => {
+              setText(v);
+              emitTyping();
+            }}
             multiline
           />
           <Pressable style={styles.sendBtn} onPress={submit}>
@@ -194,8 +290,15 @@ export default function ChatScreen({ route, navigation }) {
         animationType="fade"
         onRequestClose={() => setFullImage(null)}
       >
-        <Pressable style={styles.viewerBackdrop} onPress={() => setFullImage(null)}>
-          <Image source={{ uri: fullImage }} style={styles.viewerImage} resizeMode="contain" />
+        <Pressable
+          style={styles.viewerBackdrop}
+          onPress={() => setFullImage(null)}
+        >
+          <Image
+            source={{ uri: fullImage }}
+            style={styles.viewerImage}
+            resizeMode="contain"
+          />
           <View style={[styles.viewerClose, { top: insets.top + 12 }]}>
             <Text style={styles.viewerCloseText}>×</Text>
           </View>
@@ -205,32 +308,107 @@ export default function ChatScreen({ route, navigation }) {
   );
 }
 
-const stylesFactory = (({ colors, spacing, radius }) =>
+const stylesFactory = ({ colors, spacing, radius }) =>
   StyleSheet.create({
-    viewerBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center' },
-    viewerImage: { width: '100%', height: '100%' },
-    viewerClose: {
-      position: 'absolute', right: 16, width: 40, height: 40, borderRadius: 20,
-      backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center',
+    viewerBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.95)",
+      justifyContent: "center",
     },
-    viewerCloseText: { color: '#fff', fontSize: 26, fontWeight: '300', marginTop: -3 },
+    viewerImage: { width: "100%", height: "100%" },
+    viewerClose: {
+      position: "absolute",
+      right: 16,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: "rgba(255,255,255,0.15)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    viewerCloseText: {
+      color: "#fff",
+      fontSize: 26,
+      fontWeight: "300",
+      marginTop: -3,
+    },
     root: { flex: 1, backgroundColor: colors.bg },
     flex: { flex: 1 },
-    bubbleRow: { marginTop: spacing(2), flexDirection: 'row' },
-    rowMine: { justifyContent: 'flex-end' },
-    rowTheirs: { justifyContent: 'flex-start' },
-    bubble: { maxWidth: '78%', paddingHorizontal: spacing(3.5), paddingVertical: spacing(2.5), borderRadius: radius.lg },
+    bubbleRow: { marginTop: spacing(2), flexDirection: "row" },
+    rowMine: { justifyContent: "flex-end" },
+    rowTheirs: { justifyContent: "flex-start" },
+    bubble: {
+      maxWidth: "78%",
+      paddingHorizontal: spacing(3.5),
+      paddingVertical: spacing(2.5),
+      borderRadius: radius.lg,
+    },
     bubbleMine: { backgroundColor: colors.accent, borderBottomRightRadius: 4 },
-    bubbleTheirs: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderBottomLeftRadius: 4 },
-    imageBubble: { width: 220, height: 220, borderRadius: radius.lg, backgroundColor: colors.surfaceAlt },
+    bubbleTheirs: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderBottomLeftRadius: 4,
+    },
+    imageBubble: {
+      width: 220,
+      height: 220,
+      borderRadius: radius.lg,
+      backgroundColor: colors.surfaceAlt,
+    },
     msgText: { color: colors.text, fontSize: 15, lineHeight: 20 },
-    msgTextMine: { color: '#fff' },
-    typing: { color: colors.textDim, fontSize: 12, paddingHorizontal: spacing(4), paddingBottom: spacing(1), fontStyle: 'italic' },
-    inputRow: { flexDirection: 'row', paddingHorizontal: spacing(3), paddingTop: spacing(3), gap: spacing(2), borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface, alignItems: 'flex-end' },
-    attachBtn: { width: 44, height: 44, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
-    attachText: { color: colors.textDim, fontSize: 24, fontWeight: '300', marginTop: -2 },
-    input: { flex: 1, backgroundColor: colors.surfaceAlt, color: colors.text, borderRadius: radius.md, paddingHorizontal: spacing(4), paddingVertical: spacing(2.5), fontSize: 15, borderWidth: 1, borderColor: colors.border, maxHeight: 120 },
-    sendBtn: { backgroundColor: colors.accent, borderRadius: radius.md, paddingHorizontal: spacing(4), height: 44, justifyContent: 'center' },
-    sendText: { color: '#fff', fontWeight: '700' },
-  })
-);
+    msgTextMine: { color: "#fff" },
+    typing: {
+      color: colors.textDim,
+      fontSize: 12,
+      paddingHorizontal: spacing(4),
+      paddingBottom: spacing(1),
+      fontStyle: "italic",
+    },
+    inputRow: {
+      flexDirection: "row",
+      paddingHorizontal: spacing(3),
+      paddingTop: spacing(3),
+      gap: spacing(2),
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      backgroundColor: colors.surface,
+      alignItems: "flex-end",
+    },
+    attachBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surfaceAlt,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    attachText: {
+      color: colors.textDim,
+      fontSize: 24,
+      fontWeight: "300",
+      marginTop: -2,
+    },
+    input: {
+      flex: 1,
+      backgroundColor: colors.surfaceAlt,
+      color: colors.text,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing(4),
+      paddingVertical: spacing(2.5),
+      fontSize: 15,
+      borderWidth: 1,
+      borderColor: colors.border,
+      maxHeight: 120,
+    },
+    sendBtn: {
+      backgroundColor: colors.accent,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing(4),
+      height: 44,
+      justifyContent: "center",
+    },
+    sendText: { color: "#fff", fontWeight: "700" },
+  });

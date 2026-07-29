@@ -281,5 +281,12 @@
   "chatPendingLimit": "Du kan kun sende én besked, indtil denne person accepterer din anmodning. Vent på deres svar.",
   "chatPendingRecipient": "Accepter anmodningen, før du svarer.",
   "chatSendFailed": "Kunne ikke sende beskeden.",
-  "chatPendingTitle": "Kan ikke sende endnu"
+  "chatPendingTitle": "Kan ikke sende endnu",
+  "dobSaved": "Fødselsdato gemt.",
+  "dobUnderAge": "Du skal være mindst 18 år for at bruge appen.",
+  "dobInFuture": "Fødselsdatoen kan ikke ligge i fremtiden.",
+  "dobInvalid": "Ugyldig fødselsdato.",
+  "dobChangeLimit": "Du kan ikke ændre din fødselsdato igen. Kontakt support, hvis den er forkert.",
+  "dobChangesLeft": "Du kan ændre din fødselsdato {n} gang(e) mere.",
+  "dobLastChangeWarning": "Dette er sidste gang, du kan ændre din fødselsdato. Er du sikker?"
 }

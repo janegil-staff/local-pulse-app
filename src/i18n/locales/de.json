@@ -281,5 +281,12 @@
   "chatPendingLimit": "Du kannst nur eine Nachricht senden, bis diese Person deine Anfrage annimmt. Bitte warte auf ihre Antwort.",
   "chatPendingRecipient": "Nimm die Anfrage an, bevor du antwortest.",
   "chatSendFailed": "Nachricht konnte nicht gesendet werden.",
-  "chatPendingTitle": "Senden noch nicht möglich"
+  "chatPendingTitle": "Senden noch nicht möglich",
+  "dobSaved": "Geburtsdatum gespeichert.",
+  "dobUnderAge": "Du musst mindestens 18 Jahre alt sein, um die App zu nutzen.",
+  "dobInFuture": "Das Geburtsdatum kann nicht in der Zukunft liegen.",
+  "dobInvalid": "Ungültiges Geburtsdatum.",
+  "dobChangeLimit": "Du kannst dein Geburtsdatum nicht erneut ändern. Wende dich an den Support, wenn es falsch ist.",
+  "dobChangesLeft": "Du kannst dein Geburtsdatum noch {n} Mal ändern.",
+  "dobLastChangeWarning": "Dies ist das letzte Mal, dass du dein Geburtsdatum ändern kannst. Bist du sicher?"
 }

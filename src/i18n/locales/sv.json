@@ -281,5 +281,12 @@
   "chatPendingLimit": "Du kan bara skicka ett meddelande tills den här personen godkänner din förfrågan. Vänta på svar.",
   "chatPendingRecipient": "Acceptera förfrågan innan du svarar.",
   "chatSendFailed": "Kunde inte skicka meddelandet.",
-  "chatPendingTitle": "Kan inte skicka än"
+  "chatPendingTitle": "Kan inte skicka än",
+  "dobSaved": "Födelsedatum sparat.",
+  "dobUnderAge": "Du måste vara minst 18 år för att använda appen.",
+  "dobInFuture": "Födelsedatumet kan inte ligga i framtiden.",
+  "dobInvalid": "Ogiltigt födelsedatum.",
+  "dobChangeLimit": "Du kan inte ändra ditt födelsedatum igen. Kontakta supporten om det är fel.",
+  "dobChangesLeft": "Du kan ändra ditt födelsedatum {n} gång(er) till.",
+  "dobLastChangeWarning": "Det här är sista gången du kan ändra ditt födelsedatum. Är du säker?"
 }

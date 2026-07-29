@@ -281,5 +281,12 @@
   "chatPendingLimit": "Voit lähettää vain yhden viestin, kunnes tämä henkilö hyväksyy pyyntösi. Odota vastausta.",
   "chatPendingRecipient": "Hyväksy pyyntö ennen vastaamista.",
   "chatSendFailed": "Viestin lähetys epäonnistui.",
-  "chatPendingTitle": "Ei voi vielä lähettää"
+  "chatPendingTitle": "Ei voi vielä lähettää",
+  "dobSaved": "Syntymäaika tallennettu.",
+  "dobUnderAge": "Sinun on oltava vähintään 18-vuotias käyttääksesi sovellusta.",
+  "dobInFuture": "Syntymäaika ei voi olla tulevaisuudessa.",
+  "dobInvalid": "Virheellinen syntymäaika.",
+  "dobChangeLimit": "Et voi enää muuttaa syntymäaikaasi. Ota yhteyttä tukeen, jos se on väärin.",
+  "dobChangesLeft": "Voit muuttaa syntymäaikaasi vielä {n} kertaa.",
+  "dobLastChangeWarning": "Tämä on viimeinen kerta, kun voit muuttaa syntymäaikaasi. Oletko varma?"
 }

@@ -281,5 +281,12 @@
   "chatPendingLimit": "Możesz wysłać tylko jedną wiadomość, dopóki ta osoba nie zaakceptuje Twojej prośby. Poczekaj na odpowiedź.",
   "chatPendingRecipient": "Zaakceptuj prośbę przed odpowiedzią.",
   "chatSendFailed": "Nie udało się wysłać wiadomości.",
-  "chatPendingTitle": "Nie można jeszcze wysłać"
+  "chatPendingTitle": "Nie można jeszcze wysłać",
+  "dobSaved": "Data urodzenia zapisana.",
+  "dobUnderAge": "Musisz mieć co najmniej 18 lat, aby korzystać z aplikacji.",
+  "dobInFuture": "Data urodzenia nie może być w przyszłości.",
+  "dobInvalid": "Nieprawidłowa data urodzenia.",
+  "dobChangeLimit": "Nie możesz ponownie zmienić daty urodzenia. Skontaktuj się z pomocą techniczną, jeśli jest błędna.",
+  "dobChangesLeft": "Możesz jeszcze {n} raz(y) zmienić datę urodzenia.",
+  "dobLastChangeWarning": "To ostatni raz, gdy możesz zmienić datę urodzenia. Na pewno?"
 }

@@ -281,5 +281,12 @@
   "chatPendingLimit": "You can only send one message until this person accepts your request. Please wait for them to respond.",
   "chatPendingRecipient": "Accept the request before replying.",
   "chatSendFailed": "Could not send the message.",
-  "chatPendingTitle": "Can’t send yet"
+  "chatPendingTitle": "Can’t send yet",
+  "dobSaved": "Date of birth saved.",
+  "dobUnderAge": "You must be at least 18 to use the app.",
+  "dobInFuture": "Date of birth cannot be in the future.",
+  "dobInvalid": "Invalid date of birth.",
+  "dobChangeLimit": "You cannot change your date of birth again. Contact support if it is wrong.",
+  "dobChangesLeft": "You can change your date of birth {n} more time(s).",
+  "dobLastChangeWarning": "This is the last time you can change your date of birth. Are you sure?"
 }
