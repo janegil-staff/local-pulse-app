@@ -70,6 +70,7 @@ export default function ConversationsScreen({ navigation }) {
         navigation.navigate("Chat", {
           conversationId: item.id,
           title: item.otherUser?.displayName || item.otherUser?.username,
+          peerId: item.otherUser?.id ?? item.otherUser?._id,
         })
       }
     >

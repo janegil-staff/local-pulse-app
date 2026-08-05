@@ -39,6 +39,14 @@
         {
           "photosPermission": "Allow photo access to send pictures in chat."
         }
+      ],
+
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Qup Pulse bruker kameraet for videosamtaler.",
+          "microphonePermission": "Qup Pulse bruker mikrofonen for samtaler."
+        }
       ]
     ],
     "extra": {

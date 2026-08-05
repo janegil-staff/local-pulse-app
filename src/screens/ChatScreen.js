@@ -43,11 +43,13 @@ import { useMessageActions } from "../hooks/useMessageActions.js";
 import MessageActionSheet from "../components/MessageActionSheet.js";
 import useTyping from "../hooks/useTyping.js";
 import TypingIndicator from "../components/TypingIndicator.js";
+import { useCall, CALL_PHASE } from "../context/CallContext.js";
 
 export default function ChatScreen({ route, navigation }) {
   console.log("[ChatScreen] render");
-  const { conversationId, title } = route.params;
+  const { conversationId, title, peerId } = route.params;
   const styles = useStyles(stylesFactory);
+  const { startCall, phase } = useCall();
   const insets = useSafeAreaInsets();
   const { user: me } = useAuth();
   const messages = useChatStore((s) => s.messages);
@@ -201,11 +203,43 @@ export default function ChatScreen({ route, navigation }) {
     if (err) Alert.alert("Could not send", err);
   }
 
+  // Video-call button in the header. Only shown when we know who the peer is
+  // (passed in the Chat route params). The server is the source of truth for
+  // whether a call is actually allowed here (both sides must have messaged);
+  // if it rejects call:invite, CallContext tears the attempt down cleanly.
+  const canStartCall = !!peerId && phase === CALL_PHASE.IDLE;
+  const callButton = peerId ? (
+    <Pressable
+      onPress={() =>
+        startCall({
+          conversationId,
+          peer: { id: peerId, displayName: title },
+          media: "video",
+        })
+      }
+      disabled={!canStartCall}
+      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      accessibilityRole="button"
+      accessibilityLabel={t.callVideo || "Video call"}
+    >
+      <Text
+        style={{
+          fontSize: 22,
+          color: theme.colors.text,
+          opacity: canStartCall ? 1 : 0.4,
+        }}
+      >
+        🎥
+      </Text>
+    </Pressable>
+  ) : null;
+
   return (
     <View style={styles.root}>
       <ScreenHeader
         title={title || "Chat"}
         onBack={() => navigation.goBack()}
+        right={callButton}
       />
       <KeyboardAvoidingView
         style={styles.flex}

@@ -7,6 +7,8 @@ import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import RootNavigator from './src/navigation/RootNavigator.js';
 import { AuthProvider, useAuth } from './src/context/AuthContext.js';
+import { CallProvider } from './src/context/CallContext.js';
+import CallHost from './src/components/call/CallHost.js';
 import { ThemeProvider, useThemeMode } from './src/theme/ThemeContext.js';
 import { theme } from './src/theme/theme.js';
 import { LangProvider } from './src/context/LangContext.js';
@@ -51,6 +53,9 @@ function AppInner() {
           <RootNavigator />
           <StatusBar style={mode === 'light' ? 'dark' : 'light'} />
         </NavigationContainer>
+        {/* Call overlay: above the navigator so an active/incoming call covers
+            whatever screen is showing. Driven purely by call phase. */}
+        <CallHost />
         {/* Toast host: outside NavigationContainer so it floats above every
             screen, inside SafeAreaProvider so it respects the notch/home bar. */}
         <Toast />
@@ -64,7 +69,9 @@ export default function App() {
     <LangProvider>
       <ThemeProvider>
         <AuthProvider>
-          <AppInner />
+          <CallProvider>
+            <AppInner />
+          </CallProvider>
         </AuthProvider>
       </ThemeProvider>
     </LangProvider>

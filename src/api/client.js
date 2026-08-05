@@ -181,7 +181,15 @@ export const api = {
   },
 
   sendMessage: (id, body) => request(`/chat/conversations/${id}/messages`, { method: 'POST', body }),
- 
+
+  // ── Calls (WebRTC) ────────────────────────────────────────
+  // ICE configuration for a 1:1 call. The server should return
+  //   { iceServers: [{ urls, username?, credential? }], relayAvailable: boolean }
+  // relayAvailable=false means no TURN is configured, so calls between peers on
+  // different NATs (typical on mobile data) will often fail — STUN alone is not
+  // enough. Returns the parsed body (request() already unwraps res.json()).
+  getIceServers: () => request('/calls/ice-servers'),
+
   requestPinReset: (email) => request('/auth/forgot-pin', { method: 'POST', body: { email }, auth: false }),
   resetPin: (email, code, pin) => request('/auth/reset-pin', { method: 'POST', body: { email, code, pin }, auth: false }),
   changePin: (currentPin, newPin) => request('/auth/change-pin', { method: 'POST', body: { currentPin, newPin } }),
