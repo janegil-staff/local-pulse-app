@@ -38,17 +38,21 @@ import { theme, makeStyles, useStyles } from "../theme/theme.js";
 import { useLang } from "../context/LangContext.js";
 // with the other imports
 import { getChatSocket } from "../api/socket.js";
+import DeleteMessageButton from "../components/DeleteMessageButton.js";
+import { useMessageActions } from "../hooks/useMessageActions.js";
+import MessageActionSheet from "../components/MessageActionSheet.js";
 import useTyping from "../hooks/useTyping.js";
 import TypingIndicator from "../components/TypingIndicator.js";
 
 export default function ChatScreen({ route, navigation }) {
+  console.log("[ChatScreen] render");
+  const { conversationId, title } = route.params;
   const styles = useStyles(stylesFactory);
   const insets = useSafeAreaInsets();
-  const { conversationId, title } = route.params;
   const { user: me } = useAuth();
   const messages = useChatStore((s) => s.messages);
-  const typingUserId = useChatStore((s) => s.typingUserId);
-  const emitTyping = useChatStore((s) => s.emitTyping);
+  const removeMessage = useChatStore((s) => s.removeMessage);
+  const restoreMessage = useChatStore((s) => s.restoreMessage);
   const sendingImage = useChatStore((s) => s.sendingImage);
   const enterConversation = useChatStore((s) => s.enterConversation);
   const leaveConversation = useChatStore((s) => s.leaveConversation);
@@ -69,6 +73,29 @@ export default function ChatScreen({ route, navigation }) {
   const { peerTyping, onTextChange, stopTyping } = useTyping({
     socket,
     conversationId,
+  });
+
+  // The message a long-press opened the sheet for, with whether it is
+  // mine — the sheet needs both and recomputing `mine` there would mean
+  // duplicating the comparison renderItem already makes.
+  const [sheetFor, setSheetFor] = useState(null);
+
+  // Logs before setting state so Metro shows whether the touch reached
+  // the handler at all — which separates 'gesture not landing' from
+  // 'sheet not rendering', two failures that look identical on screen.
+  function openSheet(msg, mine) {
+    console.log("[ChatScreen] openSheet", msg?.id, { mine });
+    setSheetFor({ msg, mine });
+  }
+
+  // Hide, retract, report and the chat:message:retracted listener. All
+  // four in one hook on purpose; see useMessageActions.js.
+  const messageActions = useMessageActions({
+    socket,
+    conversationId,
+    removeMessage,
+    restoreMessage,
+    t: t,
   });
 
   useEffect(() => {
@@ -208,6 +235,8 @@ export default function ChatScreen({ route, navigation }) {
                       Keyboard.dismiss();
                       setFullImage(item.imageUrl);
                     }}
+                    onLongPress={() => openSheet(item, mine)}
+                    delayLongPress={350}
                   >
                     <Image
                       source={{ uri: item.imageUrl }}
@@ -231,22 +260,42 @@ export default function ChatScreen({ route, navigation }) {
                     mine ? styles.bubbleMine : styles.bubbleTheirs,
                   ]}
                 >
-                  <Text style={[styles.msgText, mine && styles.msgTextMine]}>
-                    {item.text}
-                  </Text>
+                  <Pressable
+                    onPress={() => openSheet(item, mine)}
+                    onLongPress={() => openSheet(item, mine)}
+                    delayLongPress={350}
+                  >
+                    <View
+                      style={{ flexDirection: "row", alignItems: "flex-start" }}
+                    >
+                      <Text
+                        style={[styles.msgText, mine && styles.msgTextMine]}
+                      >
+                        {item.text}
+                      </Text>
+                      {/* Own messages only; the component returns null otherwise. */}
+                      <DeleteMessageButton
+                        msg={item}
+                        mine={mine}
+                        m={t}
+                        onDeleted={removeMessage}
+                      />
+                    </View>
+                  </Pressable>
                 </View>
               </View>
             );
           }}
         />
-        <TextInput
-          onChangeText={(v) => {
-            setText(v);
-            emitTyping();
-          }}
+        <MessageActionSheet
+          sheetFor={sheetFor}
+          onClose={() => setSheetFor(null)}
+          actions={messageActions}
+          m={t}
+          theme={theme}
         />
 
-        {typingUserId && <TypingIndicator />}
+        {peerTyping && <TypingIndicator />}
 
         <View
           style={[
@@ -276,7 +325,7 @@ export default function ChatScreen({ route, navigation }) {
             value={text}
             onChangeText={(v) => {
               setText(v);
-              emitTyping();
+              onTextChange(v);
             }}
             multiline
           />

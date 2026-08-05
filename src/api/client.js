@@ -60,7 +60,16 @@ async function request(path, { method = 'GET', body, auth = true, isForm = false
     onAuthFailure?.();
   }
 
-  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  // The message is unchanged, so existing callers are unaffected. code and
+  // status are ADDED because the chat endpoints are only usable with them:
+  // 403 not_sender and 409 message_reported need different copy, and a
+  // flattened Error cannot tell them apart.
+  if (!res.ok) {
+    const err = new Error(data.error || `Request failed (${res.status})`);
+    err.status = res.status;
+    if (data.code) err.code = data.code;
+    throw err;
+  }
   return data;
 }
 
@@ -70,6 +79,32 @@ function qs(params = {}) {
 }
 
 export const api = {
+  // ── Chat message actions ──────────────────────────────────
+  //
+  //   hide     THEIR message (or mine), MY view only. The other party
+  //            keeps their copy and is never told. Idempotent, reversible
+  //            via unhide, and what the admin Deleted-messages list shows.
+  //   retract  MY message, gone for BOTH. Irreversible — there is no
+  //            unretract endpoint and adding one would be a mistake. 403
+  //            code not_sender on someone else's; 409 code
+  //            message_reported once a report exists.
+  //   report   to the moderation queue. reason must be one of the
+  //            server's REPORT_REASONS or it returns 400.
+  //
+  // Hide and retract are NOT interchangeable and must not share a button:
+  // one changes your view, the other destroys the message for someone else.
+  hideMessage: (id) =>
+    request(`/chat/messages/${id}/hide`, { method: 'POST' }),
+  unhideMessage: (id) =>
+    request(`/chat/messages/${id}/unhide`, { method: 'POST' }),
+  retractMessage: (id) =>
+    request(`/chat/messages/${id}/retract`, { method: 'POST' }),
+  reportMessage: (id, { reason, note } = {}) =>
+    request(`/chat/messages/${id}/report`, {
+      method: 'POST',
+      body: { reason, note },
+    }),
+
   register: (b) => request('/auth/register', { method: 'POST', body: b, auth: false }),
   login: (b) => request('/auth/login', { method: 'POST', body: b, auth: false }),
   me: () => request('/auth/me'),

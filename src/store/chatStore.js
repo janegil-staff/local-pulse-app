@@ -76,16 +76,12 @@ export const useChatStore = create((set, get) => ({
       get().refreshUnread();
     });
 
-    s.on("chat:typing", ({ userId }) => {
-      set({ typingUserId: userId });
-      setTimeout(
-        () =>
-          set((st) =>
-            st.typingUserId === userId ? { typingUserId: null } : {},
-          ),
-        2500,
-      );
-    });
+    // src/store/chatStore.js, around line 79
+    // No chat:typing listener here on purpose. useTyping owns typing:
+    // it filters by conversationId, throttles the emit, and expires a
+    // stale indicator. The version that lived here did none of that and
+    // its clear-timeout compared against the LOCAL user id, so it could
+    // never clear what it set.
 
     set({ bound: true });
     console.log("[chatStore] initSocket: bound listeners, priming unread…");
@@ -299,6 +295,33 @@ export const useChatStore = create((set, get) => ({
   // and socket binding survive into the next login — the new user sees the
   // previous one's badge, and initSocket() no-ops because bound is still true,
   // so the listeners stay attached to a socket authenticated as someone else.
+  // ── Message visibility ────────────────────────────────────
+  //
+  // Used by useMessageActions for hide and retract. Deliberately narrow:
+  // the hook removes one message or restores one, and nothing else in the
+  // app should be reaching into this array.
+  //
+  // These change the LOCAL list only. The server call is the hook's job,
+  // and hiding never emits a socket event by design — the other party must
+  // not learn that you removed their message from your view.
+  removeMessage: (id) =>
+    set((s) => ({
+      messages: s.messages.filter((x) => String(x.id) !== String(id)),
+    })),
+
+  // Re-inserted in createdAt order, not appended. A restored message at the
+  // bottom of the thread reads as a new one from the other person.
+  //
+  // A no-op if it is already present, so a double undo cannot duplicate it.
+  restoreMessage: (msg) =>
+    set((s) => {
+      if (!msg) return {};
+      if (s.messages.some((x) => String(x.id) === String(msg.id))) return {};
+      const next = [...s.messages, msg];
+      next.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      return { messages: next };
+    }),
+
   reset: () => {
     const s = getChatSocket();
     if (s) s.removeAllListeners();
